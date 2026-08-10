@@ -34,29 +34,28 @@ export default function Navigation() {
     return () => { document.body.style.overflow = '' }
   }, [mobileOpen])
 
-  const navBg =
-    scrolled || !isHome || mobileOpen
-      ? 'bg-surface/95 backdrop-blur-md border-b border-[var(--color-border)] shadow-sm'
-      : 'bg-transparent'
+  // The header is dark in every state — transparent over the hero, deep navy
+  // once scrolled or on a subpage. That keeps one set of white-on-dark colours
+  // instead of flipping the whole palette mid-scroll.
+  // Background is set via style, not a class — see --color-primary-veil.
+  const navSolid = scrolled || !isHome || mobileOpen
+  const navBg = navSolid ? 'backdrop-blur-md border-b border-white/10' : ''
 
-  const onLightNav = scrolled || !isHome
-
-  const linkColor = onLightNav ? 'text-text-muted hover:text-primary' : 'text-white/80 hover:text-white'
-  // Active state is carried by brass + open tracking only — no underline, no
-  // marker. Brass darkens on the light nav so small text still clears AA.
-  const activeColor = onLightNav ? 'text-[var(--color-gold-ink)]' : 'text-[var(--color-gold)]'
-  const logoColor = onLightNav ? 'text-primary' : 'text-white'
+  const linkColor = 'text-white/75 hover:text-white'
+  // Active state is carried by brass + open tracking only — no underline.
+  const activeColor = 'text-[var(--color-gold)]'
 
   return (
     <motion.header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${navBg}`}
+      style={{ background: navSolid ? 'var(--color-primary-veil)' : 'transparent' }}
       initial={{ y: -80, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.6, ease: 'easeOut' }}
     >
       <div className="container mx-auto px-6 py-4 flex items-center justify-between max-w-container">
         {/* Logo — wordmark over descriptor, matching Navolt's existing lockup */}
-        <Link href="/" className={`transition-colors duration-300 ${logoColor}`}>
+        <Link href="/" className="text-white transition-colors duration-300">
           <span className="block font-heading text-2xl font-semibold tracking-tight leading-none">
             {siteConfig.name}
           </span>
@@ -93,8 +92,8 @@ export default function Navigation() {
             title={siteConfig.contact.phone}
             className="flex items-center justify-center w-9 h-9 rounded-full transition-colors duration-200"
             style={{
-              background: onLightNav ? 'rgba(18,48,74,0.06)' : 'rgba(255,255,255,0.12)',
-              color: onLightNav ? 'var(--color-gold-ink)' : 'var(--color-gold)',
+              background: 'rgba(255,255,255,0.12)',
+              color: 'var(--color-gold)',
             }}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -112,15 +111,15 @@ export default function Navigation() {
         >
           <motion.span
             animate={mobileOpen ? { rotate: 45, y: 8 } : { rotate: 0, y: 0 }}
-            className={`block w-6 h-0.5 origin-center transition-colors duration-300 ${scrolled || !isHome ? 'bg-text' : 'bg-white'}`}
+            className="block w-6 h-0.5 origin-center bg-white"
           />
           <motion.span
             animate={mobileOpen ? { opacity: 0, scaleX: 0 } : { opacity: 1, scaleX: 1 }}
-            className={`block w-6 h-0.5 transition-colors duration-300 ${scrolled || !isHome ? 'bg-text' : 'bg-white'}`}
+            className="block w-6 h-0.5 bg-white"
           />
           <motion.span
             animate={mobileOpen ? { rotate: -45, y: -8 } : { rotate: 0, y: 0 }}
-            className={`block w-6 h-0.5 origin-center transition-colors duration-300 ${scrolled || !isHome ? 'bg-text' : 'bg-white'}`}
+            className="block w-6 h-0.5 origin-center bg-white"
           />
         </button>
       </div>
@@ -134,7 +133,8 @@ export default function Navigation() {
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3, ease: 'easeInOut' }}
-            className="md:hidden bg-surface border-t border-[var(--color-border)] overflow-hidden"
+            className="md:hidden border-t border-white/10 overflow-hidden"
+            style={{ background: 'var(--color-primary-veil)' }}
           >
             <nav className="container mx-auto px-6 py-6 flex flex-col gap-5">
               {navLinks.map((link) => {
@@ -146,8 +146,8 @@ export default function Navigation() {
                     aria-current={active ? 'page' : undefined}
                     className={`text-lg ${
                       active
-                        ? 'font-semibold tracking-[0.14em] text-[var(--color-gold-ink)]'
-                        : 'font-medium tracking-wide text-text-muted'
+                        ? 'font-semibold tracking-[0.14em] text-[var(--color-gold)]'
+                        : 'font-medium tracking-wide text-white/75'
                     }`}
                   >
                     {link.label}
@@ -157,7 +157,7 @@ export default function Navigation() {
 
               <a
                 href={`tel:${siteConfig.contact.phone.replace(/[^0-9+]/g, '')}`}
-                className="text-lg font-semibold tracking-wide text-primary"
+                className="text-lg font-semibold tracking-wide text-white"
               >
                 {siteConfig.contact.phone}
               </a>

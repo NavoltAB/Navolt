@@ -11,6 +11,11 @@
   /* --- Palette — "Deep Sea & Brass" ----------------------- */
   --color-bg: #F1F3F2;           /* Page background: cool seafoam linen */
   --color-surface: #FAFBFA;      /* Cards, modals, nav: near-white */
+  /* Scrolled nav background — deep navy so the header keeps the hero's dark
+     look on every page and the white text stays legible over any content.
+     Literal rgba because Tailwind can't apply an opacity modifier to a
+     var() holding a hex (bg-primary/92 silently emits nothing). */
+  --color-primary-veil: rgba(18, 48, 74, 0.92);
   --color-primary: #12304A;      /* Deep navy */
   --color-primary-hover: #0B2237;/* Darker navy */
   --color-secondary: #C08A3E;    /* Brass */

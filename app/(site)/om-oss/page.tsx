@@ -3,6 +3,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import AnimatedSection, { StaggerContainer, StaggerItem } from '@/components/AnimatedSection'
 import PageTransition from '@/components/PageTransition'
+import ElfsightWidget from '@/components/ElfsightWidget'
 import { siteConfig } from '@/config/site'
 
 export const metadata: Metadata = {
@@ -179,6 +180,21 @@ export default function AboutPage() {
           </StaggerContainer>
         </div>
       </section>
+
+      {/* Instagram — live proof of ongoing work, where static copy can't reach */}
+      {siteConfig.elfsight.instagram && (
+        <section className="section pt-0">
+          <div className="container mx-auto px-6 max-w-container">
+            <AnimatedSection className="mb-12">
+              <p className="section-label mb-3">Instagram</p>
+              <h2 className="section-title">Senast från jobbet</h2>
+            </AnimatedSection>
+            <AnimatedSection delay={0.1}>
+              <ElfsightWidget appId={siteConfig.elfsight.instagram} />
+            </AnimatedSection>
+          </div>
+        </section>
+      )}
 
       {/* CTA */}
       <section className="section" style={{ background: 'var(--color-surface)' }}>

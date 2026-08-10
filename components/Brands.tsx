@@ -1,5 +1,5 @@
 import Image from 'next/image'
-import AnimatedSection from '@/components/AnimatedSection'
+import AnimatedSection, { StaggerContainer, StaggerItem } from '@/components/AnimatedSection'
 import { getAllBrands } from '@/sanity/queries'
 import { urlFor } from '@/sanity/imageUrl'
 
@@ -63,27 +63,31 @@ export default async function Brands() {
           <h2 className="section-title">Varumärken vi arbetar med</h2>
         </AnimatedSection>
 
-        {/* One fade for the whole grid. Staggering 25 logos individually meant
-            the last ones took ~3s to appear after scrolling here. */}
-        <AnimatedSection className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6 items-center justify-items-center">
+        {/* Tight stagger — the shared ripple, but stepped down so 25 logos
+            settle in ~1.4s rather than the ~3s a 0.1s step would take. */}
+        <StaggerContainer
+          stagger={0.035}
+          className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6 items-center justify-items-center"
+        >
           {logos.map((logo) => (
-            <div
-              key={logo.key}
-              className="w-full max-w-[170px] h-[84px] relative flex items-center justify-center"
-            >
-              <Image
-                src={logo.src}
-                alt={logo.name}
-                fill
-                sizes="(max-width: 640px) 45vw, 170px"
-                className="object-contain opacity-80 transition-opacity duration-300 hover:opacity-100"
-                style={
-                  logo.scale && logo.scale !== 1 ? { transform: `scale(${logo.scale})` } : undefined
-                }
-              />
-            </div>
+            <StaggerItem key={logo.key} className="w-full flex justify-center">
+              <div className="w-full max-w-[170px] h-[84px] relative flex items-center justify-center">
+                <Image
+                  src={logo.src}
+                  alt={logo.name}
+                  fill
+                  sizes="(max-width: 640px) 45vw, 170px"
+                  className="object-contain opacity-80 transition-opacity duration-300 hover:opacity-100"
+                  style={
+                    logo.scale && logo.scale !== 1
+                      ? { transform: `scale(${logo.scale})` }
+                      : undefined
+                  }
+                />
+              </div>
+            </StaggerItem>
           ))}
-        </AnimatedSection>
+        </StaggerContainer>
       </div>
     </section>
   )

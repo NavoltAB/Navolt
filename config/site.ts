@@ -39,5 +39,11 @@ export const siteConfig = {
   elfsight: {
     // Facebook chat bubble, fixed bottom-right on every page.
     chat: '3ead7891-b445-4a8a-ac2e-bdd1f4cb0216',
+    // Reviews, homepage above the brands strip.
+    // UNVERIFIED — inferred from the old site's homepage. Confirm in the
+    // Elfsight dashboard that this is the reviews widget and not a lead form.
+    reviews: 'cb71a3bb-2e76-475b-9681-437157e214be',
+    // Instagram feed, bottom of /om-oss.
+    instagram: 'b54f4b7e-c04b-41d3-8ee7-1c421abce0ec',
   },
 } as const

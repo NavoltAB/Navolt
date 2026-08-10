@@ -39,13 +39,18 @@ export default function AnimatedSection({
   )
 }
 
-/* Stagger container — wraps a list of StaggerItems */
+/* Stagger container — wraps a list of StaggerItems.
+   `stagger` is the gap between children. The 0.1s default suits the 2–4 item
+   groups it was written for; long lists should pass something smaller, or the
+   last item lands seconds after the first (25 logos × 0.1s = 2.4s). */
 export function StaggerContainer({
   children,
   className = '',
+  stagger = 0.1,
 }: {
   children: React.ReactNode
   className?: string
+  stagger?: number
 }) {
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, margin: '-8% 0px' })
@@ -55,7 +60,7 @@ export function StaggerContainer({
       ref={ref}
       initial="hidden"
       animate={isInView ? 'visible' : 'hidden'}
-      variants={{ visible: { transition: { staggerChildren: 0.1 } } }}
+      variants={{ visible: { transition: { staggerChildren: stagger } } }}
       className={className}
     >
       {children}

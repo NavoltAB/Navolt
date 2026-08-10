@@ -3,6 +3,7 @@ import Image from 'next/image'
 import { getAllServices, getHomePage } from '@/sanity/queries'
 import AnimatedSection, { StaggerContainer, StaggerItem } from '@/components/AnimatedSection'
 import Brands from '@/components/Brands'
+import ElfsightWidget from '@/components/ElfsightWidget'
 import { siteConfig } from '@/config/site'
 
 export const revalidate = 60
@@ -438,6 +439,21 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* ── Reviews ───────────────────────────────────────────── */}
+      {/* Eyebrow only — the Elfsight widget carries its own title. */}
+      {siteConfig.elfsight.reviews && (
+        <section className="section" style={{ borderTop: '1px solid var(--color-border)' }}>
+          <div className="container mx-auto px-6 max-w-container">
+            <AnimatedSection className="mb-10 text-center">
+              <p className="section-label">Omdömen</p>
+            </AnimatedSection>
+            <AnimatedSection delay={0.1}>
+              <ElfsightWidget appId={siteConfig.elfsight.reviews} />
+            </AnimatedSection>
+          </div>
+        </section>
+      )}
 
       {/* ── Brands ────────────────────────────────────────────── */}
       <Brands />

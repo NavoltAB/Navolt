@@ -1,10 +1,6 @@
 import type { Metadata } from 'next'
 import { Source_Serif_4, Inter } from 'next/font/google'
 import './globals.css'
-import Navigation from '@/components/Navigation'
-import Footer from '@/components/Footer'
-import ChatBubble from '@/components/ChatBubble'
-import { getSiteSettings } from '@/sanity/queries'
 import { siteConfig } from '@/config/site'
 
 // Headings: Source Serif 4 — sturdy modern serif with low, even stroke contrast.
@@ -35,21 +31,16 @@ export const metadata: Metadata = {
   },
 }
 
-export default async function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
-  const settings = await getSiteSettings()
-
+/**
+ * Document shell only — no navigation, footer or chat bubble.
+ *
+ * Those live in app/(site)/layout.tsx so the embedded Sanity Studio at
+ * /studio renders on its own, without the site chrome on top of it.
+ */
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang={siteConfig.lang} className={`${heading.variable} ${body.variable}`}>
-      <body>
-        <Navigation />
-        <main>{children}</main>
-        <Footer settings={settings} />
-        <ChatBubble />
-      </body>
+      <body>{children}</body>
     </html>
   )
 }
