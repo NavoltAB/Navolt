@@ -6,8 +6,11 @@ export default function ChatBubble() {
   const appId = siteConfig.elfsight.chat
   if (!appId) return null
 
+  // The white disc and its padding are drawn inside the widget, so they can't
+  // be styled from here — scaling the wrapper shrinks the whole bubble
+  // proportionally instead. Anchored bottom-right so it stays in the corner.
   return (
-    <div className="fixed bottom-4 right-4 z-50">
+    <div className="fixed bottom-4 right-4 z-50 origin-bottom-right scale-[0.85]">
       <ElfsightWidget appId={appId} />
     </div>
   )

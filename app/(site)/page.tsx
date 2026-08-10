@@ -409,7 +409,10 @@ export default async function HomePage() {
               <h2 className="section-title mb-6">{aboutTitle}</h2>
               <p className="section-subtitle mb-10">{aboutText}</p>
 
-              <div className="grid grid-cols-3 gap-6 mb-10">
+              {/* Flex, not grid-cols-3 — the labels differ too much in length
+                  for equal columns, which left ragged gaps after the short
+                  ones. Sizing to content keeps the spacing between items even. */}
+              <div className="flex flex-wrap gap-x-12 gap-y-6 mb-10">
                 {[
                   { value: 'Hälsö', label: 'Bas' },
                   { value: 'Göteborg', label: 'Upptagningsområde' },

@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -18,12 +19,21 @@ type FormData = z.infer<typeof schema>
 export default function ContactForm() {
   const [status, setStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle')
 
+  // Prefilled by the "Fråga om …" buttons on /tjanster, which link here as
+  // /kontakt?amne=Motorservice. Capped so a hand-edited URL can't stuff the
+  // field — the visitor can still edit or clear it.
+  const searchParams = useSearchParams()
+  const subjectFromUrl = (searchParams.get('amne') ?? '').slice(0, 100)
+
   const {
     register,
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<FormData>({ resolver: zodResolver(schema) })
+  } = useForm<FormData>({
+    resolver: zodResolver(schema),
+    defaultValues: { subject: subjectFromUrl },
+  })
 
   async function onSubmit(data: FormData) {
     setStatus('sending')

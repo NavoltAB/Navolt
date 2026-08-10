@@ -178,7 +178,12 @@ export default async function ServicesPage() {
                       </ul>
                     )}
 
-                    <Link href="/kontakt" className="btn-outline">
+                    {/* Carries the service through so the contact form's
+                        "Ämne" arrives filled in. */}
+                    <Link
+                      href={`/kontakt?amne=${encodeURIComponent(service.title)}`}
+                      className="btn-outline"
+                    >
                       Fråga om {service.title.toLowerCase()}
                     </Link>
                   </article>

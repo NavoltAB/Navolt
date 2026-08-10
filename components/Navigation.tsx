@@ -38,8 +38,11 @@ export default function Navigation() {
   // once scrolled or on a subpage. That keeps one set of white-on-dark colours
   // instead of flipping the whole palette mid-scroll.
   // Background is set via style, not a class — see --color-primary-veil.
+  // `border-b` is always present and only its colour changes. Toggling the
+  // border class instead would snap the width 0→1px while the background is
+  // still fading, flashing a bright line across the header.
   const navSolid = scrolled || !isHome || mobileOpen
-  const navBg = navSolid ? 'backdrop-blur-md border-b border-white/10' : ''
+  const navBg = navSolid ? 'backdrop-blur-md' : ''
 
   const linkColor = 'text-white/75 hover:text-white'
   // Active state is carried by brass + open tracking only — no underline.
@@ -47,8 +50,11 @@ export default function Navigation() {
 
   return (
     <motion.header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${navBg}`}
-      style={{ background: navSolid ? 'var(--color-primary-veil)' : 'transparent' }}
+      className={`fixed top-0 left-0 right-0 z-50 border-b transition-all duration-300 ${navBg}`}
+      style={{
+        background: navSolid ? 'var(--color-primary-veil)' : 'transparent',
+        borderBottomColor: navSolid ? 'rgba(255,255,255,0.10)' : 'transparent',
+      }}
       initial={{ y: -80, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.6, ease: 'easeOut' }}

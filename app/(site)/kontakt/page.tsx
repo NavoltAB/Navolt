@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { Suspense } from 'react'
 import { getSiteSettings } from '@/sanity/queries'
 import AnimatedSection from '@/components/AnimatedSection'
 import ContactForm from '@/components/ContactForm'
@@ -89,7 +90,7 @@ export default async function ContactPage() {
                   <div className="space-y-5">
                     {contactItems.map((item) => (
                       <div key={item.label} className="flex items-start gap-4">
-                        <span className="mt-0.5 p-2.5 rounded-md shrink-0"
+                        <span className="mt-0.5 p-2.5 rounded-full shrink-0"
                           style={{ background: 'var(--color-accent)', color: 'var(--color-primary)' }}>
                           {item.icon}
                         </span>
@@ -143,7 +144,11 @@ export default async function ContactPage() {
             {/* Form */}
             <AnimatedSection direction="right" className="lg:col-span-3">
               <h2 className="font-heading text-2xl font-semibold mb-6">Skicka ett meddelande</h2>
-              <ContactForm />
+              {/* ContactForm reads ?amne= to prefill the subject, so it needs a
+                  Suspense boundary to keep this page statically rendered. */}
+              <Suspense fallback={<div className="h-[520px]" />}>
+                <ContactForm />
+              </Suspense>
             </AnimatedSection>
           </div>
         </div>
