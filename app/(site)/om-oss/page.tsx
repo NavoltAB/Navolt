@@ -3,6 +3,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import AnimatedSection, { StaggerContainer, StaggerItem } from '@/components/AnimatedSection'
 import PageTransition from '@/components/PageTransition'
+import Brands from '@/components/Brands'
 import ElfsightWidget from '@/components/ElfsightWidget'
 import { siteConfig } from '@/config/site'
 
@@ -180,6 +181,11 @@ export default function AboutPage() {
           </StaggerContainer>
         </div>
       </section>
+
+      {/* Brands — moved off the landing page. It belongs here: the Bakgrund
+          copy above already names Victron, Mastervolt, Garmin and Raymarine,
+          so the logo grid reads as evidence for a claim rather than filler. */}
+      <Brands />
 
       {/* Instagram — live proof of ongoing work, where static copy can't reach */}
       {siteConfig.elfsight.instagram && (

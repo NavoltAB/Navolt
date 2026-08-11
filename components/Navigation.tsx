@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -13,14 +13,77 @@ const navLinks = [
   { href: '/kontakt', label: 'Kontakt' },
 ]
 
+// One curve for every property that changes the header's *shape*, so the pill
+// collapse reads as a single movement rather than a pile of independent tweens.
+const ease = [0.16, 1, 0.3, 1] as const
+const shape = { duration: 0.85, ease }
+const SHRINK_AT = 60
+const PILL_MAX = 880
+
+// Deep navy veil, same hue as --color-primary-veil. Written out as rgba here
+// because the skins need their own alpha per state.
+const navy = (a: number) => `rgba(18, 48, 74, ${a})`
+
+// Background, blur and ring live on their own layers and only ever animate
+// opacity — never alongside the shape tween. Fading out has to beat the widening
+// bar (otherwise you watch a rounded 1px ring stretch across the viewport before
+// it vanishes), and fading in has to lag the collapse so the ring arrives on a
+// pill that already exists instead of popping onto a half-formed one.
+const skin = (visible: boolean) =>
+  visible
+    ? { duration: 0.45, delay: 0.14, ease: 'easeOut' as const }
+    : { duration: 0.22, ease: 'easeOut' as const }
+
 export default function Navigation() {
-  const [scrolled, setScrolled] = useState(false)
+  const [shrunk, setShrunk] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+  // Measured, not a big constant: `maxWidth: 3000` overshoots the viewport, so
+  // flex clamps the bar to full width a quarter of the way through the tween
+  // while padding and radius are still moving — which is what read as lag.
+  // Over-large is harmless before mount (flex-shrink clamps it), under-large is
+  // not, hence the 3000 seed.
+  const [docWidth, setDocWidth] = useState(3000)
   const pathname = usePathname()
   const isHome = pathname === '/'
 
+  // Equal-growth spacers centre the links in the space *between* the columns,
+  // not in the pill — so the links sit (leftCol − rightCol) / 2 off centre. The
+  // logo column is much wider than it looks: the collapsed descriptor animates
+  // its height to 0 but keeps its full tracked-out width. Measure both columns
+  // and cancel the difference with a margin rather than hardcoding a guess.
+  const logoRef = useRef<HTMLAnchorElement>(null)
+  const tailRef = useRef<HTMLDivElement>(null)
+  const [balance, setBalance] = useState(0)
+
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 30)
+    const logo = logoRef.current
+    const tail = tailRef.current
+    if (!logo || !tail) return
+    // Both widths are layout widths, so they're state-independent: `scale`
+    // doesn't touch them and the descriptor only collapses vertically.
+    const measure = () => setBalance(logo.offsetWidth - tail.offsetWidth)
+    measure()
+    const ro = new ResizeObserver(measure)
+    ro.observe(logo)
+    ro.observe(tail)
+    document.fonts?.ready.then(measure).catch(() => {})
+    return () => ro.disconnect()
+  }, [])
+
+  useEffect(() => {
+    const measure = () => {
+      setIsMobile(window.innerWidth < 768)
+      setDocWidth(document.documentElement.clientWidth)
+    }
+    measure()
+    window.addEventListener('resize', measure)
+    return () => window.removeEventListener('resize', measure)
+  }, [])
+
+  useEffect(() => {
+    const onScroll = () => setShrunk(window.scrollY > SHRINK_AT)
+    onScroll()
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
@@ -35,114 +98,240 @@ export default function Navigation() {
   }, [mobileOpen])
 
   // The header is dark in every state — transparent over the hero, deep navy
-  // once scrolled or on a subpage. That keeps one set of white-on-dark colours
-  // instead of flipping the whole palette mid-scroll.
-  // Background is set via style, not a class — see --color-primary-veil.
-  // `border-b` is always present and only its colour changes. Toggling the
-  // border class instead would snap the width 0→1px while the background is
-  // still fading, flashing a bright line across the header.
-  const navSolid = scrolled || !isHome || mobileOpen
-  const navBg = navSolid ? 'backdrop-blur-md' : ''
+  // on a subpage, and a translucent navy pill once scrolled. That keeps one set
+  // of white-on-dark colours instead of flipping the palette mid-scroll.
+  const barVisible = !isHome && !shrunk
+
+  // Geometry only. No colour, no blur, no shadow — see `skin` above.
+  const geometry = shrunk
+    ? {
+        maxWidth: isMobile ? docWidth - 32 : PILL_MAX,
+        marginTop: 14,
+        marginLeft: isMobile ? 16 : 24,
+        marginRight: isMobile ? 16 : 24,
+        borderRadius: 999,
+        paddingLeft: 18,
+        paddingRight: 18,
+        paddingTop: 10,
+        paddingBottom: 10,
+      }
+    : {
+        maxWidth: docWidth,
+        marginTop: 0,
+        marginLeft: 0,
+        marginRight: 0,
+        borderRadius: 0,
+        paddingLeft: isMobile ? 24 : 48,
+        paddingRight: isMobile ? 24 : 48,
+        paddingTop: isMobile ? 14 : 20,
+        paddingBottom: isMobile ? 14 : 20,
+      }
 
   const linkColor = 'text-white/75 hover:text-white'
   // Active state is carried by brass + open tracking only — no underline.
   const activeColor = 'text-[var(--color-gold)]'
 
   return (
-    <motion.header
-      className={`fixed top-0 left-0 right-0 z-50 border-b transition-all duration-300 ${navBg}`}
-      style={{
-        background: navSolid ? 'var(--color-primary-veil)' : 'transparent',
-        borderBottomColor: navSolid ? 'rgba(255,255,255,0.10)' : 'transparent',
-      }}
-      initial={{ y: -80, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.6, ease: 'easeOut' }}
-    >
-      <div className="container mx-auto px-6 py-4 flex items-center justify-between max-w-container">
-        {/* Logo — wordmark over descriptor, matching Navolt's existing lockup */}
-        <Link href="/" className="text-white transition-colors duration-300">
-          <span className="block font-heading text-2xl font-semibold tracking-tight leading-none">
-            {siteConfig.name}
-          </span>
-          <span className="block text-[9px] tracking-[0.28em] uppercase opacity-70 mt-0.5">
-            Marinelektronik
-          </span>
-        </Link>
+    <>
+      <motion.div
+        className="fixed top-0 left-0 right-0 z-50 flex justify-center pointer-events-none"
+        initial={{ y: -80, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.6, ease: 'easeOut' }}
+      >
+        <motion.header
+          className="pointer-events-auto relative w-full flex items-center"
+          initial={false}
+          animate={geometry}
+          transition={shape}
+        >
+          {/* Skins. Both inherit the animating radius and are positioned, so
+              they paint under the content below (which is `relative`, i.e. also
+              positioned, and later in DOM order). */}
+          <motion.div
+            aria-hidden
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              borderRadius: 'inherit',
+              background: navy(0.92),
+              backdropFilter: 'blur(12px)',
+              WebkitBackdropFilter: 'blur(12px)',
+              boxShadow: '0 1px 0 0 rgba(255,255,255,0.10)',
+            }}
+            initial={false}
+            animate={{ opacity: barVisible ? 1 : 0 }}
+            transition={skin(barVisible)}
+          />
+          {/* Mobile drops the blur and goes near-opaque — backdrop-filter on a
+              resizing fixed element is the one thing that reliably janks on
+              phones. The blur radius itself is constant; only opacity moves. */}
+          <motion.div
+            aria-hidden
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              borderRadius: 'inherit',
+              background: isMobile ? navy(0.97) : navy(0.72),
+              backdropFilter: isMobile ? 'none' : 'blur(24px)',
+              WebkitBackdropFilter: isMobile ? 'none' : 'blur(24px)',
+              boxShadow:
+                '0 0 0 1px rgba(255,255,255,0.12), 0 18px 40px -20px rgba(4,16,28,0.85)',
+            }}
+            initial={false}
+            animate={{ opacity: shrunk ? 1 : 0 }}
+            transition={skin(shrunk)}
+          />
 
-        {/* Desktop links */}
-        <nav className="hidden md:flex items-center gap-8">
-          {navLinks.map((link) => {
-            const active = pathname.startsWith(link.href)
-            return (
-              <Link
-                key={link.href}
-                href={link.href}
-                aria-current={active ? 'page' : undefined}
-                className={`text-sm transition-all duration-300 ${
-                  active
-                    ? `font-semibold tracking-[0.14em] ${activeColor}`
-                    : `font-medium tracking-wide ${linkColor}`
-                }`}
+          {/* Logo — wordmark over descriptor. Scaled, not resized: animating
+              fontSize reflows and re-rasterises the serif every frame. */}
+          <Link ref={logoRef} href="/" className="relative shrink-0 text-white">
+            <motion.div
+              style={{ originX: 0, originY: 0.5, willChange: 'transform' }}
+              animate={{ scale: shrunk ? 0.82 : 1 }}
+              transition={shape}
+            >
+              <span className="block font-heading text-2xl font-semibold tracking-tight leading-none">
+                {siteConfig.name}
+              </span>
+              {/* The descriptor collapses so the lockup keeps its balance in the
+                  pill. Its opacity runs ahead of its height on the way out and
+                  behind on the way back, so you never see clipped half-letters. */}
+              <motion.span
+                className="block overflow-hidden text-[9px] uppercase leading-none tracking-[0.28em]"
+                animate={{
+                  opacity: shrunk ? 0 : 0.7,
+                  height: shrunk ? 0 : 11,
+                  marginTop: shrunk ? 0 : 4,
+                }}
+                transition={{
+                  default: shape,
+                  opacity: shrunk
+                    ? { duration: 0.22, ease: 'easeOut' }
+                    : { duration: 0.4, delay: 0.3, ease: 'easeOut' },
+                }}
               >
-                {link.label}
-              </Link>
-            )
-          })}
+                Marinelektronik
+              </motion.span>
+            </motion.div>
+          </Link>
+
+          {/* Paired spacers. Full-bleed: only the left one grows, so the links
+              sit right, beside the phone. Pill: both grow, which floats the
+              links between the wordmark and the phone. */}
+          <motion.div
+            className="relative hidden md:block"
+            initial={false}
+            animate={{ flexGrow: 1 }}
+            transition={shape}
+          />
+
+          {/* Desktop links */}
+          <motion.nav
+            className="relative hidden md:flex items-center"
+            initial={false}
+            animate={{ gap: shrunk ? 22 : 32, marginRight: shrunk ? balance : 0 }}
+            transition={shape}
+          >
+            {navLinks.map((link) => {
+              const active = pathname.startsWith(link.href)
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  aria-current={active ? 'page' : undefined}
+                  className={`text-sm whitespace-nowrap transition-colors duration-300 ${
+                    active
+                      ? `font-semibold tracking-[0.14em] ${activeColor}`
+                      : `font-medium tracking-wide ${linkColor}`
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              )
+            })}
+          </motion.nav>
+
+          <motion.div
+            className="relative hidden md:block"
+            initial={false}
+            animate={{ flexGrow: shrunk ? 1 : 0 }}
+            transition={shape}
+          />
 
           {/* Icon only — the written-out number crowded the link row.
               Same phone glyph as the homepage CTA. */}
-          <a
-            href={`tel:${siteConfig.contact.phone.replace(/[^0-9+]/g, '')}`}
-            aria-label={`Ring oss på ${siteConfig.contact.phone}`}
-            title={siteConfig.contact.phone}
-            className="flex items-center justify-center w-9 h-9 rounded-full transition-colors duration-200"
-            style={{
-              background: 'rgba(255,255,255,0.12)',
-              color: 'var(--color-gold)',
-            }}
+          <motion.div
+            ref={tailRef}
+            className="relative hidden md:block shrink-0"
+            initial={false}
+            animate={{ marginLeft: shrunk ? 0 : 28 }}
+            transition={shape}
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z" />
-            </svg>
-          </a>
-        </nav>
+            <motion.a
+              href={`tel:${siteConfig.contact.phone.replace(/[^0-9+]/g, '')}`}
+              aria-label={`Ring oss på ${siteConfig.contact.phone}`}
+              title={siteConfig.contact.phone}
+              className="flex h-9 w-9 items-center justify-center rounded-full"
+              style={{
+                background: 'rgba(255,255,255,0.12)',
+                color: 'var(--color-gold)',
+                willChange: 'transform',
+              }}
+              initial={false}
+              animate={{ scale: shrunk ? 0.89 : 1 }}
+              transition={shape}
+              whileHover={{ scale: shrunk ? 0.96 : 1.08 }}
+              whileTap={{ scale: shrunk ? 0.84 : 0.94 }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z" />
+              </svg>
+            </motion.a>
+          </motion.div>
 
-        {/* Hamburger */}
-        <button
-          className="md:hidden p-2 -mr-2 flex flex-col gap-1.5"
-          onClick={() => setMobileOpen((o) => !o)}
-          aria-label={mobileOpen ? 'Stäng meny' : 'Öppna meny'}
-          aria-expanded={mobileOpen}
-        >
-          <motion.span
-            animate={mobileOpen ? { rotate: 45, y: 8 } : { rotate: 0, y: 0 }}
-            className="block w-6 h-0.5 origin-center bg-white"
-          />
-          <motion.span
-            animate={mobileOpen ? { opacity: 0, scaleX: 0 } : { opacity: 1, scaleX: 1 }}
-            className="block w-6 h-0.5 bg-white"
-          />
-          <motion.span
-            animate={mobileOpen ? { rotate: -45, y: -8 } : { rotate: 0, y: 0 }}
-            className="block w-6 h-0.5 origin-center bg-white"
-          />
-        </button>
-      </div>
+          {/* Hamburger */}
+          <button
+            className="relative md:hidden ml-auto p-2 -mr-2 flex flex-col gap-1.5 shrink-0"
+            onClick={() => setMobileOpen((o) => !o)}
+            aria-label={mobileOpen ? 'Stäng meny' : 'Öppna meny'}
+            aria-expanded={mobileOpen}
+          >
+            <motion.span
+              animate={mobileOpen ? { rotate: 45, y: 8 } : { rotate: 0, y: 0 }}
+              transition={{ duration: 0.3, ease }}
+              className="block w-6 h-0.5 origin-center bg-white"
+            />
+            <motion.span
+              animate={mobileOpen ? { opacity: 0, scaleX: 0 } : { opacity: 1, scaleX: 1 }}
+              transition={{ duration: 0.2 }}
+              className="block w-6 h-0.5 bg-white"
+            />
+            <motion.span
+              animate={mobileOpen ? { rotate: -45, y: -8 } : { rotate: 0, y: 0 }}
+              transition={{ duration: 0.3, ease }}
+              className="block w-6 h-0.5 origin-center bg-white"
+            />
+          </button>
+        </motion.header>
+      </motion.div>
 
-      {/* Mobile drawer */}
+      {/* Mobile menu — a detached card rather than a drawer, since the header
+          itself is a floating pill once scrolled. */}
       <AnimatePresence>
         {mobileOpen && (
           <motion.div
             key="mobile-menu"
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3, ease: 'easeInOut' }}
-            className="md:hidden border-t border-white/10 overflow-hidden"
-            style={{ background: 'var(--color-primary-veil)' }}
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0, top: shrunk ? 74 : 82 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.3, ease }}
+            className="md:hidden fixed inset-x-4 z-40 rounded-2xl overflow-hidden"
+            style={{
+              backgroundColor: navy(0.97),
+              boxShadow:
+                '0 0 0 1px rgba(255,255,255,0.12), 0 18px 40px -20px rgba(4,16,28,0.85)',
+            }}
           >
-            <nav className="container mx-auto px-6 py-6 flex flex-col gap-5">
+            <nav className="flex flex-col px-6 py-5">
               {navLinks.map((link) => {
                 const active = pathname.startsWith(link.href)
                 return (
@@ -150,7 +339,7 @@ export default function Navigation() {
                     key={link.href}
                     href={link.href}
                     aria-current={active ? 'page' : undefined}
-                    className={`text-lg ${
+                    className={`py-3 text-lg border-b border-white/[0.08] ${
                       active
                         ? 'font-semibold tracking-[0.14em] text-[var(--color-gold)]'
                         : 'font-medium tracking-wide text-white/75'
@@ -163,7 +352,7 @@ export default function Navigation() {
 
               <a
                 href={`tel:${siteConfig.contact.phone.replace(/[^0-9+]/g, '')}`}
-                className="text-lg font-semibold tracking-wide text-white"
+                className="pt-4 text-lg font-semibold tracking-wide text-white"
               >
                 {siteConfig.contact.phone}
               </a>
@@ -171,6 +360,6 @@ export default function Navigation() {
           </motion.div>
         )}
       </AnimatePresence>
-    </motion.header>
+    </>
   )
 }

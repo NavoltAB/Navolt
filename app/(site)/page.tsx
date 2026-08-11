@@ -2,7 +2,6 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { getAllServices, getHomePage } from '@/sanity/queries'
 import AnimatedSection, { StaggerContainer, StaggerItem } from '@/components/AnimatedSection'
-import Brands from '@/components/Brands'
 import ElfsightWidget from '@/components/ElfsightWidget'
 import { siteConfig } from '@/config/site'
 
@@ -235,7 +234,7 @@ export default async function HomePage() {
           <AnimatedSection className="mb-12">
             <p className="section-label mb-3">Vad vi gör</p>
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-              <h2 className="section-title">Fyra saker vi kan på riktigt</h2>
+              <h2 className="section-title">Tjänster vi erbjuder</h2>
               <Link href="/tjanster" className="btn-outline shrink-0">
                 Alla tjänster
               </Link>
@@ -458,8 +457,9 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* ── Brands ────────────────────────────────────────────── */}
-      <Brands />
+      {/* Brands live on /om-oss — the landing page already carries the "25+
+          varumärken" stat and the "Komponenter vi står bakom" feature, so a
+          25-logo grid here was a third telling of the same thing. */}
 
       {/* ── CTA ───────────────────────────────────────────────── */}
       <section

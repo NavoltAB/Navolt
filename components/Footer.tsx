@@ -123,9 +123,7 @@ export default function Footer({ settings }: FooterProps) {
             {s.orgNumber && <p>Org.nr: {s.orgNumber}</p>}
             {siteConfig.company.fSkatt && <p>Godkänd för F-skatt</p>}
           </div>
-          <Link href="/studio" className="hover:text-white/70 transition-colors">
-            Admin
-          </Link>
+          
         </div>
       </div>
     </footer>
