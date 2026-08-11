@@ -1,7 +1,9 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import { getAllServices, getHomePage } from '@/sanity/queries'
+import { getAllServices, getHomePage, getLandingProducts } from '@/sanity/queries'
 import AnimatedSection, { StaggerContainer, StaggerItem } from '@/components/AnimatedSection'
+import ProductCard from '@/components/ProductCard'
+import ServiceTiles from '@/components/ServiceTiles'
 import ElfsightWidget from '@/components/ElfsightWidget'
 import { siteConfig } from '@/config/site'
 
@@ -70,7 +72,11 @@ const stats = [
 ]
 
 export default async function HomePage() {
-  const [services, homePage] = await Promise.all([getAllServices(), getHomePage()])
+  const [services, homePage, products] = await Promise.all([
+    getAllServices(),
+    getHomePage(),
+    getLandingProducts(),
+  ])
 
   const segments =
     services.length > 0
@@ -228,6 +234,35 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* ── Products ──────────────────────────────────────────── */}
+      {/* Renders only when there's stock to show. Unlike services there's no
+          fallback copy for products — an empty grid under a "Sortiment"
+          heading would read as broken, so the whole section stands down until
+          Sanity has something in it. */}
+      {products.length > 0 && (
+        <section className="section">
+          <div className="container mx-auto px-6" style={{ maxWidth: 'var(--container-max)' }}>
+            <AnimatedSection className="mb-12">
+              <p className="section-label mb-3">Sortiment</p>
+              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+                <h2 className="section-title">Produkter vi säljer</h2>
+                <Link href="/produkter" className="btn-outline shrink-0">
+                  Alla produkter
+                </Link>
+              </div>
+            </AnimatedSection>
+
+            <StaggerContainer className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+              {products.map((product) => (
+                <StaggerItem key={product._id} className="h-full">
+                  <ProductCard product={product} />
+                </StaggerItem>
+              ))}
+            </StaggerContainer>
+          </div>
+        </section>
+      )}
+
       {/* ── Segments ──────────────────────────────────────────── */}
       <section className="section">
         <div className="container mx-auto px-6" style={{ maxWidth: 'var(--container-max)' }}>
@@ -241,72 +276,10 @@ export default async function HomePage() {
             </div>
           </AnimatedSection>
 
-          <StaggerContainer className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {segments.map((seg) => (
-              <StaggerItem key={seg._id}>
-                <Link
-                  href={seg.href}
-                  className="group block h-full overflow-hidden"
-                  style={{
-                    border: '1px solid var(--color-border)',
-                    borderRadius: 'var(--radius-md)',
-                    background: 'var(--color-surface)',
-                  }}
-                >
-                  <div
-                    className="aspect-[4/3] relative overflow-hidden"
-                    style={{ background: 'var(--color-primary)' }}
-                  >
-                    {seg.imageUrl && (
-                      <Image
-                        src={seg.imageUrl}
-                        alt={seg.title}
-                        fill
-                        className="object-cover transition-transform duration-500 group-hover:scale-105"
-                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                      />
-                    )}
-                    <div
-                      className="absolute inset-0 transition-opacity duration-300 opacity-0 group-hover:opacity-100"
-                      style={{ background: 'rgba(11,34,55,0.18)' }}
-                    />
-                  </div>
-
-                  <div className="p-6 flex flex-col gap-2">
-                    <h3
-                      className="font-heading font-semibold"
-                      style={{ fontSize: 'var(--text-xl)' }}
-                    >
-                      {seg.title}
-                    </h3>
-                    <p
-                      className="text-sm leading-relaxed"
-                      style={{ color: 'var(--color-text-muted)' }}
-                    >
-                      {seg.shortDescription}
-                    </p>
-                    <span
-                      className="inline-flex items-center gap-1.5 text-sm font-medium mt-2"
-                      style={{ color: 'var(--color-primary)' }}
-                    >
-                      Läs mer
-                      <svg
-                        width="14"
-                        height="14"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        className="translate-x-0 group-hover:translate-x-1 transition-transform duration-200"
-                      >
-                        <polyline points="9 18 15 12 9 6" />
-                      </svg>
-                    </span>
-                  </div>
-                </Link>
-              </StaggerItem>
-            ))}
-          </StaggerContainer>
+          {/* Editorial photo tiles rather than cards — the card shape is
+              reserved for products, which carry price and stock. See
+              components/ServiceTiles.tsx. */}
+          <ServiceTiles segments={segments} />
         </div>
       </section>
 

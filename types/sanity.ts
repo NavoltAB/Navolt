@@ -29,6 +29,8 @@ export interface Product {
   description?: PortableTextBlock[]
   productDetails?: ProductDetail[]
   mainImage?: SanityImage
+  // images[1], when the product has one — the card cross-fades to it on hover.
+  hoverImage?: SanityImage
   images?: SanityImage[]
 }
 

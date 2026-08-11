@@ -13,7 +13,8 @@ const productFields = `
   unit,
   inStock,
   shortDescription,
-  "mainImage": images[0]
+  "mainImage": images[0],
+  "hoverImage": images[1]
 `
 
 export async function getAllCategories(): Promise<Category[]> {
@@ -29,6 +30,18 @@ export async function getFeaturedProducts(): Promise<Product[]> {
   if (!isSanityConfigured) return []
   return client.fetch(
     `*[_type == "product" && featured == true] | order(_createdAt desc)[0...4] { ${productFields} }`,
+    {},
+    opts60
+  )
+}
+
+// Landing page row. Featured first, then newest, capped at four — one query
+// rather than "featured, else fall back to all", so the section still fills
+// sensibly before anyone has thought to tick the featured box.
+export async function getLandingProducts(): Promise<Product[]> {
+  if (!isSanityConfigured) return []
+  return client.fetch(
+    `*[_type == "product"] | order(featured desc, _createdAt desc)[0...4] { ${productFields} }`,
     {},
     opts60
   )
