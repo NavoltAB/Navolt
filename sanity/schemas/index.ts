@@ -5,6 +5,19 @@ import { brandSchema } from './brand'
 import { homePageSchema } from './homePage'
 import { aboutPageSchema } from './aboutPage'
 import { kontaktPageSchema } from './kontaktPage'
+import { productsPageSchema } from './productsPage'
+import { tjansterPageSchema } from './tjansterPage'
 import { siteSettingsSchema } from './siteSettings'
 
-export const schemas = [categorySchema, productSchema, serviceSchema, brandSchema, homePageSchema, aboutPageSchema, kontaktPageSchema, siteSettingsSchema]
+export const schemas = [
+  categorySchema,
+  productSchema,
+  serviceSchema,
+  brandSchema,
+  homePageSchema,
+  aboutPageSchema,
+  kontaktPageSchema,
+  productsPageSchema,
+  tjansterPageSchema,
+  siteSettingsSchema,
+]

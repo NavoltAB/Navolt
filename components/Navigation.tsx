@@ -3,12 +3,12 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useCart } from '@/context/CartContext'
 import { siteConfig } from '@/config/site'
 
-// NOTE: /produkter is intentionally absent until the customer has a real
-// catalogue in Sanity. The page and schemas exist — just add the link back here.
 const navLinks = [
   { href: '/tjanster', label: 'Tjänster' },
+  { href: '/produkter', label: 'Produkter' },
   { href: '/om-oss', label: 'Om oss' },
   { href: '/kontakt', label: 'Kontakt' },
 ]
@@ -46,6 +46,7 @@ export default function Navigation() {
   const [docWidth, setDocWidth] = useState(3000)
   const pathname = usePathname()
   const isHome = pathname === '/'
+  const { count, ready } = useCart()
 
   // Equal-growth spacers centre the links in the space *between* the columns,
   // not in the pill — so the links sit (leftCol − rightCol) / 2 off centre. The
@@ -261,11 +262,58 @@ export default function Navigation() {
               Same phone glyph as the homepage CTA. */}
           <motion.div
             ref={tailRef}
-            className="relative hidden md:block shrink-0"
+            className="relative hidden md:flex items-center gap-2.5 shrink-0"
             initial={false}
             animate={{ marginLeft: shrunk ? 0 : 28 }}
             transition={shape}
           >
+            {/* Basket. Absent while empty rather than sitting there greyed out:
+                on a site whose catalogue may be empty, a permanent cart icon is
+                chrome for a feature nobody is using. It animates its own width,
+                and the ResizeObserver above re-measures the tail so the centred
+                links stay centred when it appears. */}
+            <AnimatePresence initial={false}>
+              {ready && count > 0 && (
+                <motion.div
+                  key="cart"
+                  initial={{ opacity: 0, width: 0, scale: 0.6 }}
+                  animate={{ opacity: 1, width: 36, scale: shrunk ? 0.89 : 1 }}
+                  exit={{ opacity: 0, width: 0, scale: 0.6 }}
+                  transition={{ duration: 0.45, ease }}
+                  className="relative shrink-0 overflow-visible"
+                  style={{ willChange: 'transform' }}
+                >
+                  <Link
+                    href="/offert"
+                    aria-label={`Offertkorg, ${count} ${count === 1 ? 'artikel' : 'artiklar'}`}
+                    className="flex h-9 w-9 items-center justify-center rounded-full transition-colors duration-300"
+                    style={{ background: 'rgba(255,255,255,0.12)', color: 'var(--color-gold)' }}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                      <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+                      <path d="M3 6h18" />
+                      <path d="M16 10a4 4 0 0 1-8 0" />
+                    </svg>
+                  </Link>
+
+                  {/* Re-keyed on the number so every change replays the spring —
+                      the badge pops when you add something, which is the only
+                      feedback you get if the basket is off-screen. */}
+                  <motion.span
+                    key={count}
+                    initial={{ scale: 0.4, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ type: 'spring', stiffness: 520, damping: 24, mass: 0.7 }}
+                    aria-hidden
+                    className="pointer-events-none absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-semibold tabular-nums text-white"
+                    style={{ background: 'var(--color-gold)' }}
+                  >
+                    {count}
+                  </motion.span>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             <motion.a
               href={`tel:${siteConfig.contact.phone.replace(/[^0-9+]/g, '')}`}
               aria-label={`Ring oss på ${siteConfig.contact.phone}`}
@@ -349,6 +397,21 @@ export default function Navigation() {
                   </Link>
                 )
               })}
+
+              {ready && count > 0 && (
+                <Link
+                  href="/offert"
+                  className="flex items-center justify-between py-3 text-lg font-medium tracking-wide border-b border-white/[0.08] text-white/75"
+                >
+                  Offertkorg
+                  <span
+                    className="flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] font-semibold tabular-nums text-white"
+                    style={{ background: 'var(--color-gold)' }}
+                  >
+                    {count}
+                  </span>
+                </Link>
+              )}
 
               <a
                 href={`tel:${siteConfig.contact.phone.replace(/[^0-9+]/g, '')}`}

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Suspense } from 'react'
-import { getSiteSettings } from '@/sanity/queries'
+import { getKontaktPage, getSiteSettings } from '@/sanity/queries'
+import { text } from '@/sanity/fallback'
 import AnimatedSection from '@/components/AnimatedSection'
 import ContactForm from '@/components/ContactForm'
 import PageTransition from '@/components/PageTransition'
@@ -13,8 +14,23 @@ export const metadata: Metadata = {
   description: `Kontakta ${siteConfig.legalName} — marinelektriker i Göteborg och Öckerö. Ring, mejla eller besök oss på Hälsö.`,
 }
 
+// Editable in Sanity under "Kontakt". These render until someone fills the
+// fields in — the page has to stand up with no Sanity project configured.
+const defaults = {
+  pageLabel: 'Hör av dig',
+  pageTitle: 'Kontakt',
+  pageSubtitle:
+    'Ring, mejla eller skicka ett meddelande här. Beskriv gärna båten eller bilen och vad som krånglar — då kan vi ge dig ett rakare svar direkt.',
+  contactInfoTitle: 'Uppgifter',
+  openingHoursTitle: 'Öppettider',
+  freeConsultationTitle: 'Pris innan vi börjar',
+  freeConsultationText:
+    'Du får alltid en bedömning och ett pris innan vi sätter igång. Är felet inte värt att laga säger vi det direkt.',
+  formTitle: 'Skicka ett meddelande',
+} as const
+
 export default async function ContactPage() {
-  const sanitySettings = await getSiteSettings()
+  const [sanitySettings, page] = await Promise.all([getSiteSettings(), getKontaktPage()])
 
   // Sanity wins where it has a value; config/site.ts is the fallback so the
   // page still shows real details before the CMS is populated.
@@ -68,11 +84,10 @@ export default async function ContactPage() {
       <div className="pt-32 pb-16" style={{ background: 'var(--color-surface)' }}>
         <div className="container mx-auto px-6 max-w-container">
           <AnimatedSection>
-            <p className="section-label mb-3">Hör av dig</p>
-            <h1 className="section-title mb-5">Kontakt</h1>
+            <p className="section-label mb-3">{text(page?.pageLabel, defaults.pageLabel)}</p>
+            <h1 className="section-title mb-5">{text(page?.pageTitle, defaults.pageTitle)}</h1>
             <p className="section-subtitle">
-              Ring, mejla eller skicka ett meddelande här. Beskriv gärna båten eller bilen
-              och vad som krånglar — då kan vi ge dig ett rakare svar direkt.
+              {text(page?.pageSubtitle, defaults.pageSubtitle)}
             </p>
           </AnimatedSection>
         </div>
@@ -84,7 +99,9 @@ export default async function ContactPage() {
             {/* Contact info */}
             <AnimatedSection direction="left" className="lg:col-span-2 flex flex-col gap-8">
               <div>
-                <h2 className="font-heading text-2xl font-semibold mb-6">Uppgifter</h2>
+                <h2 className="font-heading text-2xl font-semibold mb-6">
+                  {text(page?.contactInfoTitle, defaults.contactInfoTitle)}
+                </h2>
 
                 {contactItems.length > 0 ? (
                   <div className="space-y-5">
@@ -125,7 +142,9 @@ export default async function ContactPage() {
 
               {settings?.openingHours && (
                 <div>
-                  <h3 className="font-heading text-lg font-semibold mb-3">Öppettider</h3>
+                  <h3 className="font-heading text-lg font-semibold mb-3">
+                    {text(page?.openingHoursTitle, defaults.openingHoursTitle)}
+                  </h3>
                   <p className="text-sm leading-loose whitespace-pre-line" style={{ color: 'var(--color-text-muted)' }}>
                     {settings.openingHours}
                   </p>
@@ -133,17 +152,20 @@ export default async function ContactPage() {
               )}
 
               <div className="p-5 rounded-lg border" style={{ borderColor: 'var(--color-border)' }}>
-                <p className="font-heading text-base font-semibold mb-2">Pris innan vi börjar</p>
+                <p className="font-heading text-base font-semibold mb-2">
+                  {text(page?.freeConsultationTitle, defaults.freeConsultationTitle)}
+                </p>
                 <p className="text-sm leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
-                  Du får alltid en bedömning och ett pris innan vi sätter igång. Är felet inte värt
-                  att laga säger vi det direkt.
+                  {text(page?.freeConsultationText, defaults.freeConsultationText)}
                 </p>
               </div>
             </AnimatedSection>
 
             {/* Form */}
             <AnimatedSection direction="right" className="lg:col-span-3">
-              <h2 className="font-heading text-2xl font-semibold mb-6">Skicka ett meddelande</h2>
+              <h2 className="font-heading text-2xl font-semibold mb-6">
+                {text(page?.formTitle, defaults.formTitle)}
+              </h2>
               {/* ContactForm reads ?amne= to prefill the subject, so it needs a
                   Suspense boundary to keep this page statically rendered. */}
               <Suspense fallback={<div className="h-[520px]" />}>

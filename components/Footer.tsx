@@ -4,7 +4,16 @@ import { siteConfig } from '@/config/site'
 
 interface FooterProps {
   settings?: SiteSettings | null
+  /**
+   * The paragraph under the logotype. Fed the landing page's hero subtitle by
+   * the layout, so the sentence the customer edits once in "Startsida" is the
+   * same one that appears at the bottom of every page.
+   */
+  blurb?: string
 }
+
+const defaultBlurb =
+  'Marinelektriker i Göteborg och Öckerö. Felsökning, uppgradering och nyinstallation av el ombord — i båt, husbil och campervan.'
 
 const defaults: SiteSettings = {
   phone: siteConfig.contact.phone,
@@ -16,7 +25,7 @@ const defaults: SiteSettings = {
   orgNumber: siteConfig.company.orgNumber,
 }
 
-export default function Footer({ settings }: FooterProps) {
+export default function Footer({ settings, blurb }: FooterProps) {
   const s = { ...defaults, ...Object.fromEntries(Object.entries(settings ?? {}).filter(([, v]) => v)) }
   const year = new Date().getFullYear()
 
@@ -36,8 +45,7 @@ export default function Footer({ settings }: FooterProps) {
               Marinelektronik
             </p>
             <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.65)' }}>
-              Marinelektriker i Göteborg och Öckerö. Felsökning, uppgradering och
-              nyinstallation av el ombord — i båt, husbil och campervan.
+              {blurb?.trim() || defaultBlurb}
             </p>
           </div>
 
@@ -47,6 +55,7 @@ export default function Footer({ settings }: FooterProps) {
             <ul className="space-y-2.5">
               {[
                 { href: '/tjanster', label: 'Tjänster' },
+                { href: '/produkter', label: 'Produkter' },
                 { href: '/om-oss', label: 'Om oss' },
                 { href: '/kontakt', label: 'Kontakt' },
               ].map((link) => (

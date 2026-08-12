@@ -1,5 +1,16 @@
 import { client, isSanityConfigured } from './client'
-import type { Product, Category, Service, Brand, HomePage, AboutPage, KontaktPage, SiteSettings } from '@/types/sanity'
+import type {
+  Product,
+  Category,
+  Service,
+  Brand,
+  HomePage,
+  AboutPage,
+  KontaktPage,
+  ProductsPage,
+  TjansterPage,
+  SiteSettings,
+} from '@/types/sanity'
 
 const opts60 = { next: { revalidate: 60 } }
 const opts300 = { next: { revalidate: 300 } }
@@ -77,6 +88,25 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
   )
 }
 
+/**
+ * The row under a product detail page. Same category first, then anything else
+ * to top the row up — a one-product category would otherwise render a heading
+ * over an empty strip. The product being viewed is always excluded.
+ */
+export async function getRelatedProducts(
+  slug: string,
+  categorySlug: string | null
+): Promise<Product[]> {
+  if (!isSanityConfigured) return []
+  return client.fetch(
+    `*[_type == "product" && slug.current != $slug]
+      | order(select(category->slug.current == $categorySlug => 0, 1) asc, featured desc, name asc)
+      [0...4] { ${productFields} }`,
+    { slug, categorySlug },
+    opts60
+  )
+}
+
 export async function getAllProductSlugs(): Promise<{ slug: string }[]> {
   if (!isSanityConfigured) return []
   return client.fetch(`*[_type == "product"] { "slug": slug.current }`, {}, opts60)
@@ -118,13 +148,43 @@ export async function getAllBrands(): Promise<Brand[]> {
 export async function getHomePage(): Promise<HomePage | null> {
   if (!isSanityConfigured) return null
   return client.fetch(
+    // Projected field by field rather than fetched whole, so a schema change
+    // can't quietly start shipping unused document weight to every visitor.
     `*[_type == "homePage"][0] {
+      heroBadge,
       heroTitle,
+      heroTitleAccent,
       heroSubtitle,
       "heroImageUrl": heroImage.asset->url,
+      heroCtaLabel,
+      heroPhoneLabel,
+      trustStats[]{ value, label },
+      productsLabel,
+      productsTitle,
+      productsCtaLabel,
+      manifestoBefore,
+      manifestoAccent,
+      manifestoAfter,
+      servicesLabel,
+      servicesTitle,
+      servicesCtaLabel,
+      whyLabel,
+      whyTitle,
+      whyItems[]{ title, text },
+      aboutLabel,
       aboutTitle,
       aboutText,
-      "aboutImageUrl": aboutImage.asset->url
+      "aboutImageUrl": aboutImage.asset->url,
+      aboutStats[]{ value, label },
+      aboutCtaLabel,
+      reviewsLabel,
+      ctaLabel,
+      ctaTitle,
+      ctaTitleAccent,
+      ctaText,
+      ctaPrimaryLabel,
+      ctaSecondaryLabel,
+      ctaPhoneLabel
     }`,
     {},
     opts60
@@ -135,13 +195,23 @@ export async function getAboutPage(): Promise<AboutPage | null> {
   if (!isSanityConfigured) return null
   return client.fetch(
     `*[_type == "aboutPage"][0] {
+      pageLabel,
+      pageTitle,
       pageSubtitle,
       "mainImageUrl": mainImage.asset->url,
+      storyLabel,
       storyText,
-      stats,
-      values,
+      storyCtaLabel,
+      stats[]{ value, label },
+      valuesLabel,
+      valuesTitle,
+      values[]{ title, text },
+      instagramLabel,
+      instagramTitle,
       ctaTitle,
-      ctaText
+      ctaText,
+      ctaPrimaryLabel,
+      ctaSecondaryLabel
     }`,
     {},
     opts300
@@ -150,7 +220,55 @@ export async function getAboutPage(): Promise<AboutPage | null> {
 
 export async function getKontaktPage(): Promise<KontaktPage | null> {
   if (!isSanityConfigured) return null
-  return client.fetch(`*[_type == "kontaktPage"][0]`, {}, opts300)
+  return client.fetch(
+    `*[_type == "kontaktPage"][0] {
+      pageLabel,
+      pageTitle,
+      pageSubtitle,
+      contactInfoTitle,
+      openingHoursTitle,
+      freeConsultationTitle,
+      freeConsultationText,
+      formTitle
+    }`,
+    {},
+    opts300
+  )
+}
+
+export async function getTjansterPage(): Promise<TjansterPage | null> {
+  if (!isSanityConfigured) return null
+  return client.fetch(
+    `*[_type == "tjansterPage"][0] {
+      pageLabel,
+      pageTitle,
+      pageSubtitle,
+      serviceCtaPrefix,
+      ctaLabel,
+      ctaTitle,
+      ctaText,
+      ctaButtonLabel
+    }`,
+    {},
+    opts300
+  )
+}
+
+export async function getProductsPage(): Promise<ProductsPage | null> {
+  if (!isSanityConfigured) return null
+  return client.fetch(
+    `*[_type == "productsPage"][0] {
+      pageLabel,
+      pageTitle,
+      pageSubtitle,
+      ctaLabel,
+      ctaTitle,
+      ctaText,
+      ctaButtonLabel
+    }`,
+    {},
+    opts300
+  )
 }
 
 export async function getSiteSettings(): Promise<SiteSettings | null> {

@@ -1,6 +1,12 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import { getAllServices, getHomePage, getLandingProducts } from '@/sanity/queries'
+import {
+  getAllServices,
+  getHomePage,
+  getLandingProducts,
+  getSiteSettings,
+} from '@/sanity/queries'
+import { list, text } from '@/sanity/fallback'
 import AnimatedSection, { StaggerContainer, StaggerItem } from '@/components/AnimatedSection'
 import ProductCard from '@/components/ProductCard'
 import ServiceTiles from '@/components/ServiceTiles'
@@ -49,34 +55,93 @@ const fallbackSegments = [
   },
 ]
 
-const features = [
-  {
-    label: 'Rätt utfört från början',
-    text: 'El ombord är inte platsen för genvägar. Vi drar, märker och dokumenterar installationen så att den går att felsöka och bygga vidare på — även av någon annan, om tio år.',
-  },
-  {
-    label: 'Vi kommer till båten',
-    text: 'Det mesta löser vi där båten ligger. Slipper du transportera fram och tillbaka blir jobbet både snabbare och billigare för dig.',
-  },
-  {
-    label: 'Komponenter vi står bakom',
-    text: 'Vi arbetar med marknadsledande marina varumärken — Victron, Mastervolt, Garmin, Raymarine och fler. Delar som går att få tag på och serva även i framtiden.',
-  },
-]
+// Every string and image on this page is editable in Sanity under "Startsida".
+// This object is what renders until someone fills a field in — the page must
+// stand up with no Sanity project configured at all, so nothing below may
+// depend on the CMS having an answer.
+const defaults = {
+  heroBadge: 'Göteborg · Öckerö · Hälsö',
+  heroTitle: 'Vi löser elen',
+  heroTitleAccent: 'ombord',
+  heroSubtitle:
+    'Felsökning, uppgradering och nyinstallation av el och elektronik i din fritidsbåt, husbil eller campervan.',
+  heroImageUrl: '/images/hero-img.jpg',
+  heroCtaLabel: 'Se våra tjänster',
+  heroPhoneLabel: 'Ring',
 
-const stats = [
-  { value: '25+', label: 'Varumärken vi arbetar med' },
-  { value: '4', label: 'Specialområden' },
-  { value: 'Hälsö', label: 'Verkstad i skärgården' },
-  { value: 'F-skatt', label: 'Godkänt bolag' },
-]
+  trustStats: [
+    { value: '25+', label: 'Varumärken vi arbetar med' },
+    { value: '4', label: 'Specialområden' },
+    { value: 'Hälsö', label: 'Verkstad i skärgården' },
+    { value: 'F-skatt', label: 'Godkänt bolag' },
+  ],
+
+  productsLabel: 'Sortiment',
+  productsTitle: 'Produkter vi säljer',
+  productsCtaLabel: 'Alla produkter',
+
+  manifestoBefore: 'Elen ombord ska bara',
+  manifestoAccent: 'fungera',
+  manifestoAfter: '— oavsett väder och oavsett hur långt hemifrån du är.',
+
+  servicesLabel: 'Vad vi gör',
+  servicesTitle: 'Tjänster vi erbjuder',
+  servicesCtaLabel: 'Alla tjänster',
+
+  whyLabel: 'Vårt arbetssätt',
+  whyTitle: 'Varför Navolt',
+  whyItems: [
+    {
+      title: 'Rätt utfört från början',
+      text: 'El ombord är inte platsen för genvägar. Vi drar, märker och dokumenterar installationen så att den går att felsöka och bygga vidare på — även av någon annan, om tio år.',
+    },
+    {
+      title: 'Vi kommer till båten',
+      text: 'Det mesta löser vi där båten ligger. Slipper du transportera fram och tillbaka blir jobbet både snabbare och billigare för dig.',
+    },
+    {
+      title: 'Komponenter vi står bakom',
+      text: 'Vi arbetar med marknadsledande marina varumärken — Victron, Mastervolt, Garmin, Raymarine och fler. Delar som går att få tag på och serva även i framtiden.',
+    },
+  ],
+
+  aboutLabel: 'Om oss',
+  aboutTitle: 'Marinelektriker med skärgården som arbetsplats',
+  aboutText:
+    'Navolt sitter på Hälsö i Göteborgs norra skärgård och arbetar med el och elektronik ombord — från en trasig landströmsladdare till ett komplett elsystem i en nybyggd campervan. Vi tar oss an både det lilla felet som stoppat semestern och de större installationerna som kräver planering.',
+  aboutImageUrl: '/images/startpage-2.jpg',
+  aboutStats: [
+    { value: 'Hälsö', label: 'Bas' },
+    { value: 'Göteborg', label: 'Upptagningsområde' },
+    { value: 'F-skatt', label: 'Godkänt' },
+  ],
+  aboutCtaLabel: 'Mer om Navolt',
+
+  reviewsLabel: 'Omdömen',
+
+  ctaLabel: 'Hör av dig',
+  ctaTitle: 'Berätta vad som',
+  ctaTitleAccent: 'krånglar',
+  ctaText:
+    'Beskriv problemet eller projektet så återkommer vi med en bedömning — och ett pris innan vi sätter igång.',
+  ctaPrimaryLabel: 'Kontakta oss',
+  ctaSecondaryLabel: 'Se våra tjänster',
+  ctaPhoneLabel: 'Ring oss direkt',
+} as const
 
 export default async function HomePage() {
-  const [services, homePage, products] = await Promise.all([
+  const [services, homePage, products, settings] = await Promise.all([
     getAllServices(),
     getHomePage(),
     getLandingProducts(),
+    getSiteSettings(),
   ])
+
+  // The number appears twice on this page. It lives in Webbplatsinställningar
+  // like it does in the footer and on /kontakt — editing it in one place has to
+  // change it everywhere, or the site starts contradicting itself.
+  const phone = text(settings?.phone, siteConfig.contact.phone)
+  const phoneHref = `tel:${phone.replace(/[^0-9+]/g, '')}`
 
   const segments =
     services.length > 0
@@ -89,22 +154,22 @@ export default async function HomePage() {
         }))
       : fallbackSegments
 
-  const heroTitle = homePage?.heroTitle
-  const heroSubtitle =
-    homePage?.heroSubtitle ||
-    'Felsökning, uppgradering och nyinstallation av el och elektronik i din fritidsbåt, husbil eller campervan.'
+  const heroTitleAccent = text(homePage?.heroTitleAccent, defaults.heroTitleAccent)
+  const manifestoAccent = text(homePage?.manifestoAccent, defaults.manifestoAccent)
+  const ctaTitleAccent = text(homePage?.ctaTitleAccent, defaults.ctaTitleAccent)
 
-  const aboutTitle = homePage?.aboutTitle || 'Marinelektriker med skärgården som arbetsplats'
-  const aboutText =
-    homePage?.aboutText ||
-    'Navolt sitter på Hälsö i Göteborgs norra skärgård och arbetar med el och elektronik ombord — från en trasig landströmsladdare till ett komplett elsystem i en nybyggd campervan. Vi tar oss an både det lilla felet som stoppat semestern och de större installationerna som kräver planering.'
+  const trustStats = list(homePage?.trustStats, defaults.trustStats)
+  const aboutStats = list(homePage?.aboutStats, defaults.aboutStats)
+  // A row with no heading has nothing to number, so it's dropped rather than
+  // rendered as a bare paragraph beside an orphaned "04".
+  const whyItems = list(homePage?.whyItems, defaults.whyItems).filter((item) => item.title)
 
   return (
     <>
       {/* ── Hero ─────────────────────────────────────────────── */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
         <Image
-          src={homePage?.heroImageUrl || '/images/hero-img.jpg'}
+          src={text(homePage?.heroImageUrl, defaults.heroImageUrl)}
           alt="Marinelektronik och elinstallation i båt — Navolt i Göteborg och Öckerö"
           fill
           className="object-cover"
@@ -146,7 +211,7 @@ export default async function HomePage() {
                 className="w-1.5 h-1.5 rounded-full"
                 style={{ background: 'var(--color-gold)' }}
               />
-              Göteborg · Öckerö · Hälsö
+              {text(homePage?.heroBadge, defaults.heroBadge)}
             </div>
           </AnimatedSection>
 
@@ -159,10 +224,13 @@ export default async function HomePage() {
                 letterSpacing: '-0.02em',
               }}
             >
-              {heroTitle || (
+              {text(homePage?.heroTitle, defaults.heroTitle)}
+              {heroTitleAccent && (
                 <>
-                  Vi löser elen<br />
-                  <em style={{ color: 'var(--color-gold)', fontStyle: 'italic' }}>ombord</em>
+                  <br />
+                  <em style={{ color: 'var(--color-gold)', fontStyle: 'italic' }}>
+                    {heroTitleAccent}
+                  </em>
                 </>
               )}
             </h1>
@@ -173,21 +241,22 @@ export default async function HomePage() {
               className="text-lg md:text-xl leading-relaxed mb-12 max-w-2xl mx-auto"
               style={{ color: 'rgba(255,255,255,0.66)' }}
             >
-              {heroSubtitle}
+              {text(homePage?.heroSubtitle, defaults.heroSubtitle)}
             </p>
           </AnimatedSection>
 
           <AnimatedSection delay={0.56}>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
               <Link href="/tjanster" className="btn-gold">
-                Se våra tjänster
+                {text(homePage?.heroCtaLabel, defaults.heroCtaLabel)}
               </Link>
               <a
-                href={`tel:${siteConfig.contact.phone.replace(/[^0-9+]/g, '')}`}
+                href={phoneHref}
                 className="group inline-flex items-center gap-2 text-sm font-medium text-white"
               >
                 <span className="border-b border-transparent pb-0.5 transition-colors duration-200 group-hover:border-white/60">
-                  Ring {siteConfig.contact.phone}
+                  {text(homePage?.heroPhoneLabel, defaults.heroPhoneLabel)}{' '}
+                  {phone}
                 </span>
                 <svg
                   width="16"
@@ -212,8 +281,8 @@ export default async function HomePage() {
       <section style={{ background: 'var(--color-primary)' }}>
         <div className="container mx-auto px-6 py-10" style={{ maxWidth: 'var(--container-max)' }}>
           <StaggerContainer className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {stats.map((s) => (
-              <StaggerItem key={s.label}>
+            {trustStats.map((s, i) => (
+              <StaggerItem key={`${s.label}-${i}`}>
                 <div className="text-center">
                   <p
                     className="font-heading font-semibold mb-1"
@@ -243,11 +312,15 @@ export default async function HomePage() {
         <section className="section">
           <div className="container mx-auto px-6" style={{ maxWidth: 'var(--container-max)' }}>
             <AnimatedSection className="mb-12">
-              <p className="section-label mb-3">Sortiment</p>
+              <p className="section-label mb-3">
+                {text(homePage?.productsLabel, defaults.productsLabel)}
+              </p>
               <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-                <h2 className="section-title">Produkter vi säljer</h2>
+                <h2 className="section-title">
+                  {text(homePage?.productsTitle, defaults.productsTitle)}
+                </h2>
                 <Link href="/produkter" className="btn-outline shrink-0">
-                  Alla produkter
+                  {text(homePage?.productsCtaLabel, defaults.productsCtaLabel)}
                 </Link>
               </div>
             </AnimatedSection>
@@ -263,27 +336,9 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* ── Segments ──────────────────────────────────────────── */}
-      <section className="section">
-        <div className="container mx-auto px-6" style={{ maxWidth: 'var(--container-max)' }}>
-          <AnimatedSection className="mb-12">
-            <p className="section-label mb-3">Vad vi gör</p>
-            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-              <h2 className="section-title">Tjänster vi erbjuder</h2>
-              <Link href="/tjanster" className="btn-outline shrink-0">
-                Alla tjänster
-              </Link>
-            </div>
-          </AnimatedSection>
-
-          {/* Editorial photo tiles rather than cards — the card shape is
-              reserved for products, which carry price and stock. See
-              components/ServiceTiles.tsx. */}
-          <ServiceTiles segments={segments} />
-        </div>
-      </section>
-
       {/* ── Manifesto ─────────────────────────────────────────── */}
+      {/* Sits between the products and the services: the claim lands first,
+          then the tiles below show what backs it up. */}
       <section
         className="py-20"
         style={{
@@ -303,11 +358,37 @@ export default async function HomePage() {
                 letterSpacing: '-0.02em',
               }}
             >
-              Elen ombord ska bara{' '}
-              <em style={{ color: 'var(--color-gold)', fontStyle: 'italic' }}>fungera</em> — oavsett
-              väder och oavsett hur långt hemifrån du är.
+              {text(homePage?.manifestoBefore, defaults.manifestoBefore)}{' '}
+              <em style={{ color: 'var(--color-gold)', fontStyle: 'italic' }}>
+                {manifestoAccent}
+              </em>{' '}
+              {text(homePage?.manifestoAfter, defaults.manifestoAfter)}
             </p>
           </AnimatedSection>
+        </div>
+      </section>
+
+      {/* ── Segments ──────────────────────────────────────────── */}
+      <section className="section">
+        <div className="container mx-auto px-6" style={{ maxWidth: 'var(--container-max)' }}>
+          <AnimatedSection className="mb-12">
+            <p className="section-label mb-3">
+              {text(homePage?.servicesLabel, defaults.servicesLabel)}
+            </p>
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+              <h2 className="section-title">
+                {text(homePage?.servicesTitle, defaults.servicesTitle)}
+              </h2>
+              <Link href="/tjanster" className="btn-outline shrink-0">
+                {text(homePage?.servicesCtaLabel, defaults.servicesCtaLabel)}
+              </Link>
+            </div>
+          </AnimatedSection>
+
+          {/* Editorial photo tiles rather than cards — the card shape is
+              reserved for products, which carry price and stock. See
+              components/ServiceTiles.tsx. */}
+          <ServiceTiles segments={segments} />
         </div>
       </section>
 
@@ -319,13 +400,13 @@ export default async function HomePage() {
             style={{ borderBottom: '2px solid var(--color-primary)' }}
           >
             <div>
-              <p className="section-label mb-2">Vårt arbetssätt</p>
-              <h2 className="section-title">Varför Navolt</h2>
+              <p className="section-label mb-2">{text(homePage?.whyLabel, defaults.whyLabel)}</p>
+              <h2 className="section-title">{text(homePage?.whyTitle, defaults.whyTitle)}</h2>
             </div>
           </div>
 
-          {features.map((f, i) => (
-            <AnimatedSection key={f.label} delay={i * 0.1}>
+          {whyItems.map((f, i) => (
+            <AnimatedSection key={`${f.title}-${i}`} delay={i * 0.1}>
               <div className="py-10 md:py-12" style={{ borderBottom: '1px solid var(--color-border)' }}>
                 <div
                   className="flex flex-col md:grid md:items-start md:gap-10"
@@ -345,7 +426,7 @@ export default async function HomePage() {
                     className="font-heading font-semibold mb-3 md:mb-0 md:pt-1"
                     style={{ fontSize: 'var(--text-2xl)' }}
                   >
-                    {f.label}
+                    {f.title}
                   </h3>
                   <p className="leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
                     {f.text}
@@ -367,7 +448,7 @@ export default async function HomePage() {
                 style={{ background: 'var(--color-primary)' }}
               >
                 <Image
-                  src={homePage?.aboutImageUrl || '/images/startpage-2.jpg'}
+                  src={text(homePage?.aboutImageUrl, defaults.aboutImageUrl)}
                   alt={`Om ${siteConfig.legalName}`}
                   fill
                   className="object-cover"
@@ -377,20 +458,22 @@ export default async function HomePage() {
             </AnimatedSection>
 
             <AnimatedSection direction="right">
-              <p className="section-label mb-4">Om oss</p>
-              <h2 className="section-title mb-6">{aboutTitle}</h2>
-              <p className="section-subtitle mb-10">{aboutText}</p>
+              <p className="section-label mb-4">
+                {text(homePage?.aboutLabel, defaults.aboutLabel)}
+              </p>
+              <h2 className="section-title mb-6">
+                {text(homePage?.aboutTitle, defaults.aboutTitle)}
+              </h2>
+              <p className="section-subtitle mb-10">
+                {text(homePage?.aboutText, defaults.aboutText)}
+              </p>
 
               {/* Flex, not grid-cols-3 — the labels differ too much in length
                   for equal columns, which left ragged gaps after the short
                   ones. Sizing to content keeps the spacing between items even. */}
               <div className="flex flex-wrap gap-x-12 gap-y-6 mb-10">
-                {[
-                  { value: 'Hälsö', label: 'Bas' },
-                  { value: 'Göteborg', label: 'Upptagningsområde' },
-                  { value: 'F-skatt', label: 'Godkänt' },
-                ].map((s) => (
-                  <div key={s.label}>
+                {aboutStats.map((s, i) => (
+                  <div key={`${s.label}-${i}`}>
                     <p
                       className="font-heading font-semibold mb-0.5"
                       style={{ fontSize: 'var(--text-xl)', color: 'var(--color-primary)' }}
@@ -408,7 +491,7 @@ export default async function HomePage() {
               </div>
 
               <Link href="/om-oss" className="btn-outline">
-                Mer om Navolt
+                {text(homePage?.aboutCtaLabel, defaults.aboutCtaLabel)}
               </Link>
             </AnimatedSection>
           </div>
@@ -421,7 +504,9 @@ export default async function HomePage() {
         <section className="section" style={{ borderTop: '1px solid var(--color-border)' }}>
           <div className="container mx-auto px-6 max-w-container">
             <AnimatedSection className="mb-10 text-center">
-              <p className="section-label">Omdömen</p>
+              <p className="section-label">
+                {text(homePage?.reviewsLabel, defaults.reviewsLabel)}
+              </p>
             </AnimatedSection>
             <AnimatedSection delay={0.1}>
               <ElfsightWidget appId={siteConfig.elfsight.reviews} />
@@ -453,7 +538,7 @@ export default async function HomePage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
             <AnimatedSection direction="left">
               <p className="section-label mb-4" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                Hör av dig
+                {text(homePage?.ctaLabel, defaults.ctaLabel)}
               </p>
               <h2
                 className="font-heading font-semibold"
@@ -464,32 +549,33 @@ export default async function HomePage() {
                   letterSpacing: '-0.02em',
                 }}
               >
-                Berätta vad som{' '}
-                <em style={{ color: 'var(--color-gold)', fontStyle: 'italic' }}>krånglar</em>
+                {text(homePage?.ctaTitle, defaults.ctaTitle)}{' '}
+                <em style={{ color: 'var(--color-gold)', fontStyle: 'italic' }}>
+                  {ctaTitleAccent}
+                </em>
               </h2>
               <p
                 className="text-lg mt-6 max-w-md leading-relaxed"
                 style={{ color: 'rgba(255,255,255,0.58)' }}
               >
-                Beskriv problemet eller projektet så återkommer vi med en bedömning — och ett pris
-                innan vi sätter igång.
+                {text(homePage?.ctaText, defaults.ctaText)}
               </p>
             </AnimatedSection>
 
             <AnimatedSection direction="right" className="w-full lg:max-w-sm lg:justify-self-end">
               <div className="flex flex-col gap-4">
                 <Link href="/kontakt" className="btn-gold w-full">
-                  Kontakta oss
+                  {text(homePage?.ctaPrimaryLabel, defaults.ctaPrimaryLabel)}
                 </Link>
                 <Link
                   href="/tjanster"
                   className="btn-outline w-full !border-white/25 !text-white hover:!bg-white/10 hover:!text-white hover:!border-white/25"
                 >
-                  Se våra tjänster
+                  {text(homePage?.ctaSecondaryLabel, defaults.ctaSecondaryLabel)}
                 </Link>
 
                 <a
-                  href={`tel:${siteConfig.contact.phone.replace(/[^0-9+]/g, '')}`}
+                  href={phoneHref}
                   className="group flex items-center gap-3 mt-3 pt-5"
                   style={{ borderTop: '1px solid rgba(255,255,255,0.12)' }}
                 >
@@ -513,13 +599,13 @@ export default async function HomePage() {
                       className="block text-xs tracking-[0.12em] uppercase"
                       style={{ color: 'rgba(255,255,255,0.42)' }}
                     >
-                      Ring oss direkt
+                      {text(homePage?.ctaPhoneLabel, defaults.ctaPhoneLabel)}
                     </span>
                     <span
                       className="block font-heading font-semibold transition-colors duration-200 group-hover:text-white"
                       style={{ fontSize: 'var(--text-lg)', color: 'rgba(255,255,255,0.9)' }}
                     >
-                      {siteConfig.contact.phone}
+                      {phone}
                     </span>
                   </span>
                 </a>

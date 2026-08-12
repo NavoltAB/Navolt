@@ -1,72 +1,181 @@
-import { defineField, defineType } from 'sanity'
+import { defineArrayMember, defineField, defineType } from 'sanity'
 
+/**
+ * Every piece of copy and every image on /om-oss.
+ *
+ * Grouped and ordered to match the page top to bottom. Anything left blank
+ * falls back to the copy hardcoded in `app/(site)/om-oss/page.tsx`, so the page
+ * never renders half-empty. Link targets are fixed (/kontakt, /tjanster) —
+ * labels are editable, paths aren't.
+ *
+ * The brand logos further down the page are separate documents, under
+ * Varumärken in the menu.
+ */
 export const aboutPageSchema = defineType({
   name: 'aboutPage',
   title: 'Om oss',
   type: 'document',
+  groups: [
+    { name: 'huvud', title: 'Sidhuvud', default: true },
+    { name: 'bakgrund', title: 'Bakgrund' },
+    { name: 'stats', title: 'Sifferrad' },
+    { name: 'varderingar', title: 'Så jobbar vi' },
+    { name: 'instagram', title: 'Instagram' },
+    { name: 'cta', title: 'Avslutande CTA' },
+  ],
   fields: [
+    // ── Sidhuvud ────────────────────────────────────────────
+    defineField({
+      name: 'pageLabel',
+      title: 'Sidhuvud — Etikett',
+      type: 'string',
+      group: 'huvud',
+      description: 'Liten text ovanför rubriken, t.ex. "Vilka vi är".',
+    }),
+    defineField({
+      name: 'pageTitle',
+      title: 'Sidhuvud — Rubrik',
+      type: 'string',
+      group: 'huvud',
+    }),
     defineField({
       name: 'pageSubtitle',
       title: 'Sidhuvud — Underrubrik',
       type: 'text',
       rows: 2,
+      group: 'huvud',
     }),
+
+    // ── Bakgrund ────────────────────────────────────────────
     defineField({
       name: 'mainImage',
-      title: 'Bild',
+      title: 'Bakgrund — Bild',
       type: 'image',
       options: { hotspot: true },
+      group: 'bakgrund',
+      description: 'Den breda bilden överst. Beskärs till 21:9.',
+    }),
+    defineField({
+      name: 'storyLabel',
+      title: 'Bakgrund — Etikett',
+      type: 'string',
+      group: 'bakgrund',
+      description: 'Texten i vänsterspalten bredvid brödtexten.',
     }),
     defineField({
       name: 'storyText',
-      title: 'Historia — Text',
+      title: 'Bakgrund — Text',
       type: 'text',
-      rows: 8,
-      description: 'Separera stycken med en tom rad',
+      rows: 12,
+      group: 'bakgrund',
+      description: 'Separera stycken med en tom rad.',
     }),
     defineField({
+      name: 'storyCtaLabel',
+      title: 'Bakgrund — Knapptext',
+      type: 'string',
+      group: 'bakgrund',
+      description: 'Knappen leder till /kontakt.',
+    }),
+
+    // ── Sifferrad ───────────────────────────────────────────
+    defineField({
       name: 'stats',
-      title: 'Statistik',
+      title: 'Sifferrad',
       type: 'array',
+      group: 'stats',
+      description: 'Den mörkblå raden. Fyra poster ligger snyggast — fler radbryts.',
       of: [
-        {
+        defineArrayMember({
           type: 'object',
           fields: [
             defineField({ name: 'value', title: 'Värde', type: 'string' }),
             defineField({ name: 'label', title: 'Etikett', type: 'string' }),
           ],
-          preview: {
-            select: { title: 'value', subtitle: 'label' },
-          },
-        },
+          preview: { select: { title: 'value', subtitle: 'label' } },
+        }),
       ],
+    }),
+
+    // ── Så jobbar vi ────────────────────────────────────────
+    defineField({
+      name: 'valuesLabel',
+      title: 'Så jobbar vi — Etikett',
+      type: 'string',
+      group: 'varderingar',
+    }),
+    defineField({
+      name: 'valuesTitle',
+      title: 'Så jobbar vi — Rubrik',
+      type: 'string',
+      group: 'varderingar',
     }),
     defineField({
       name: 'values',
-      title: 'Värderingar',
+      title: 'Så jobbar vi — Punkter',
       type: 'array',
+      group: 'varderingar',
+      description:
+        'Lägg till, ta bort och dra för att ändra ordning. Numreringen (01, 02 …) sätts automatiskt. Visas i två spalter, så jämnt antal ser bäst ut.',
       of: [
-        {
+        defineArrayMember({
           type: 'object',
           fields: [
-            defineField({ name: 'title', title: 'Rubrik', type: 'string' }),
-            defineField({ name: 'text', title: 'Text', type: 'text', rows: 3 }),
+            defineField({
+              name: 'title',
+              title: 'Rubrik',
+              type: 'string',
+              validation: (Rule) => Rule.required(),
+            }),
+            defineField({ name: 'text', title: 'Text', type: 'text', rows: 4 }),
           ],
-          preview: {
-            select: { title: 'title' },
-          },
-        },
+          preview: { select: { title: 'title', subtitle: 'text' } },
+        }),
       ],
     }),
+
+    // ── Instagram ───────────────────────────────────────────
+    defineField({
+      name: 'instagramLabel',
+      title: 'Instagram — Etikett',
+      type: 'string',
+      group: 'instagram',
+    }),
+    defineField({
+      name: 'instagramTitle',
+      title: 'Instagram — Rubrik',
+      type: 'string',
+      group: 'instagram',
+      description: 'Själva flödet hämtas från Instagram — bara rubrikerna styrs här.',
+    }),
+
+    // ── Avslutande CTA ──────────────────────────────────────
     defineField({
       name: 'ctaTitle',
       title: 'CTA — Rubrik',
       type: 'string',
+      group: 'cta',
     }),
     defineField({
       name: 'ctaText',
       title: 'CTA — Text',
+      type: 'text',
+      rows: 3,
+      group: 'cta',
+    }),
+    defineField({
+      name: 'ctaPrimaryLabel',
+      title: 'CTA — Knapptext (fylld)',
       type: 'string',
+      group: 'cta',
+      description: 'Knappen leder till /kontakt.',
+    }),
+    defineField({
+      name: 'ctaSecondaryLabel',
+      title: 'CTA — Knapptext (kontur)',
+      type: 'string',
+      group: 'cta',
+      description: 'Knappen leder till /tjanster.',
     }),
   ],
   preview: {

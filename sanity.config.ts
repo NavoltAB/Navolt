@@ -19,6 +19,15 @@ export default defineConfig({
             S.listItem()
               .title('Startsida')
               .child(S.document().schemaType('homePage').documentId('homePage')),
+            // Page-level copy, in the same order as the site navigation. The
+            // documents these pages *list* — services, products — live under
+            // the divider below.
+            S.listItem()
+              .title('Tjänstesida')
+              .child(S.document().schemaType('tjansterPage').documentId('tjansterPage')),
+            S.listItem()
+              .title('Produktsida')
+              .child(S.document().schemaType('productsPage').documentId('productsPage')),
             S.listItem()
               .title('Om oss')
               .child(S.document().schemaType('aboutPage').documentId('aboutPage')),

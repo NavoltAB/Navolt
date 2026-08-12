@@ -1,7 +1,8 @@
 import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
-import { getAllServices } from '@/sanity/queries'
+import { getAllServices, getTjansterPage } from '@/sanity/queries'
+import { text } from '@/sanity/fallback'
 import AnimatedSection from '@/components/AnimatedSection'
 import PageTransition from '@/components/PageTransition'
 import ServiceIndexRail from '@/components/ServiceIndexRail'
@@ -79,9 +80,26 @@ const defaultServices = [
   },
 ]
 
+// The page's own framing text, editable in Sanity under "Tjänstesida". The
+// services listed between these two blocks come from `service` documents —
+// see `defaultServices` above for what stands in until any exist.
+const defaults = {
+  pageLabel: 'Vad vi gör',
+  pageTitle: 'Tjänster',
+  pageSubtitle:
+    'El och elektronik ombord — i båt, husbil och campervan. Berätta vad som krånglar eller vad du vill bygga, så återkommer vi med en bedömning.',
+  serviceCtaPrefix: 'Fråga om',
+  ctaLabel: 'Osäker?',
+  ctaTitle: 'Vet du inte vad felet är?',
+  ctaText:
+    'Det är helt okej — det är ofta därför man ringer en elektriker. Beskriv symptomen så gott du kan, så hör vi av oss och reder ut resten tillsammans.',
+  ctaButtonLabel: 'Kontakta oss',
+} as const
+
 export default async function ServicesPage() {
-  const sanityServices = await getAllServices()
+  const [sanityServices, page] = await Promise.all([getAllServices(), getTjansterPage()])
   const services = sanityServices.length > 0 ? sanityServices : defaultServices
+  const serviceCtaPrefix = text(page?.serviceCtaPrefix, defaults.serviceCtaPrefix)
 
   return (
     <PageTransition>
@@ -89,11 +107,10 @@ export default async function ServicesPage() {
       <div className="pt-32 pb-16" style={{ background: 'var(--color-surface)' }}>
         <div className="container mx-auto px-6 max-w-container">
           <AnimatedSection>
-            <p className="section-label mb-3">Vad vi gör</p>
-            <h1 className="section-title mb-5">Tjänster</h1>
+            <p className="section-label mb-3">{text(page?.pageLabel, defaults.pageLabel)}</p>
+            <h1 className="section-title mb-5">{text(page?.pageTitle, defaults.pageTitle)}</h1>
             <p className="section-subtitle">
-              El och elektronik ombord — i båt, husbil och campervan. Berätta vad som krånglar
-              eller vad du vill bygga, så återkommer vi med en bedömning.
+              {text(page?.pageSubtitle, defaults.pageSubtitle)}
             </p>
           </AnimatedSection>
         </div>
@@ -184,7 +201,7 @@ export default async function ServicesPage() {
                       href={`/kontakt?amne=${encodeURIComponent(service.title)}`}
                       className="btn-outline"
                     >
-                      Fråga om {service.title.toLowerCase()}
+                      {serviceCtaPrefix} {service.title.toLowerCase()}
                     </Link>
                   </article>
                 </AnimatedSection>
@@ -198,14 +215,13 @@ export default async function ServicesPage() {
       <section className="section" style={{ background: 'var(--color-surface)' }}>
         <div className="container mx-auto px-6 max-w-container text-center">
           <AnimatedSection>
-            <p className="section-label mb-4">Osäker?</p>
-            <h2 className="section-title mb-5">Vet du inte vad felet är?</h2>
+            <p className="section-label mb-4">{text(page?.ctaLabel, defaults.ctaLabel)}</p>
+            <h2 className="section-title mb-5">{text(page?.ctaTitle, defaults.ctaTitle)}</h2>
             <p className="section-subtitle mx-auto mb-8">
-              Det är helt okej — det är ofta därför man ringer en elektriker. Beskriv symptomen
-              så gott du kan, så hör vi av oss och reder ut resten tillsammans.
+              {text(page?.ctaText, defaults.ctaText)}
             </p>
             <Link href="/kontakt" className="btn-primary">
-              Kontakta oss
+              {text(page?.ctaButtonLabel, defaults.ctaButtonLabel)}
             </Link>
           </AnimatedSection>
         </div>

@@ -65,13 +65,13 @@ before interpolating into the email HTML. Keep that escaping if you edit them.
 `components/PageTransition.tsx` wraps subpages.
 
 Server components fetch and pass down; `'use client'` is limited to Navigation,
-forms, animation wrappers and FilterBar.
+forms, animation wrappers and the product index shell.
 
 ## Current state
 
-- `/produkter` exists but is **not** in the navigation — the customer has no
-  catalogue yet. Schemas and components are ready; re-add the nav links in
-  `components/Navigation.tsx` and `components/Footer.tsx` to switch it on.
+- `/produkter` is live in the navigation (`components/Navigation.tsx` and
+  `components/Footer.tsx`). The catalogue itself is only as full as Sanity —
+  the page falls back to its in-file defaults while the dataset is empty.
 - No product detail page or cart/order flow yet — deferred until products exist.
   Port from `Apegrenen` when needed.
 - Copy marked `PLACEHOLDER COPY` awaits customer sign-off. Don't present it as

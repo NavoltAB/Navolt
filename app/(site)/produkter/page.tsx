@@ -1,15 +1,33 @@
 import type { Metadata } from 'next'
-import { getAllProducts, getAllCategories } from '@/sanity/queries'
-import ProductCard from '@/components/ProductCard'
-import AnimatedSection, { StaggerContainer, StaggerItem } from '@/components/AnimatedSection'
+import Link from 'next/link'
+import { getAllProducts, getAllCategories, getProductsPage } from '@/sanity/queries'
+import { text } from '@/sanity/fallback'
+import AnimatedSection from '@/components/AnimatedSection'
 import PageTransition from '@/components/PageTransition'
-import FilterBar from './FilterBar'
+import ProductsHero from './ProductsHero'
+import ProductsShell from './ProductsShell'
 
 export const revalidate = 60
 
+// Editable in Sanity under "Produktsida". These render until someone fills the
+// fields in — the page has to stand up with no Sanity project configured.
+// PLACEHOLDER COPY, awaiting the customer's own description of the catalogue.
+const defaults = {
+  pageLabel: 'Sortiment',
+  pageTitle: 'Produkter',
+  pageSubtitle:
+    'Delar och komponenter vi arbetar med ombord — i båt, husbil och campervan. Söker du något som inte ligger uppe här, hör av dig så tittar vi på det.',
+  ctaLabel: 'Hittar du inte rätt?',
+  ctaTitle: 'Vi tar fram delen åt dig',
+  ctaText:
+    'Sortimentet här är ett urval. Beskriv vad du har ombord och vad du vill få gjort, så återkommer vi med förslag och pris.',
+  ctaButtonLabel: 'Kontakta oss',
+} as const
+
 export const metadata: Metadata = {
   title: 'Produkter',
-  description: 'Våra produkter — noggrant utvalda för dig.',
+  description:
+    'Delar och komponenter för el och elektronik ombord — båt, husbil och campervan. Navolt i Göteborg och Öckerö.',
 }
 
 export default async function ProductsPage({
@@ -18,65 +36,48 @@ export default async function ProductsPage({
   searchParams: Promise<{ kategori?: string }>
 }) {
   const { kategori } = await searchParams
-  const [allProducts, categories] = await Promise.all([getAllProducts(), getAllCategories()])
+  const [products, categories, page] = await Promise.all([
+    getAllProducts(),
+    getAllCategories(),
+    getProductsPage(),
+  ])
 
-  const filtered =
-    kategori && kategori !== 'alla'
-      ? allProducts.filter((p) => p.category?.slug === kategori)
-      : allProducts
-
-  const categoryEntries: [string, string][] = [
-    ['alla', 'Alla'],
-    ...categories.map((c) => [c.slug, c.title] as [string, string]),
-  ]
+  // Read once here and handed to the client as a starting value — from then on
+  // the filter lives on the client so it can animate. An unknown or stale slug
+  // falls back to "alla" rather than deep-linking into an empty grid.
+  const initialCategory =
+    kategori && categories.some((c) => c.slug === kategori) ? kategori : 'alla'
 
   return (
     <PageTransition>
-      {/* Page header */}
-      <div className="pt-32 pb-16" style={{ background: 'var(--color-surface)' }}>
-        <div className="container mx-auto px-6 max-w-container">
+      <ProductsHero
+        label={text(page?.pageLabel, defaults.pageLabel)}
+        title={text(page?.pageTitle, defaults.pageTitle)}
+        subtitle={text(page?.pageSubtitle, defaults.pageSubtitle)}
+        count={products.length}
+        categoryCount={categories.length}
+      />
+      <ProductsShell
+        products={products}
+        categories={categories.map((c) => ({ slug: c.slug, title: c.title }))}
+        initialCategory={initialCategory}
+      />
+
+      {/* Closing band — /tjanster and the landing page both end on one, so the
+          index stopping dead after the last card was the odd one out. On
+          `surface`, the same ground the header above uses. */}
+      <section className="section" style={{ background: 'var(--color-surface)' }}>
+        <div className="container mx-auto max-w-container px-6 text-center">
           <AnimatedSection>
-            <p className="section-label mb-3">Sortiment</p>
-            <h1 className="section-title mb-4">Produkter</h1>
-            <p className="section-subtitle">
-              Noggrant utvalda produkter för dig.
+            <p className="section-label mb-4">{text(page?.ctaLabel, defaults.ctaLabel)}</p>
+            <h2 className="section-title mb-5">{text(page?.ctaTitle, defaults.ctaTitle)}</h2>
+            <p className="section-subtitle mx-auto mb-8">
+              {text(page?.ctaText, defaults.ctaText)}
             </p>
+            <Link href="/kontakt" className="btn-primary">
+              {text(page?.ctaButtonLabel, defaults.ctaButtonLabel)}
+            </Link>
           </AnimatedSection>
-        </div>
-      </div>
-
-      {/* Filter bar */}
-      <div className="sticky top-[72px] z-40 border-b" style={{ background: 'var(--color-bg)', borderColor: 'var(--color-border)' }}>
-        <div className="container mx-auto px-6 max-w-container">
-          <FilterBar
-            categories={categoryEntries}
-            current={kategori || 'alla'}
-            total={filtered.length}
-          />
-        </div>
-      </div>
-
-      {/* Product grid */}
-      <section className="section">
-        <div className="container mx-auto px-6 max-w-container">
-          {filtered.length === 0 ? (
-            <AnimatedSection className="text-center py-20">
-              <p className="font-heading text-2xl mb-3">Inga produkter hittades</p>
-              <p style={{ color: 'var(--color-text-muted)' }}>
-                {allProducts.length === 0
-                  ? 'Produkter läggs till via CMS-studion på /studio.'
-                  : `Inga produkter i vald kategori.`}
-              </p>
-            </AnimatedSection>
-          ) : (
-            <StaggerContainer className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filtered.map((product) => (
-                <StaggerItem key={product._id}>
-                  <ProductCard product={product} />
-                </StaggerItem>
-              ))}
-            </StaggerContainer>
-          )}
         </div>
       </section>
     </PageTransition>
