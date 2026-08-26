@@ -224,7 +224,10 @@ export default async function AboutPage() {
               </h2>
             </AnimatedSection>
             <AnimatedSection delay={0.1}>
-              <ElfsightWidget appId={siteConfig.elfsight.instagram} />
+              <ElfsightWidget
+                appId={siteConfig.elfsight.instagram}
+                fallbackLabel="Vårt Instagram-flöde visas via en extern tjänst (Elfsight)."
+              />
             </AnimatedSection>
           </div>
         </section>

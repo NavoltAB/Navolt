@@ -1,11 +1,11 @@
 import type { Metadata } from 'next'
-import { Source_Serif_4, Inter } from 'next/font/google'
+import { Open_Sans, Inter } from 'next/font/google'
 import './globals.css'
 import { siteConfig } from '@/config/site'
 
-// Headings: Source Serif 4 — sturdy modern serif with low, even stroke contrast.
-// Calm and trustworthy at display sizes (no fashion-serif thick/thin drama).
-const heading = Source_Serif_4({
+// Headings: Open Sans — the same face the wordmark is drawn in, so the logotype
+// and every heading below it read as one voice. Body text stays Inter.
+const heading = Open_Sans({
   subsets: ['latin'],
   variable: '--font-heading',
   display: 'swap',

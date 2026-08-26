@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import CookieSettingsButton from '@/components/CookieSettingsButton'
 import type { SiteSettings } from '@/types/sanity'
 import { siteConfig } from '@/config/site'
 
@@ -35,11 +36,11 @@ export default function Footer({ settings, blurb }: FooterProps) {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
           {/* Brand */}
           <div>
-            <p className="font-heading text-2xl text-white font-semibold leading-none">
+            <p className="font-heading text-[32px] text-white font-semibold uppercase leading-none">
               {siteConfig.name}
             </p>
             <p
-              className="text-[9px] tracking-[0.28em] uppercase mt-1 mb-3"
+              className="text-[12px] tracking-[0.06em] uppercase mt-1.5 mb-3"
               style={{ color: 'rgba(255,255,255,0.5)' }}
             >
               Marinelektronik
@@ -132,7 +133,19 @@ export default function Footer({ settings, blurb }: FooterProps) {
             {s.orgNumber && <p>Org.nr: {s.orgNumber}</p>}
             {siteConfig.company.fSkatt && <p>Godkänd för F-skatt</p>}
           </div>
-          
+
+          {/* Legal. The cookie link has to live somewhere permanent and
+              reachable from every page — withdrawing consent must be as easy as
+              giving it, and this row is where a visitor looks for it. */}
+          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
+            <Link href="/integritetspolicy" className="footer-nav-link transition-colors duration-200">
+              Integritetspolicy
+            </Link>
+            <Link href="/cookies" className="footer-nav-link transition-colors duration-200">
+              Cookiepolicy
+            </Link>
+            <CookieSettingsButton />
+          </div>
         </div>
       </div>
     </footer>

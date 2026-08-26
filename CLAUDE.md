@@ -36,8 +36,9 @@ are defined in `globals.css` under `@layer components`. Prefer them over
 ad-hoc Tailwind.
 
 ### Fonts
-`Source Serif 4` (headings) and `Inter` (body) via `next/font/google` in
-`app/layout.tsx`, exposed as `--font-heading` / `--font-body`.
+`Open Sans` (headings, and the wordmark) and `Inter` (body) via
+`next/font/google` in `app/layout.tsx`, exposed as `--font-heading` /
+`--font-body`.
 
 ### Content sources — three layers
 1. `config/site.ts` — company facts (name, phone, org.nr, social). Edit here first.
@@ -53,11 +54,40 @@ defined in `sanity.config.ts`. Schemas in `sanity/schemas/`, GROQ in
 `sanity/queries.ts`, image URLs via `sanity/imageUrl.ts`.
 
 ### Email
-- `POST /api/contact` — contact form
-- `POST /api/send` — single-product order form
+- `POST /api/contact` — contact form (**multipart**, it carries attachments)
+- `POST /api/send` — single-product order form (JSON)
 
 Both validate with zod and escape user input via the local `esc()` helper
 before interpolating into the email HTML. Keep that escaping if you edit them.
+
+### Contact form
+`lib/contactForm.ts` is the single source of truth: the five subjects, the
+follow-up questions each one reveals, and the upload limits. `ContactForm`
+renders from it, `/api/contact` labels the email rows from it and drops any
+answer that doesn't belong to the chosen subject. Add a question there, not in
+either consumer.
+
+Attachments cap at 5 files / 4 MB total — Vercel rejects a request body over
+4.5 MB before the route ever runs, so the form checks the limit client-side to
+turn that into a readable error. Both sides re-check; neither trusts the other.
+
+`/tjanster` still links in as `/kontakt?amne=<tjänst>`; `prefillFromParam`
+maps that onto a subject (Motorservice → Båt, with "Motor" ticked).
+
+### Cookies / GDPR
+`context/CookieConsentContext.tsx` holds the consent state (localStorage key
+`navolt_cookie_consent`), `components/CookieBanner.tsx` is the banner plus its
+settings dialog, and `CookieSettingsButton` reopens it from the footer.
+
+Two categories only: **nödvändiga** (always on) and **externa tjänster**. The
+second gates every Elfsight widget — `ElfsightWidget` returns a placeholder and
+loads no third-party script until consent is given, which is the whole point.
+Don't bypass it by mounting `platform.js` anywhere else, and don't advertise a
+category (statistik, marknadsföring) the site doesn't actually use.
+
+`/integritetspolicy` and `/cookies` are static, not Sanity-backed. The cookie
+table lists what the site really stores — update it when that changes, and bump
+`CONSENT_VERSION` when the categories do.
 
 ### Animation
 `components/AnimatedSection.tsx` exports `AnimatedSection` (scroll fade/slide,
@@ -65,7 +95,8 @@ before interpolating into the email HTML. Keep that escaping if you edit them.
 `components/PageTransition.tsx` wraps subpages.
 
 Server components fetch and pass down; `'use client'` is limited to Navigation,
-forms, animation wrappers and the product index shell.
+forms, animation wrappers, the product index shell, and everything that reads
+cookie consent (`ElfsightWidget` included).
 
 ## Current state
 

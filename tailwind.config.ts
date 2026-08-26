@@ -24,7 +24,7 @@ const config: Config = {
         'border-color': 'var(--color-border)',
       },
       fontFamily: {
-        heading: ['var(--font-heading)', 'Georgia', 'serif'],
+        heading: ['var(--font-heading)', 'system-ui', 'sans-serif'],
         body: ['var(--font-body)', 'system-ui', 'sans-serif'],
       },
       maxWidth: {

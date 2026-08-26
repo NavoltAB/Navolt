@@ -21,6 +21,18 @@ const schema = z.object({
     .max(50),
 })
 
+// Subject lines are read at a glance in a shared inbox, so they all take the
+// same shape: a bracketed type, the thing it's about, then who sent it. The
+// bracket is what makes them sort and filter cleanly — "Ny beställning" and
+// "Ny offertförfrågan" used to interleave under N.
+//
+// Values going into a header get flattened first: a subject is a single line,
+// and anything the visitor typed may not be.
+function oneLine(value: string) {
+  return value.replace(/\s+/g, ' ').trim()
+}
+
+
 // Form input is interpolated into the email body — escape it so a submission
 // can't inject markup into the inbox. Same helper as /api/contact and /api/send.
 function esc(value: string) {
@@ -61,11 +73,27 @@ export async function POST(req: NextRequest) {
       )
       .join('')
 
-    const resend = new Resend(process.env.RESEND_API_KEY)
-    await resend.emails.send({
+    // Without a key there is nothing to send with. Caught here so the log says
+    // which piece of configuration is missing, instead of the SDK throwing a
+    // generic error further down and surfacing as "Internt serverfel".
+    const apiKey = process.env.RESEND_API_KEY
+    if (!apiKey) {
+      console.error('offert route: RESEND_API_KEY is not set — nothing was sent')
+      return NextResponse.json({ error: 'E-post är inte konfigurerad' }, { status: 503 })
+    }
+
+    // One product is worth naming outright; several are only noise in a subject
+    // line, so they collapse to a count and the detail stays in the table below.
+    const summary =
+      data.items.length === 1
+        ? `${oneLine(data.items[0].name)} ×${data.items[0].quantity}`
+        : `${data.items.length} artiklar`
+
+    const resend = new Resend(apiKey)
+    const { error: sendError } = await resend.emails.send({
       from: process.env.RESEND_FROM_EMAIL || 'bestallning@navolt.se',
       to: process.env.CONTACT_EMAIL || 'info@navolt.se',
-      subject: `Ny offertförfrågan från ${data.name}`,
+      subject: `[Offert] ${summary} – ${oneLine(data.name)}`,
       replyTo: data.email,
       html: `
         <div style="font-family: sans-serif; max-width: 640px; margin: 0 auto; padding: 24px;">
@@ -128,6 +156,15 @@ export async function POST(req: NextRequest) {
         </div>
       `,
     })
+
+    // resend.emails.send resolves with { data, error } rather than throwing, so
+    // a rejected send (unverified sending domain, bad recipient, quota) lands
+    // here looking like success. Without this check the visitor gets a thank-you
+    // for a message that never arrived.
+    if (sendError) {
+      console.error('offert route: Resend rejected the send:', sendError)
+      return NextResponse.json({ error: 'Kunde inte skicka meddelandet' }, { status: 502 })
+    }
 
     return NextResponse.json({ success: true })
   } catch (error) {

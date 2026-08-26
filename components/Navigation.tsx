@@ -19,20 +19,42 @@ const ease = [0.16, 1, 0.3, 1] as const
 const shape = { duration: 0.85, ease }
 const SHRINK_AT = 60
 const PILL_MAX = 880
+// The wordmark's scale in the pill — the descriptor is collapsed by then, so
+// this is the only thing setting the logo's size there. Named because the
+// centring maths below has to know the logo's *rendered* width, and scale
+// doesn't show up in offsetWidth.
+const SHRUNK_SCALE = 0.72
+// The descriptor's line box, in px. Its height is animated, so the number has to
+// be written out rather than left to leading-none — it tracks the larger of the
+// span's two font sizes (10px from md up).
+const DESCRIPTOR_H = 11
 
 // Deep navy veil, same hue as --color-primary-veil. Written out as rgba here
 // because the skins need their own alpha per state.
 const navy = (a: number) => `rgba(18, 48, 74, ${a})`
 
-// Background, blur and ring live on their own layers and only ever animate
-// opacity — never alongside the shape tween. Fading out has to beat the widening
-// bar (otherwise you watch a rounded 1px ring stretch across the viewport before
-// it vanishes), and fading in has to lag the collapse so the ring arrives on a
-// pill that already exists instead of popping onto a half-formed one.
-const skin = (visible: boolean) =>
-  visible
-    ? { duration: 0.45, delay: 0.14, ease: 'easeOut' as const }
-    : { duration: 0.22, ease: 'easeOut' as const }
+// The painted layer tweens its *colour*, never its opacity. Two cross-fading
+// skins — a full-bleed bar and a pill — left a window on the way back up where
+// neither was opaque yet and the page showed through: that was the blink. One
+// layer that only ever changes colour cannot open that gap.
+//
+// Ring and drop shadow are written with the same two-shadow structure in every
+// state so they interpolate. The bar's ring is invisible except along the
+// bottom, since its other three edges sit outside the viewport.
+const PILL_SHADOW =
+  '0 0 0 1px rgba(255,255,255,0.12), 0 18px 40px -20px rgba(4,16,28,0.85)'
+const BAR_SHADOW =
+  '0 0 0 1px rgba(255,255,255,0.10), 0 18px 40px -20px rgba(4,16,28,0)'
+const BARE_SHADOW =
+  '0 0 0 1px rgba(255,255,255,0), 0 18px 40px -20px rgba(4,16,28,0)'
+
+// Arriving: lag the collapse so the ring lands on a pill that already exists
+// instead of popping onto a half-formed one. Leaving: get out fast, before the
+// bar has widened far enough for a stretching 1px ring to be legible.
+const paintTransition = (collapsed: boolean) =>
+  collapsed
+    ? { duration: 0.45, delay: 0.12, ease: 'easeOut' as const }
+    : { duration: 0.28, ease: 'easeOut' as const }
 
 export default function Navigation() {
   const [shrunk, setShrunk] = useState(false)
@@ -48,26 +70,41 @@ export default function Navigation() {
   const isHome = pathname === '/'
   const { count, ready } = useCart()
 
-  // Equal-growth spacers centre the links in the space *between* the columns,
-  // not in the pill — so the links sit (leftCol − rightCol) / 2 off centre. The
-  // logo column is much wider than it looks: the collapsed descriptor animates
-  // its height to 0 but keeps its full tracked-out width. Measure both columns
-  // and cancel the difference with a margin rather than hardcoding a guess.
+  // Equal-growth spacers centre the links between the columns, so the links land
+  // (leftCol − rightCol) / 2 off the pill's centre and a margin has to cancel it.
+  //
+  // The catch is that the logo column is wider than the ink in it: the wordmark
+  // is *scaled* in the pill, and scale doesn't show up in offsetWidth. Cancelling
+  // the whole box centres the links on the pill but leaves them looking pushed
+  // left, because the tail of the column is empty. So cancel the dead space
+  // instead — box width minus rendered ink — which puts the row on the midpoint
+  // between the wordmark and the phone, where the eye expects it. The tail drops
+  // out of the algebra: it shifts the row and the target by the same amount.
   const logoRef = useRef<HTMLAnchorElement>(null)
-  const tailRef = useRef<HTMLDivElement>(null)
+  const wordmarkRef = useRef<HTMLSpanElement>(null)
   const [balance, setBalance] = useState(0)
 
   useEffect(() => {
     const logo = logoRef.current
-    const tail = tailRef.current
-    if (!logo || !tail) return
-    // Both widths are layout widths, so they're state-independent: `scale`
-    // doesn't touch them and the descriptor only collapses vertically.
-    const measure = () => setBalance(logo.offsetWidth - tail.offsetWidth)
+    const wordmark = wordmarkRef.current
+    if (!logo || !wordmark) return
+    // The wordmark span is `block`, so its own offsetWidth is the *column's*
+    // width, not the word's — measuring that cancels nothing. A Range over its
+    // text gives the real ink. Range rects are post-transform, so divide out
+    // whatever scale is currently applied (offsetWidth is the pre-transform
+    // width of the same box, so their ratio is exactly that scale) to get a
+    // layout width that's the same whichever state we happen to measure in.
+    const measure = () => {
+      const scale = wordmark.getBoundingClientRect().width / wordmark.offsetWidth
+      const range = document.createRange()
+      range.selectNodeContents(wordmark)
+      const ink = range.getBoundingClientRect().width / (scale || 1)
+      setBalance(logo.offsetWidth - ink * SHRUNK_SCALE)
+    }
     measure()
     const ro = new ResizeObserver(measure)
     ro.observe(logo)
-    ro.observe(tail)
+    ro.observe(wordmark)
     document.fonts?.ready.then(measure).catch(() => {})
     return () => ro.disconnect()
   }, [])
@@ -98,10 +135,29 @@ export default function Navigation() {
     return () => { document.body.style.overflow = '' }
   }, [mobileOpen])
 
-  // The header is dark in every state — transparent over the hero, deep navy
-  // on a subpage, and a translucent navy pill once scrolled. That keeps one set
-  // of white-on-dark colours instead of flipping the palette mid-scroll.
-  const barVisible = !isHome && !shrunk
+  // Three grounds: nothing over the landing hero, deep navy on every other page,
+  // a translucent navy pill once scrolled. One layer carries all three and
+  // tweens its *colour*, never its opacity — that's the whole blink fix, and it
+  // holds however many states there are. Cross-fading two stacked skins is what
+  // left a window on the way back up where neither was opaque yet and the page
+  // showed through; a single layer changing colour cannot open that gap, whether
+  // it's moving between two navies or navy and nothing at all.
+  const paint = shrunk
+    ? {
+        backgroundColor: isMobile ? navy(0.97) : navy(0.72),
+        boxShadow: PILL_SHADOW,
+      }
+    : isHome
+      ? { backgroundColor: navy(0), boxShadow: BARE_SHADOW }
+      : { backgroundColor: navy(0.92), boxShadow: BAR_SHADOW }
+
+  // Blur is the one property that can't ride along on a colour tween, so it goes
+  // back to its own layer *underneath* the paint — a backdrop filter only sees
+  // what's painted below it. It has to be absent over the hero, or the photo
+  // goes soft behind a header that's meant to be invisible there. A gap in this
+  // fade is harmless: it only ever costs a frame of unblurred glass, never a
+  // frame of missing ground.
+  const blurred = shrunk || !isHome
 
   // Geometry only. No colour, no blur, no shadow — see `skin` above.
   const geometry = shrunk
@@ -129,8 +185,16 @@ export default function Navigation() {
       }
 
   const linkColor = 'text-white/75 hover:text-white'
-  // Active state is carried by brass + open tracking only — no underline.
+  // Active state is brass plus a small brass mark below — the same language as
+  // the category rail on /produkter. Weight and tracking stay identical to the
+  // inactive links: letter-spacing that changes per route makes the row twitch
+  // as you navigate, and it's the one thing a nav can't afford to do.
   const activeColor = 'text-[var(--color-gold)]'
+  // The mark is centred with left/right 0 + auto margins rather than a
+  // translate, so it stays put while the header's padding is mid-tween. It is
+  // deliberately not a `layoutId` that slides between links: layout projection
+  // inside a container whose padding is animating measures against a box that
+  // no longer exists a frame later, and the dot drifts off its label.
 
   return (
     <>
@@ -148,59 +212,60 @@ export default function Navigation() {
         >
           {/* Skins. Both inherit the animating radius and are positioned, so
               they paint under the content below (which is `relative`, i.e. also
-              positioned, and later in DOM order). */}
+              positioned, and later in DOM order).
+
+              Blur first, paint second — a backdrop filter samples only what sits
+              below it, so the glass has to be the lower of the two. Mobile drops
+              the blur entirely: backdrop-filter on a resizing fixed element is
+              the one thing that reliably janks on phones, and at 0.97 alpha
+              there'd be nothing to see through anyway. */}
           <motion.div
             aria-hidden
             className="absolute inset-0 pointer-events-none"
             style={{
               borderRadius: 'inherit',
-              background: navy(0.92),
-              backdropFilter: 'blur(12px)',
-              WebkitBackdropFilter: 'blur(12px)',
-              boxShadow: '0 1px 0 0 rgba(255,255,255,0.10)',
+              backdropFilter: isMobile ? 'none' : 'blur(20px)',
+              WebkitBackdropFilter: isMobile ? 'none' : 'blur(20px)',
             }}
             initial={false}
-            animate={{ opacity: barVisible ? 1 : 0 }}
-            transition={skin(barVisible)}
+            animate={{ opacity: blurred ? 1 : 0 }}
+            transition={{ duration: 0.3, ease: 'easeOut' }}
           />
-          {/* Mobile drops the blur and goes near-opaque — backdrop-filter on a
-              resizing fixed element is the one thing that reliably janks on
-              phones. The blur radius itself is constant; only opacity moves. */}
           <motion.div
             aria-hidden
             className="absolute inset-0 pointer-events-none"
-            style={{
-              borderRadius: 'inherit',
-              background: isMobile ? navy(0.97) : navy(0.72),
-              backdropFilter: isMobile ? 'none' : 'blur(24px)',
-              WebkitBackdropFilter: isMobile ? 'none' : 'blur(24px)',
-              boxShadow:
-                '0 0 0 1px rgba(255,255,255,0.12), 0 18px 40px -20px rgba(4,16,28,0.85)',
-            }}
+            style={{ borderRadius: 'inherit' }}
             initial={false}
-            animate={{ opacity: shrunk ? 1 : 0 }}
-            transition={skin(shrunk)}
+            animate={paint}
+            transition={paintTransition(shrunk)}
           />
 
           {/* Logo — wordmark over descriptor. Scaled, not resized: animating
-              fontSize reflows and re-rasterises the serif every frame. */}
+              fontSize reflows and re-rasterises the type every frame. */}
           <Link ref={logoRef} href="/" className="relative shrink-0 text-white">
             <motion.div
+              className="text-center"
               style={{ originX: 0, originY: 0.5, willChange: 'transform' }}
-              animate={{ scale: shrunk ? 0.82 : 1 }}
+              animate={{ scale: shrunk ? SHRUNK_SCALE : 1 }}
               transition={shape}
             >
-              <span className="block font-heading text-2xl font-semibold tracking-tight leading-none">
+              {/* The wordmark is the wider of the two lines at both sizes, so it
+                  alone sets the column's width — which is what lets the
+                  `text-center` above centre the descriptor under it without
+                  moving the wordmark itself. Shrink the wordmark or grow the
+                  descriptor past that crossover and the wordmark starts sliding
+                  right instead. */}
+              <span ref={wordmarkRef} className="block font-heading text-[24px] md:text-[34px] font-semibold uppercase leading-none">
                 {siteConfig.name}
               </span>
               {/* The descriptor collapses so the lockup keeps its balance in the
                   pill. Its opacity runs ahead of its height on the way out and
                   behind on the way back, so you never see clipped half-letters. */}
               <motion.span
-                className="block overflow-hidden text-[9px] uppercase leading-none tracking-[0.28em]"
+                className="block overflow-hidden text-[8px] md:text-[10px] uppercase leading-none tracking-[0.06em]"
                 animate={{
                   opacity: shrunk ? 0 : 0.7,
-                  height: shrunk ? 0 : 11,
+                  height: shrunk ? 0 : DESCRIPTOR_H,
                   marginTop: shrunk ? 0 : 4,
                 }}
                 transition={{
@@ -239,13 +304,22 @@ export default function Navigation() {
                   key={link.href}
                   href={link.href}
                   aria-current={active ? 'page' : undefined}
-                  className={`text-sm whitespace-nowrap transition-colors duration-300 ${
-                    active
-                      ? `font-semibold tracking-[0.14em] ${activeColor}`
-                      : `font-medium tracking-wide ${linkColor}`
+                  className={`relative text-sm font-medium tracking-wide whitespace-nowrap transition-colors duration-300 ${
+                    active ? activeColor : linkColor
                   }`}
                 >
                   {link.label}
+                  {active && (
+                    <motion.span
+                      key={link.href}
+                      aria-hidden
+                      initial={{ opacity: 0, scale: 0.4 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.35, delay: 0.1, ease: 'easeOut' }}
+                      className="absolute -bottom-2 left-0 right-0 mx-auto h-1 w-1 rounded-full"
+                      style={{ background: 'var(--color-gold)' }}
+                    />
+                  )}
                 </Link>
               )
             })}
@@ -261,7 +335,6 @@ export default function Navigation() {
           {/* Icon only — the written-out number crowded the link row.
               Same phone glyph as the homepage CTA. */}
           <motion.div
-            ref={tailRef}
             className="relative hidden md:flex items-center gap-2.5 shrink-0"
             initial={false}
             animate={{ marginLeft: shrunk ? 0 : 28 }}
@@ -387,13 +460,21 @@ export default function Navigation() {
                     key={link.href}
                     href={link.href}
                     aria-current={active ? 'page' : undefined}
-                    className={`py-3 text-lg border-b border-white/[0.08] ${
-                      active
-                        ? 'font-semibold tracking-[0.14em] text-[var(--color-gold)]'
-                        : 'font-medium tracking-wide text-white/75'
+                    className={`flex items-center justify-between py-3 text-lg font-medium tracking-wide border-b border-white/[0.08] ${
+                      active ? 'text-[var(--color-gold)]' : 'text-white/75'
                     }`}
                   >
                     {link.label}
+                    {/* Same brass mark, moved to the end of the row — a dot
+                        under a 18px line in a stacked list reads as a stray
+                        bullet rather than an indicator. */}
+                    {active && (
+                      <span
+                        aria-hidden
+                        className="h-1.5 w-1.5 rounded-full"
+                        style={{ background: 'var(--color-gold)' }}
+                      />
+                    )}
                   </Link>
                 )
               })}

@@ -71,6 +71,13 @@ html {
   scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Nothing here is meant to scroll sideways. Entrance animations parked at an
+     x offset, and shadows or rings on full-width elements, widen the scrollable
+     area even though nothing is *laid out* past the edge — which is what put a
+     horizontal scrollbar on phones. Note `clip` rather than `hidden`: it does not
+     turn the root into a scroll container, so `position: sticky` (the category
+     rail, the mobile category bar, the product gallery) keeps working. */
+  overflow-x: clip;
 }
 
 body {
@@ -87,7 +94,7 @@ h3,
 h4,
 h5,
 h6 {
-  font-family: var(--font-heading), Georgia, serif;
+  font-family: var(--font-heading), system-ui, sans-serif;
   line-height: 1.2;
   color: var(--color-text);
 }
@@ -219,6 +226,61 @@ video {
     letter-spacing: 0.02em;
   }
 
+  /* Native select, dressed to match .input. The stock arrow ignores the border
+     radius and is a different size in every browser, so it is replaced with a
+     chevron drawn as a background image. A data URI can't read a custom
+     property, so that chevron's colour is --color-text-muted written out — if
+     you change the token, change it here too. */
+  .select {
+    appearance: none;
+    -webkit-appearance: none;
+    padding-right: 2.5rem;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23566A79' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 14px;
+    cursor: pointer;
+  }
+
+  /* Radio, in the site's palette rather than the browser's blue. */
+  .radio {
+    appearance: none;
+    -webkit-appearance: none;
+    flex-shrink: 0;
+    width: 1.05rem;
+    height: 1.05rem;
+    border: 1.5px solid var(--color-border);
+    border-radius: 50%;
+    background: var(--color-surface);
+    display: inline-grid;
+    place-content: center;
+    cursor: pointer;
+    transition: border-color var(--transition-base);
+  }
+
+  .radio::before {
+    content: '';
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: var(--color-primary);
+    transform: scale(0);
+    transition: transform var(--transition-base);
+  }
+
+  .radio:checked {
+    border-color: var(--color-primary);
+  }
+
+  .radio:checked::before {
+    transform: scale(1);
+  }
+
+  .radio:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
   /* Cards */
   .card {
     background: var(--color-surface);
@@ -238,7 +300,7 @@ video {
   }
 
   .section-title {
-    font-family: var(--font-heading), Georgia, serif;
+    font-family: var(--font-heading), system-ui, sans-serif;
     font-size: clamp(2rem, 4vw, 3rem);
     color: var(--color-text);
     font-weight: 600;
@@ -278,14 +340,14 @@ video {
    ============================================================ */
 
 .prose-sanity h2 {
-  font-family: var(--font-heading), Georgia, serif;
+  font-family: var(--font-heading), system-ui, sans-serif;
   font-size: var(--text-2xl);
   margin-top: 2rem;
   margin-bottom: 0.75rem;
 }
 
 .prose-sanity h3 {
-  font-family: var(--font-heading), Georgia, serif;
+  font-family: var(--font-heading), system-ui, sans-serif;
   font-size: var(--text-xl);
   margin-top: 1.5rem;
   margin-bottom: 0.5rem;

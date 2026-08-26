@@ -176,12 +176,18 @@ export default async function HomePage() {
           priority
         />
 
-        {/* Navy scrim — keeps the white headline legible over the photo */}
+        {/* Navy scrim — keeps the white headline legible over the photo.
+
+            Held deliberately light in the middle, where the headline sits. The
+            photo is already a deep navy sea, so white type clears 11:1 against
+            the bare image; the scrim only has to even out the water's texture
+            and darken the corners. Heavier than this and the picture flattens
+            into a plain navy panel, which is what it used to do. */}
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
             background:
-              'linear-gradient(150deg, rgba(7,20,33,0.86) 0%, rgba(11,34,55,0.62) 45%, rgba(7,20,33,0.88) 100%)',
+              'linear-gradient(150deg, rgba(7,20,33,0.50) 0%, rgba(11,34,55,0.24) 45%, rgba(7,20,33,0.52) 100%)',
           }}
         />
 
@@ -509,7 +515,10 @@ export default async function HomePage() {
               </p>
             </AnimatedSection>
             <AnimatedSection delay={0.1}>
-              <ElfsightWidget appId={siteConfig.elfsight.reviews} />
+              <ElfsightWidget
+                appId={siteConfig.elfsight.reviews}
+                fallbackLabel="Våra kundomdömen visas via en extern tjänst (Elfsight)."
+              />
             </AnimatedSection>
           </div>
         </section>

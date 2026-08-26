@@ -65,6 +65,8 @@ export default function ProductsShell({
     [products, active]
   )
 
+  const activeLabel = entries.find((entry) => entry.key === active)?.label ?? 'Alla'
+
   const select = useCallback((key: string) => {
     setActive(key)
     // Native history rather than the router: this is a view filter, not a
@@ -217,6 +219,18 @@ export default function ProductsShell({
 
             {/* ── Grid ─────────────────────────────────────────── */}
             <div>
+              {/* The grid's own heading, out of view. ProductsHero already
+                  names the page and the rail already marks the category, so
+                  there is nothing left to show — but without an h2 here the
+                  ProductCard h3s hang straight off the page h1, and both
+                  screen readers and crawlers read that as a broken outline.
+                  Naming the active category also means the heading still says
+                  something useful when the page is deep-linked with
+                  ?kategori=. */}
+              <h2 className="sr-only">
+                {active === 'alla' ? 'Alla produkter' : `Produkter i kategorin ${activeLabel}`}
+              </h2>
+
               <AnimatePresence mode="wait" initial={false}>
                 {filtered.length === 0 ? (
                   <motion.div

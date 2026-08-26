@@ -6,6 +6,26 @@ import { text } from '@/sanity/fallback'
 import AnimatedSection from '@/components/AnimatedSection'
 import PageTransition from '@/components/PageTransition'
 import ServiceIndexRail from '@/components/ServiceIndexRail'
+import ServiceFormDialog from '@/components/ServiceFormDialog'
+import { siteConfig } from '@/config/site'
+
+// Services with a lead form of their own. These two carried a booking form on
+// the old site and keep it here, opened from the service panel instead of a
+// separate page; everything else falls through to the generic "Fråga om …"
+// link, which lands on /kontakt with the subject prefilled.
+//
+// Keyed by slug, so a Sanity `service` document picks its form up by matching
+// slug without any change here.
+const serviceForms: Record<string, { appId: string; label: string }> = {
+  motorservice: {
+    appId: siteConfig.elfsight.motorserviceForm,
+    label: 'Boka motorservice',
+  },
+  campervan: {
+    appId: siteConfig.elfsight.campervanForm,
+    label: 'Berätta om din van',
+  },
+}
 
 export const revalidate = 60
 
@@ -132,7 +152,9 @@ export default async function ServicesPage() {
             </aside>
 
             <div className="space-y-24 lg:space-y-32">
-              {services.map((service, index) => (
+              {services.map((service, index) => {
+                const form = serviceForms[service.slug ?? service._id]
+                return (
                 <AnimatedSection key={service._id}>
                   <article id={service.slug ?? service._id} className="scroll-mt-32">
                     <div className="aspect-[16/9] rounded-lg overflow-hidden relative mb-10">
@@ -195,17 +217,23 @@ export default async function ServicesPage() {
                       </ul>
                     )}
 
-                    {/* Carries the service through so the contact form's
-                        "Ämne" arrives filled in. */}
-                    <Link
-                      href={`/kontakt?amne=${encodeURIComponent(service.title)}`}
-                      className="btn-outline"
-                    >
-                      {serviceCtaPrefix} {service.title.toLowerCase()}
-                    </Link>
+                    {/* With a form of its own, the panel opens it in place.
+                        Without one, the link carries the service through so the
+                        contact form's "Ämne" arrives filled in. */}
+                    {form ? (
+                      <ServiceFormDialog appId={form.appId} label={form.label} />
+                    ) : (
+                      <Link
+                        href={`/kontakt?amne=${encodeURIComponent(service.title)}`}
+                        className="btn-outline"
+                      >
+                        {serviceCtaPrefix} {service.title.toLowerCase()}
+                      </Link>
+                    )}
                   </article>
                 </AnimatedSection>
-              ))}
+                )
+              })}
             </div>
           </div>
         </div>

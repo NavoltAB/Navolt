@@ -168,7 +168,7 @@ export default async function ContactPage() {
               </h2>
               {/* ContactForm reads ?amne= to prefill the subject, so it needs a
                   Suspense boundary to keep this page statically rendered. */}
-              <Suspense fallback={<div className="h-[520px]" />}>
+              <Suspense fallback={<div className="h-[760px]" />}>
                 <ContactForm />
               </Suspense>
             </AnimatedSection>

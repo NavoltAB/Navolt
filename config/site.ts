@@ -45,5 +45,10 @@ export const siteConfig = {
     reviews: 'cb71a3bb-2e76-475b-9681-437157e214be',
     // Instagram feed, bottom of /om-oss.
     instagram: 'b54f4b7e-c04b-41d3-8ee7-1c421abce0ec',
+    // Lead forms, opened from the matching service panel on /tjanster. Same two
+    // widgets the old site opened in a modal from its /motorservice and
+    // /campervan pages, so the submissions keep landing in the same place.
+    motorserviceForm: 'f91c748e-389f-400c-ae6f-33659247c49b',
+    campervanForm: '4daba287-9bb2-4f97-8c90-9b215ae72512',
   },
 } as const
