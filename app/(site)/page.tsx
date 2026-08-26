@@ -168,10 +168,20 @@ export default async function HomePage() {
     <>
       {/* ── Hero ─────────────────────────────────────────────── */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+        {/* `sizes` is spelled out rather than left to the `fill` default so the
+            intent is on the page: this is edge to edge at every width.
+
+            Quality is below the default 75 because the photo spends its life
+            under the scrim below — a smooth, low-detail sea, dimmed, is the
+            best case for the encoder and the artefacts have nowhere to show.
+            It is the LCP element, so the bytes are worth more here than the
+            last few percent of fidelity nobody can see. */}
         <Image
           src={text(homePage?.heroImageUrl, defaults.heroImageUrl)}
           alt="Marinelektronik och elinstallation i båt — Navolt i Göteborg och Öckerö"
           fill
+          sizes="100vw"
+          quality={60}
           className="object-cover"
           priority
         />

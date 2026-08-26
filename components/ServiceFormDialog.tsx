@@ -40,12 +40,23 @@ export default function ServiceFormDialog({
   appId,
   label,
   title,
+  padded = false,
 }: {
   appId: string
   /** Button text, e.g. "Boka motorservice". */
   label: string
   /** Heading inside the dialog. Defaults to the button text. */
   title?: string
+  /**
+   * Insets the widget from the panel's edges.
+   *
+   * Off by default, because how much air a form has around it is set per widget
+   * in the Elfsight dashboard, and one that already pads itself would end up
+   * double-padded. Turn it on for a form that runs flush to its own edges — see
+   * `serviceForms` in app/(site)/tjanster/page.tsx, which decides this per
+   * service.
+   */
+  padded?: boolean
 }) {
   const [open, setOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
@@ -166,10 +177,12 @@ export default function ServiceFormDialog({
               tabIndex={-1}
               className="relative my-auto w-full max-w-lg overflow-hidden rounded-lg outline-none"
               style={{
-                // Dark, because the widget is: it ships its own black
-                // ground, photo header and Navolt lockup from the Elfsight
-                // dashboard. A light frame around it just draws a seam.
-                background: '#111111',
+                // Matches the widget's own ground, which is set in the Elfsight
+                // dashboard rather than here — a mismatch shows as a seam around
+                // the form's edges and as a flash of the wrong colour in the
+                // moment before it renders. If the form is ever restyled dark
+                // again, this has to follow it.
+                background: 'var(--color-surface)',
                 boxShadow: '0 30px 70px -30px rgba(4, 16, 28, 0.65)',
               }}
               initial={false}
@@ -189,7 +202,7 @@ export default function ServiceFormDialog({
               {/* Floated over the widget's photo header rather than sitting
                   in a bar of its own, which would be a second title strip
                   above the one the form already draws. */}
-              <div className="absolute right-3 top-3 z-10">
+              <div className={`absolute z-10 ${padded ? 'right-2 top-2' : 'right-3 top-3'}`}>
                 <button
                   type="button"
                   onClick={() => setOpen(false)}
@@ -219,7 +232,7 @@ export default function ServiceFormDialog({
                   reach the viewport, and this one deliberately renders while
                   it's hidden behind the page. Leaving it lazy would defeat the
                   whole prewarm. */}
-              <div className="min-h-[240px]">
+              <div className={`min-h-[240px] ${padded ? 'p-6 sm:p-8' : ''}`}>
                 <ElfsightWidget
                   appId={appId}
                   lazy={false}

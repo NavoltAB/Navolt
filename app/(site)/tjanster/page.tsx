@@ -16,10 +16,17 @@ import { siteConfig } from '@/config/site'
 //
 // Keyed by slug, so a Sanity `service` document picks its form up by matching
 // slug without any change here.
-const serviceForms: Record<string, { appId: string; label: string }> = {
+const serviceForms: Record<
+  string,
+  { appId: string; label: string; padded?: boolean }
+> = {
   motorservice: {
     appId: siteConfig.elfsight.motorserviceForm,
     label: 'Boka motorservice',
+    // This one runs flush to its own edges, so the dialog gives it the air.
+    // The campervan form already pads itself in the Elfsight dashboard — adding
+    // it there too would double up.
+    padded: true,
   },
   campervan: {
     appId: siteConfig.elfsight.campervanForm,
@@ -221,7 +228,11 @@ export default async function ServicesPage() {
                         Without one, the link carries the service through so the
                         contact form's "Ämne" arrives filled in. */}
                     {form ? (
-                      <ServiceFormDialog appId={form.appId} label={form.label} />
+                      <ServiceFormDialog
+                        appId={form.appId}
+                        label={form.label}
+                        padded={form.padded}
+                      />
                     ) : (
                       <Link
                         href={`/kontakt?amne=${encodeURIComponent(service.title)}`}
