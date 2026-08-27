@@ -77,6 +77,30 @@ export default defineConfig({
                             )
                           )
                       }),
+                    S.listItem()
+                      .title('Per båtmodell')
+                      .child(async () => {
+                        const models = await context
+                          .getClient({ apiVersion: '2024-01-01' })
+                          .fetch<{ _id: string; name: string }[]>(
+                            '*[_type == "boatModel"] | order(order asc, name asc) { _id, name }'
+                          )
+                        return S.list()
+                          .title('Välj båtmodell')
+                          .items(
+                            models.map((model) =>
+                              S.listItem()
+                                .title(model.name)
+                                .child(
+                                  S.documentList()
+                                    .title(model.name)
+                                    .filter('_type == "product" && boatModel._ref == $modelId')
+                                    .params({ modelId: model._id })
+                                    .defaultOrdering([{ field: 'name', direction: 'asc' }])
+                                )
+                            )
+                          )
+                      }),
                     S.divider(),
                     S.listItem()
                       .title('Utvalda (startsidan)')
@@ -87,10 +111,10 @@ export default defineConfig({
                           .defaultOrdering([{ field: 'name', direction: 'asc' }])
                       ),
                     S.listItem()
-                      .title('Ej i lager')
+                      .title('Beställningsvaror')
                       .child(
                         S.documentList()
-                          .title('Ej i lager')
+                          .title('Beställningsvaror')
                           .filter('_type == "product" && inStock == false')
                           .defaultOrdering([{ field: 'name', direction: 'asc' }])
                       ),
@@ -105,6 +129,16 @@ export default defineConfig({
                 S.documentTypeList('brand')
                   .title('Varumärken')
                   .defaultOrdering([{ field: 'order', direction: 'asc' }])
+              ),
+            S.listItem()
+              .title('Båtmodeller')
+              .child(
+                S.documentTypeList('boatModel')
+                  .title('Båtmodeller')
+                  .defaultOrdering([
+                    { field: 'order', direction: 'asc' },
+                    { field: 'name', direction: 'asc' },
+                  ])
               ),
           ]),
     }),

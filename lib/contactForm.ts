@@ -9,6 +9,10 @@
  *
  * Adding a question means adding it to `FIELDS_BY_SUBJECT` and to
  * `CONDITIONAL_KEYS`. Nothing else needs to change.
+ *
+ * A question can also depend on another answer — see `showWhen` — and both
+ * consumers go through `visibleFields` so a hidden question is neither rendered
+ * nor mailed.
  */
 
 export const SUBJECTS = ['Båt', 'Campervan', 'Båtrutor', 'Husbil', 'Övrigt'] as const
@@ -20,6 +24,7 @@ export const CONDITIONAL_KEYS = [
   'boatLocation',
   'boatPlacement',
   'windowRequest',
+  'windowMould',
   'vehicleModel',
   'vehicleLocation',
 ] as const
@@ -35,6 +40,13 @@ export type ContactField = {
   options?: readonly string[]
   /** Text fields that pair up two-per-row. Radios always take a full row. */
   half?: boolean
+  /**
+   * Reveals this question only while another answer for the same subject holds
+   * this exact value. One level deep on purpose: a condition pointing at a
+   * question that is itself conditional would need the chain resolved, and
+   * nothing here needs that yet.
+   */
+  showWhen?: { key: ConditionalKey; value: string }
 }
 
 const BOAT_WHERE: ContactField[] = [
@@ -77,9 +89,32 @@ export const FIELDS_BY_SUBJECT: Record<Subject, ContactField[]> = {
       label: 'Vill du göra en förfrågan om en båtmodell som inte finns tillgänglig just nu?',
       options: ['Ja', 'Nej'],
     },
+    {
+      key: 'windowMould',
+      label: 'Har du befintliga rutor vi kan malla av?',
+      options: ['Ja', 'Nej'],
+      // Only worth asking about a model Navolt doesn't already stock — for one
+      // that's in the catalogue the measurements are known.
+      showWhen: { key: 'windowRequest', value: 'Ja' },
+    },
   ],
   Husbil: vehicle('Var finns din bil?'),
   Övrigt: [],
+}
+
+/**
+ * The questions actually on screen for a subject, given what has been answered
+ * so far. The form renders from this and the route labels from it, so a
+ * question the visitor never saw can't arrive in the inbox — whether it was
+ * answered and then hidden again, or posted by hand.
+ */
+export function visibleFields(
+  subject: Subject,
+  answers: Partial<Record<ConditionalKey, string | undefined>>
+): ContactField[] {
+  return FIELDS_BY_SUBJECT[subject].filter(
+    (field) => !field.showWhen || answers[field.showWhen.key] === field.showWhen.value
+  )
 }
 
 export function isSubject(value: string): value is Subject {

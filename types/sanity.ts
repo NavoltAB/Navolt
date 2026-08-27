@@ -11,16 +11,36 @@ export interface Category {
   slug: string
 }
 
+export interface BoatModel {
+  _id: string
+  name: string
+  slug: string
+  order?: number
+}
+
 export interface ProductDetail {
   label: string
   value: string
 }
 
+export interface ProductDocument {
+  title?: string
+  url?: string
+  filename?: string
+  /** Lowercase, no dot — "pdf", "dwg". Used for the chip on the download row. */
+  ext?: string
+  size?: number
+}
+
 export interface Product {
   _id: string
+  // Sanity's own creation timestamp, projected so /produkter can offer a
+  // "Nyast" sort without the editor having to maintain a date field.
+  _createdAt?: string
   name: string
   slug: string
   category?: Category
+  boatModel?: BoatModel
   price?: number
   unit?: string
   inStock: boolean
@@ -28,6 +48,7 @@ export interface Product {
   shortDescription?: string
   description?: PortableTextBlock[]
   productDetails?: ProductDetail[]
+  documents?: ProductDocument[]
   mainImage?: SanityImage
   // images[1], when the product has one — the card cross-fades to it on hover.
   hoverImage?: SanityImage

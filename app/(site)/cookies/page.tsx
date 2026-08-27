@@ -26,9 +26,9 @@ const NECESSARY = [
     retention: 'Tills du rensar webbläsaren eller ändrar ditt val',
   },
   {
-    name: 'navolt-offertkorg',
+    name: 'navolt-varukorg',
     type: 'Local storage (förstapart)',
-    purpose: 'Håller reda på vad du lagt i offertkorgen mellan sidbyten.',
+    purpose: 'Håller reda på vad du lagt i varukorgen mellan sidbyten.',
     retention: 'Tills korgen töms eller webbläsaren rensas',
   },
 ]

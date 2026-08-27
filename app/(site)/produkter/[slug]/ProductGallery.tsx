@@ -98,7 +98,7 @@ export default function ProductGallery({
               }
               fill
               sizes="(max-width: 1024px) 100vw, 46vw"
-              className={`object-contain p-8 ${inStock ? '' : 'grayscale'}`}
+              className="object-contain p-8"
               priority={active === 0}
             />
           </motion.div>
@@ -107,9 +107,9 @@ export default function ProductGallery({
         {!inStock && (
           <span
             className="absolute left-4 top-4 rounded-full px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-white backdrop-blur-md"
-            style={{ background: 'rgba(11,34,55,0.82)' }}
+            style={{ background: 'var(--color-warning)' }}
           >
-            Slut i lager
+            Beställningsvara
           </span>
         )}
 

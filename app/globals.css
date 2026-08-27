@@ -26,6 +26,11 @@
   --color-text-muted: #566A79;   /* Slate */
   --color-border: #C7D1D6;       /* Cool grey-blue border */
   --color-success: #2F7D62;
+  /* Amber for "beställningsvara" — the only stock state besides I lager.
+     Dark enough to clear AA on both --color-bg and --color-surface, which a
+     brighter yellow cannot. Deliberately its own token rather than reusing
+     --color-gold: the brass accent is decoration, this one carries meaning. */
+  --color-warning: #8F6200;
   --color-error: #B03A2E;
 
   /* --- Typography ----------------------------------------- */

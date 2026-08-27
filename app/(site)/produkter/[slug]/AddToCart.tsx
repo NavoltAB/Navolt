@@ -14,8 +14,8 @@ const ease = [0.16, 1, 0.3, 1] as const
  * jump when the taller confirmation replaces the shorter stepper. That height
  * tween is the whole reason this isn't two sibling divs behind a boolean.
  *
- * Out-of-stock parts stay addable on purpose: the basket sends an enquiry, and
- * "when can you get one" is a question Navolt wants to be asked.
+ * Beställningsvaror stay addable on purpose — that is the whole point of the
+ * state: the part is sold, it is just ordered in rather than picked off a shelf.
  */
 export default function AddToCart({
   slug,
@@ -79,7 +79,7 @@ export default function AddToCart({
               </motion.span>
               <div className="min-w-0">
                 <p className="font-heading text-lg font-semibold leading-snug">
-                  Tillagd i offertkorgen
+                  Tillagd i varukorgen
                 </p>
                 <p className="mt-1 text-sm" style={{ color: 'var(--color-text-muted)' }}>
                   {qty} {unitLabel} · {count} {count === 1 ? 'artikel' : 'artiklar'} totalt
@@ -89,7 +89,7 @@ export default function AddToCart({
 
             <div className="mt-6 flex flex-col gap-3">
               <Link href="/offert" className="btn-primary w-full">
-                Visa offertkorgen
+                Visa varukorgen
               </Link>
               <button
                 type="button"
@@ -155,7 +155,7 @@ export default function AddToCart({
                 style={{ borderTop: '1px solid var(--color-border)' }}
               >
                 <span className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
-                  Cirkapris {qty} {unitLabel}
+                  Pris {qty} {unitLabel}
                 </span>
                 <span
                   className="font-heading text-xl font-semibold tabular-nums"
@@ -167,13 +167,13 @@ export default function AddToCart({
             )}
 
             <button type="button" onClick={handleAdd} className="btn-gold mt-5 w-full">
-              Lägg i offertkorgen
+              Lägg i varukorg
             </button>
 
             <p className="mt-3.5 text-xs leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
               {inStock
                 ? 'Ingen bindande beställning — vi bekräftar pris, frakt och leveranstid innan något skickas.'
-                : 'Just nu slut i lager. Lägg den i korgen ändå, så återkommer vi med leveranstid.'}
+                : 'Beställningsvara — vi tar hem den åt dig. Lägg den i korgen, så återkommer vi med leveranstid.'}
             </p>
           </motion.div>
         )}

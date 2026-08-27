@@ -171,7 +171,7 @@ export default function CookieBanner() {
                   <p className="text-sm font-semibold mb-1">Nödvändiga</p>
                   <p className="text-xs leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
                     Krävs för att webbplatsen ska fungera. Här sparas ditt cookie-val och
-                    innehållet i offertkorgen, lokalt i din webbläsare. Ingenting delas med tredje
+                    innehållet i varukorgen, lokalt i din webbläsare. Ingenting delas med tredje
                     part. Kan inte stängas av.
                   </p>
                 </div>

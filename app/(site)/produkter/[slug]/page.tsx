@@ -45,6 +45,15 @@ export async function generateMetadata({
   }
 }
 
+// kB rather than KiB: the number on a download link is read by a customer
+// deciding whether to tap it on mobile data, not by anyone doing arithmetic.
+function fileSize(bytes?: number) {
+  if (!bytes) return null
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} kB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
+
 export default async function ProductPage({
   params,
 }: {
@@ -72,6 +81,7 @@ export default async function ProductPage({
     : undefined
 
   const details = product.productDetails ?? []
+  const documents = product.documents ?? []
 
   return (
     <PageTransition>
@@ -197,7 +207,7 @@ export default async function ProductPage({
                   style={{
                     color: product.inStock
                       ? 'var(--color-success)'
-                      : 'var(--color-text-muted)',
+                      : 'var(--color-warning)',
                   }}
                 >
                   <span
@@ -206,12 +216,29 @@ export default async function ProductPage({
                     style={{
                       background: product.inStock
                         ? 'var(--color-success)'
-                        : 'var(--color-text-muted)',
+                        : 'var(--color-warning)',
                     }}
                   />
-                  {product.inStock ? 'I lager' : 'Slut i lager'}
+                  {product.inStock ? 'I lager' : 'Beställningsvara'}
                 </span>
               </div>
+
+              {/* The model is the whole reason someone is on a båtruta page, so
+                  it sits with the price rather than buried in the spec table —
+                  and it links back into the filtered index, which is the next
+                  thing a customer with that boat wants. */}
+              {product.boatModel && (
+                <p className="mt-5 text-sm" style={{ color: 'var(--color-text-muted)' }}>
+                  Passar{' '}
+                  <Link
+                    href={`/produkter?modell=${product.boatModel.slug}`}
+                    className="font-medium underline underline-offset-4 transition-colors hover:text-primary"
+                    style={{ color: 'var(--color-text)' }}
+                  >
+                    {product.boatModel.name}
+                  </Link>
+                </p>
+              )}
 
               {product.description && product.description.length > 0 ? (
                 <div className="prose-sanity mt-7">
@@ -270,26 +297,81 @@ export default async function ProductPage({
                 </span>
               </a>
 
-              {details.length > 0 && (
+              {(details.length > 0 || documents.length > 0) && (
                 <div className="mt-10">
                   <p className="section-label mb-4">Specifikation</p>
-                  <StaggerContainer>
-                    <dl>
-                      {details.map((detail, i) => (
-                        <StaggerItem key={`${detail.label}-${i}`}>
-                          <div
-                            className="flex items-baseline justify-between gap-6 py-3.5"
-                            style={{ borderTop: '1px solid var(--color-border)' }}
-                          >
-                            <dt className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
-                              {detail.label}
-                            </dt>
-                            <dd className="text-right text-sm font-medium">{detail.value}</dd>
-                          </div>
-                        </StaggerItem>
-                      ))}
-                    </dl>
-                  </StaggerContainer>
+                  {details.length > 0 && (
+                    <StaggerContainer>
+                      <dl>
+                        {details.map((detail, i) => (
+                          <StaggerItem key={`${detail.label}-${i}`}>
+                            <div
+                              className="flex items-baseline justify-between gap-6 py-3.5"
+                              style={{ borderTop: '1px solid var(--color-border)' }}
+                            >
+                              <dt className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
+                                {detail.label}
+                              </dt>
+                              <dd className="text-right text-sm font-medium">{detail.value}</dd>
+                            </div>
+                          </StaggerItem>
+                        ))}
+                      </dl>
+                    </StaggerContainer>
+                  )}
+
+                  {/* Manuals and datasheets sit with the spec table because
+                      that is the same question being answered — what is this
+                      thing, exactly — and a customer hunting for a
+                      monteringsanvisning looks under the specs, not in the
+                      description. */}
+                  {documents.length > 0 && (
+                    <StaggerContainer className={details.length > 0 ? 'mt-8' : undefined}>
+                      <ul>
+                        {documents.map((doc, i) => {
+                          const size = fileSize(doc.size)
+                          const label = doc.title || doc.filename || 'Dokument'
+                          return (
+                            <StaggerItem key={`${doc.url ?? label}-${i}`}>
+                              <a
+                                href={doc.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="group flex items-center gap-3.5 py-3.5 transition-colors"
+                                style={{ borderTop: '1px solid var(--color-border)' }}
+                              >
+                                <span
+                                  aria-hidden
+                                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors duration-300 group-hover:bg-[var(--color-gold)] group-hover:text-white"
+                                  style={{
+                                    background: 'rgba(192,138,62,0.12)',
+                                    color: 'var(--color-gold-ink)',
+                                  }}
+                                >
+                                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
+                                    <path d="M12 3v12" />
+                                    <polyline points="7 11 12 16 17 11" />
+                                    <path d="M4 20h16" />
+                                  </svg>
+                                </span>
+                                <span className="min-w-0 flex-1">
+                                  <span className="block text-sm font-medium transition-colors group-hover:text-[var(--color-gold-ink)]">
+                                    {label}
+                                  </span>
+                                  <span
+                                    className="block text-xs"
+                                    style={{ color: 'var(--color-text-muted)' }}
+                                  >
+                                    {[doc.ext?.toUpperCase(), size].filter(Boolean).join(' · ')}
+                                  </span>
+                                </span>
+                              </a>
+                            </StaggerItem>
+                          )
+                        })}
+                      </ul>
+                    </StaggerContainer>
+                  )}
                 </div>
               )}
             </AnimatedSection>

@@ -1,11 +1,17 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { getAllProducts, getAllCategories, getProductsPage } from '@/sanity/queries'
+import {
+  getAllProducts,
+  getAllCategories,
+  getAllBoatModels,
+  getProductsPage,
+} from '@/sanity/queries'
 import { text } from '@/sanity/fallback'
 import AnimatedSection from '@/components/AnimatedSection'
 import PageTransition from '@/components/PageTransition'
 import ProductsHero from './ProductsHero'
 import ProductsShell from './ProductsShell'
+import { DEFAULT_SORT, isSortKey } from './sort'
 
 export const revalidate = 60
 
@@ -33,20 +39,29 @@ export const metadata: Metadata = {
 export default async function ProductsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ kategori?: string }>
+  searchParams: Promise<{ kategori?: string; modell?: string; sortera?: string }>
 }) {
-  const { kategori } = await searchParams
-  const [products, categories, page] = await Promise.all([
+  const { kategori, modell, sortera } = await searchParams
+  const [products, categories, boatModels, page] = await Promise.all([
     getAllProducts(),
     getAllCategories(),
+    getAllBoatModels(),
     getProductsPage(),
   ])
 
-  // Read once here and handed to the client as a starting value — from then on
-  // the filter lives on the client so it can animate. An unknown or stale slug
-  // falls back to "alla" rather than deep-linking into an empty grid.
+  // Read once here and handed to the client as starting values — from then on
+  // the filters live on the client so they can animate. Unknown or stale values
+  // are dropped rather than deep-linking into an empty grid: a model that was
+  // deleted in the studio should leave a working page behind, not a dead link.
   const initialCategory =
     kategori && categories.some((c) => c.slug === kategori) ? kategori : 'alla'
+
+  const initialModels = (modell ?? '')
+    .split(',')
+    .map((slug) => slug.trim())
+    .filter((slug) => boatModels.some((m) => m.slug === slug))
+
+  const initialSort = isSortKey(sortera) ? sortera : DEFAULT_SORT
 
   return (
     <PageTransition>
@@ -60,7 +75,10 @@ export default async function ProductsPage({
       <ProductsShell
         products={products}
         categories={categories.map((c) => ({ slug: c.slug, title: c.title }))}
+        boatModels={boatModels}
         initialCategory={initialCategory}
+        initialModels={initialModels}
+        initialSort={initialSort}
       />
 
       {/* Closing band — /tjanster and the landing page both end on one, so the

@@ -61,7 +61,7 @@ export default function IntegritetspolicyPage() {
                 <li>Vad förfrågan gäller, och dina svar på följdfrågorna om båten eller bilen</li>
                 <li>Ditt meddelande</li>
                 <li>Bilder eller dokument du själv väljer att bifoga</li>
-                <li>De produkter du lagt i offertkorgen, om du begär en offert</li>
+                <li>De produkter du lagt i varukorgen, när du skickar en beställning</li>
               </ul>
               <p className="text-sm leading-relaxed mt-3">
                 Vi samlar inte in uppgifter om dig utan att du aktivt skickar in ett formulär, och

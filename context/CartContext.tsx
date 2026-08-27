@@ -1,7 +1,7 @@
 'use client'
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 
-const STORAGE_KEY = 'navolt-offertkorg'
+const STORAGE_KEY = 'navolt-varukorg'
 
 /**
  * The basket holds enough to render itself without another Sanity round trip —

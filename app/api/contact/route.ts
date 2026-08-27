@@ -2,7 +2,7 @@ import { Resend } from 'resend'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import {
-  FIELDS_BY_SUBJECT,
+  visibleFields,
   SUBJECTS,
   MAX_FILES,
   MAX_TOTAL_BYTES,
@@ -23,6 +23,7 @@ const schema = z.object({
   boatLocation: z.string().max(200).optional(),
   boatPlacement: z.string().max(120).optional(),
   windowRequest: z.string().max(120).optional(),
+  windowMould: z.string().max(120).optional(),
   vehicleModel: z.string().max(200).optional(),
   vehicleLocation: z.string().max(200).optional(),
 })
@@ -108,7 +109,7 @@ export async function POST(req: NextRequest) {
     // off the shared map is what keeps the email's labels identical to the
     // form's — and what stops a hand-crafted POST attaching "Båtmodell" to an
     // enquiry about a husbil.
-    const detailRows = FIELDS_BY_SUBJECT[data.subject]
+    const detailRows = visibleFields(data.subject, data)
       .map((field) => {
         const value = data[field.key]
         return value ? row(field.label, esc(value)) : ''

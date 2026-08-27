@@ -8,15 +8,40 @@ import { z } from 'zod'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import PageTransition from '@/components/PageTransition'
 import { MAX_QTY, useCart } from '@/context/CartContext'
+import { siteConfig } from '@/config/site'
+import { DELIVERY_OPTIONS } from '@/lib/order'
 
 const ease = [0.16, 1, 0.3, 1] as const
 
-const schema = z.object({
-  name: z.string().min(2, 'Ange ditt namn'),
-  email: z.string().email('Ange en giltig e-postadress'),
-  phone: z.string().optional(),
-  message: z.string().optional(),
-})
+const schema = z
+  .object({
+    name: z.string().min(2, 'Ange ditt namn'),
+    email: z.string().email('Ange en giltig e-postadress'),
+    phone: z.string().optional(),
+    delivery: z.enum(DELIVERY_OPTIONS),
+    address: z.string().optional(),
+    postalCode: z.string().optional(),
+    country: z.string().optional(),
+    message: z.string().optional(),
+  })
+  // The address is only required for something being shipped. Asking someone
+  // collecting in Hälsö for a delivery address is noise, so the fields are both
+  // hidden and unvalidated in that case — and no stale address rides along in
+  // the email either, because onSubmit strips them.
+  .superRefine((data, ctx) => {
+    if (data.delivery !== 'Leverans') return
+    const demand = (field: 'address' | 'postalCode' | 'country', min: number, message: string) => {
+      if ((data[field] ?? '').trim().length < min) {
+        ctx.addIssue({ code: 'custom', path: [field], message })
+      }
+    }
+    demand('address', 3, 'Ange leveransadress')
+    // Deliberately not a Swedish five-digit pattern — the country is free text,
+    // and rejecting a valid Norwegian postcode would be worse than accepting a
+    // typo a human reads anyway.
+    demand('postalCode', 4, 'Ange postnummer')
+    demand('country', 2, 'Ange land')
+  })
 
 type FormData = z.infer<typeof schema>
 
@@ -36,8 +61,17 @@ export default function OffertPage() {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
-  } = useForm<FormData>({ resolver: zodResolver(schema) })
+  } = useForm<FormData>({
+    resolver: zodResolver(schema),
+    // Leverans first so the address block is open by default — most orders ship,
+    // and a form that starts collapsed hides what it is going to ask for.
+    defaultValues: { delivery: 'Leverans', country: 'Sverige' },
+  })
+
+  const delivery = watch('delivery')
+  const shipping = delivery === 'Leverans'
 
   const priced = items.filter((i) => i.price != null)
   const total = priced.reduce((sum, i) => sum + (i.price ?? 0) * i.quantity, 0)
@@ -50,6 +84,9 @@ export default function OffertPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...data,
+          // Collected orders carry no address, whatever is still sitting in the
+          // form state from before the visitor switched.
+          ...(shipping ? {} : { address: undefined, postalCode: undefined, country: undefined }),
           items: items.map(({ slug, name, quantity, price, unit }) => ({
             slug,
             name,
@@ -82,13 +119,13 @@ export default function OffertPage() {
               Produkter
             </Link>
             <span aria-hidden className="opacity-50">/</span>
-            <span style={{ color: 'var(--color-text)' }}>Offertkorg</span>
+            <span style={{ color: 'var(--color-text)' }}>Varukorg</span>
           </nav>
 
-          <p className="section-label mb-3">Din förfrågan</p>
-          <h1 className="section-title mb-4">Offertkorg</h1>
+          <p className="section-label mb-3">Din beställning</p>
+          <h1 className="section-title mb-4">Varukorg</h1>
           <p className="section-subtitle">
-            Gå igenom delarna, fyll i dina uppgifter och skicka. Du får en offert med
+            Gå igenom delarna, fyll i dina uppgifter och skicka. Du får en bekräftelse med
             pris, frakt och leveranstid tillbaka — ingenting skickas innan du sagt ja.
           </p>
         </div>
@@ -125,9 +162,9 @@ export default function OffertPage() {
                     />
                   </svg>
                 </motion.span>
-                <h2 className="section-title mb-4">Tack — vi har din förfrågan</h2>
+                <h2 className="section-title mb-4">Tack — vi har din beställning</h2>
                 <p className="section-subtitle mx-auto mb-8">
-                  Vi läser igenom den och återkommer med offert, oftast inom en arbetsdag.
+                  Vi läser igenom den och återkommer med en bekräftelse, oftast inom en arbetsdag.
                   Är det bråttom är det snabbaste att ringa.
                 </p>
                 <Link href="/produkter" className="btn-primary">
@@ -152,7 +189,7 @@ export default function OffertPage() {
                 <p className="font-heading text-2xl font-semibold">Korgen är tom</p>
                 <p className="mt-3 max-w-md" style={{ color: 'var(--color-text-muted)' }}>
                   Lägg till delarna du är intresserad av, så samlar vi ihop dem till en
-                  offert. Vet du redan vad du behöver går det lika bra att höra av sig direkt.
+                  beställning. Vet du redan vad du behöver går det lika bra att höra av sig direkt.
                 </p>
                 <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                   <Link href="/produkter" className="btn-primary">
@@ -313,11 +350,11 @@ export default function OffertPage() {
                       style={{ borderTop: '2px solid var(--color-primary)' }}
                     >
                       <div>
-                        <p className="font-heading text-lg font-semibold">Cirkapris</p>
+                        <p className="font-heading text-lg font-semibold">Pris</p>
                         <p className="mt-1 text-xs" style={{ color: 'var(--color-text-muted)' }}>
                           {priced.length < items.length
                             ? 'Exklusive delar med pris på förfrågan. Frakt tillkommer.'
-                            : 'Exklusive frakt. Slutpriset står i offerten.'}
+                            : 'Exklusive frakt. Slutpriset bekräftas innan vi skickar.'}
                         </p>
                       </div>
                       <p
@@ -338,7 +375,7 @@ export default function OffertPage() {
                   <div className="card p-6 md:p-7 lg:sticky lg:top-32">
                     <h2 className="font-heading text-xl font-semibold">Dina uppgifter</h2>
                     <p className="mb-6 mt-1.5 text-sm" style={{ color: 'var(--color-text-muted)' }}>
-                      Berätta gärna vilken båt eller bil det gäller — det gör offerten
+                      Berätta gärna vilken båt eller bil det gäller — det gör beställningen
                       träffsäkrare.
                     </p>
 
@@ -388,6 +425,109 @@ export default function OffertPage() {
                         />
                       </div>
 
+                      <fieldset>
+                        <legend className="label">Leveranssätt *</legend>
+                        <div className="mt-1 flex flex-wrap gap-x-8 gap-y-2">
+                          {DELIVERY_OPTIONS.map((option) => (
+                            <label
+                              key={option}
+                              className="flex cursor-pointer items-center gap-2.5 text-sm"
+                            >
+                              <input
+                                type="radio"
+                                value={option}
+                                {...register('delivery')}
+                                className="radio"
+                              />
+                              {option}
+                            </label>
+                          ))}
+                        </div>
+                      </fieldset>
+
+                      {/* Height-animated rather than toggled outright, so the
+                          card doesn't snap open and shut under the cursor when
+                          the visitor switches between the two. */}
+                      <AnimatePresence initial={false} mode="wait">
+                        {shipping ? (
+                          <motion.div
+                            key="address"
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            transition={{ duration: reduceMotion ? 0 : 0.35, ease }}
+                            className="overflow-hidden"
+                          >
+                            <div className="space-y-4 pt-1">
+                              <div>
+                                <label htmlFor="offert-address" className="label">Adress *</label>
+                                <input
+                                  id="offert-address"
+                                  {...register('address')}
+                                  placeholder="Gatuadress"
+                                  autoComplete="street-address"
+                                  className="input"
+                                />
+                                {errors.address && (
+                                  <p className="mt-1 text-xs" style={{ color: 'var(--color-error)' }}>
+                                    {errors.address.message}
+                                  </p>
+                                )}
+                              </div>
+
+                              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                <div>
+                                  <label htmlFor="offert-postal" className="label">Postnummer *</label>
+                                  <input
+                                    id="offert-postal"
+                                    {...register('postalCode')}
+                                    placeholder="475 50"
+                                    inputMode="numeric"
+                                    autoComplete="postal-code"
+                                    className="input"
+                                  />
+                                  {errors.postalCode && (
+                                    <p className="mt-1 text-xs" style={{ color: 'var(--color-error)' }}>
+                                      {errors.postalCode.message}
+                                    </p>
+                                  )}
+                                </div>
+
+                                <div>
+                                  <label htmlFor="offert-country" className="label">Land *</label>
+                                  <input
+                                    id="offert-country"
+                                    {...register('country')}
+                                    placeholder="Sverige"
+                                    autoComplete="country-name"
+                                    className="input"
+                                  />
+                                  {errors.country && (
+                                    <p className="mt-1 text-xs" style={{ color: 'var(--color-error)' }}>
+                                      {errors.country.message}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </motion.div>
+                        ) : (
+                          <motion.p
+                            key="pickup"
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            transition={{ duration: reduceMotion ? 0 : 0.35, ease }}
+                            className="overflow-hidden text-sm leading-relaxed"
+                            style={{ color: 'var(--color-text-muted)' }}
+                          >
+                            Du hämtar hos oss på{' '}
+                            {siteConfig.contact.address.split('\n').join(', ')}. Vi hör av
+                            oss när beställningen är klar att hämta.
+                          </motion.p>
+                        )}
+                      </AnimatePresence>
+
                       <div>
                         <label htmlFor="offert-message" className="label">Meddelande</label>
                         <textarea
@@ -415,15 +555,15 @@ export default function OffertPage() {
                         disabled={status === 'sending'}
                         className="btn-gold mt-1 w-full"
                       >
-                        {status === 'sending' ? 'Skickar…' : 'Skicka offertförfrågan'}
+                        {status === 'sending' ? 'Skickar…' : 'Skicka beställning'}
                       </button>
 
                       <p
                         className="text-xs leading-relaxed"
                         style={{ color: 'var(--color-text-muted)' }}
                       >
-                        Förfrågan är inte bindande. Vi hör av oss med pris och leveranstid
-                        innan något beställs hem.
+                        Beställningen är inte bindande förrän vi bekräftat den. Vi hör av oss med
+                        pris, frakt och leveranstid innan något skickas.
                       </p>
                     </form>
                   </div>

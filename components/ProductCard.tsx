@@ -76,7 +76,7 @@ export default function ProductCard({ product }: { product: Product }) {
                   sizes={sizes}
                   className={`object-cover ${sweep} group-hover:scale-[1.05] ${
                     hover ? 'group-hover:opacity-0' : ''
-                  } ${product.inStock ? '' : 'grayscale'}`}
+                  }`}
                 />
                 {/* Second shot from the images array, when there is one. */}
                 {hover && (
@@ -86,9 +86,7 @@ export default function ProductCard({ product }: { product: Product }) {
                     aria-hidden
                     fill
                     sizes={sizes}
-                    className={`object-cover opacity-0 ${sweep} group-hover:scale-[1.05] group-hover:opacity-100 ${
-                      product.inStock ? '' : 'grayscale'
-                    }`}
+                    className={`object-cover opacity-0 ${sweep} group-hover:scale-[1.05] group-hover:opacity-100`}
                   />
                 )}
               </>
@@ -127,14 +125,15 @@ export default function ProductCard({ product }: { product: Product }) {
             </span>
           )}
 
-          {/* A chip plus the grayscale above, rather than a slab across the
-              photo — it still reads instantly but doesn't wreck the card. */}
+          {/* A chip rather than a slab across the photo — it reads instantly
+              without wrecking the card. The photo is left in full colour: a
+              beställningsvara is for sale, it just gets ordered in. */}
           {!product.inStock && (
             <span
               className="absolute top-3 right-3 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-white backdrop-blur-md"
-              style={{ background: 'rgba(11,34,55,0.82)' }}
+              style={{ background: 'var(--color-warning)' }}
             >
-              Slut i lager
+              Beställningsvara
             </span>
           )}
         </div>

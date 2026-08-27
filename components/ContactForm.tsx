@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   SUBJECTS,
   FIELDS_BY_SUBJECT,
+  visibleFields,
   CONDITIONAL_KEYS,
   ACCEPTED_EXTENSIONS,
   MAX_FILES,
@@ -38,6 +39,7 @@ const schema = z.object({
   boatLocation: z.string().optional(),
   boatPlacement: z.string().optional(),
   windowRequest: z.string().optional(),
+  windowMould: z.string().optional(),
   vehicleModel: z.string().optional(),
   vehicleLocation: z.string().optional(),
 })
@@ -62,6 +64,8 @@ export default function ContactForm() {
     handleSubmit,
     reset,
     watch,
+    getValues,
+    setValue,
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -69,7 +73,26 @@ export default function ContactForm() {
   })
 
   const subject = watch('subject')
-  const conditionalFields = isSubject(subject) ? FIELDS_BY_SUBJECT[subject] : []
+  // Watched so a question gated behind another answer appears the moment that
+  // answer is picked. `watch()` with no argument re-renders on every keystroke,
+  // so only the keys something is actually gated on are subscribed to.
+  const windowRequest = watch('windowRequest')
+  const conditionalFields = isSubject(subject)
+    ? visibleFields(subject, { windowRequest })
+    : []
+
+  // A question that has been answered and then hidden again — Ja, answered, then
+  // back to Nej — must not keep its answer. The submit already drops it, but
+  // leaving it in form state means it silently reappears if the visitor flips
+  // back, which reads as the form having answered for them.
+  useEffect(() => {
+    if (!isSubject(subject)) return
+    const shown = visibleFields(subject, { windowRequest })
+    for (const field of FIELDS_BY_SUBJECT[subject]) {
+      const stillShown = shown.some((visible) => visible.key === field.key)
+      if (!stillShown && getValues(field.key)) setValue(field.key, '')
+    }
+  }, [subject, windowRequest, getValues, setValue])
 
 
   /** Adds to the current selection, rejecting the whole batch with one readable

@@ -358,7 +358,7 @@ export default function Navigation() {
                 >
                   <Link
                     href="/offert"
-                    aria-label={`Offertkorg, ${count} ${count === 1 ? 'artikel' : 'artiklar'}`}
+                    aria-label={`Varukorg, ${count} ${count === 1 ? 'artikel' : 'artiklar'}`}
                     className="flex h-9 w-9 items-center justify-center rounded-full transition-colors duration-300"
                     style={{ background: 'rgba(255,255,255,0.12)', color: 'var(--color-gold)' }}
                   >
@@ -484,7 +484,7 @@ export default function Navigation() {
                   href="/offert"
                   className="flex items-center justify-between py-3 text-lg font-medium tracking-wide border-b border-white/[0.08] text-white/75"
                 >
-                  Offertkorg
+                  Varukorg
                   <span
                     className="flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] font-semibold tabular-nums text-white"
                     style={{ background: 'var(--color-gold)' }}

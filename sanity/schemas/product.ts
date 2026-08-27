@@ -53,6 +53,14 @@ export const productSchema = defineType({
       validation: (Rule) => Rule.required(),
     }),
     defineField({
+      name: 'boatModel',
+      title: 'Båtmodell',
+      type: 'reference',
+      to: [{ type: 'boatModel' }],
+      description:
+        'Vilken båt produkten är gjord för. Fylls i för båtrutor och monteringspaket — lämna tom för produkter som inte hör till en viss båt. Styr filtret på /produkter.',
+    }),
+    defineField({
       name: 'images',
       title: 'Bilder',
       type: 'array',
@@ -107,9 +115,38 @@ export const productSchema = defineType({
       ],
     }),
     defineField({
+      name: 'documents',
+      title: 'Dokument',
+      type: 'array',
+      description:
+        'Monteringsanvisningar, datablad, mallar — laddas ned från produktsidan under "Specifikation".',
+      of: [
+        {
+          type: 'file',
+          fields: [
+            defineField({
+              name: 'title',
+              title: 'Namn',
+              type: 'string',
+              description:
+                'Vad länken ska heta, t.ex. "Monteringsanvisning". Lämnas det tomt används filnamnet.',
+            }),
+          ],
+          preview: {
+            select: { title: 'title', filename: 'asset.originalFilename' },
+            prepare({ title, filename }) {
+              return { title: title || filename || 'Dokument', subtitle: title ? filename : undefined }
+            },
+          },
+        },
+      ],
+    }),
+    defineField({
       name: 'inStock',
       title: 'I lager',
       type: 'boolean',
+      description:
+        'På = "I lager" (grön) på produktsidan. Av = "Beställningsvara" (gul) — produkten säljs fortfarande och går att lägga i varukorgen, den tas bara hem på beställning.',
       initialValue: true,
     }),
     defineField({
@@ -120,12 +157,13 @@ export const productSchema = defineType({
     }),
   ],
   preview: {
-    select: { title: 'name', subtitle: 'category.title', media: 'images.0', price: 'price', inStock: 'inStock' },
-    prepare({ title, subtitle, media, price, inStock }) {
+    select: { title: 'name', subtitle: 'category.title', boatModel: 'boatModel.name', media: 'images.0', price: 'price', inStock: 'inStock' },
+    prepare({ title, subtitle, boatModel, media, price, inStock }) {
       const parts: string[] = []
       if (subtitle) parts.push(subtitle)
+      if (boatModel) parts.push(boatModel)
       if (price) parts.push(`${price} kr`)
-      if (inStock === false) parts.push('EJ I LAGER')
+      if (inStock === false) parts.push('BESTÄLLNINGSVARA')
       return { title, subtitle: parts.join(' · '), media }
     },
   },

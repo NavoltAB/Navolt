@@ -4,6 +4,7 @@ import type {
   Category,
   Service,
   Brand,
+  BoatModel,
   HomePage,
   AboutPage,
   KontaktPage,
@@ -17,9 +18,11 @@ const opts300 = { next: { revalidate: 300 } }
 
 const productFields = `
   _id,
+  _createdAt,
   name,
   "slug": slug.current,
   "category": category->{ _id, title, "slug": slug.current },
+  "boatModel": boatModel->{ _id, name, "slug": slug.current },
   price,
   unit,
   inStock,
@@ -32,6 +35,21 @@ export async function getAllCategories(): Promise<Category[]> {
   if (!isSanityConfigured) return []
   return client.fetch(
     `*[_type == "category"] | order(title asc) { _id, title, "slug": slug.current }`,
+    {},
+    opts300
+  )
+}
+
+// Every model in Sanity, not only the ones already sitting on a product — the
+// filter counts each option against the catalogue itself, and a model that
+// vanished from the list the moment its last product went out of stock would
+// read as a bug to whoever just created it. `order` first so the common boats
+// can be pinned to the top, then name, so untouched models still land
+// alphabetically rather than arbitrarily.
+export async function getAllBoatModels(): Promise<BoatModel[]> {
+  if (!isSanityConfigured) return []
+  return client.fetch(
+    `*[_type == "boatModel"] | order(order asc, name asc) { _id, name, "slug": slug.current, order }`,
     {},
     opts300
   )
@@ -75,12 +93,20 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
       name,
       "slug": slug.current,
       "category": category->{ _id, title, "slug": slug.current },
+      "boatModel": boatModel->{ _id, name, "slug": slug.current },
       price,
       unit,
       inStock,
       shortDescription,
       description,
       productDetails,
+      "documents": documents[defined(asset)]{
+        title,
+        "url": asset->url,
+        "filename": asset->originalFilename,
+        "ext": asset->extension,
+        "size": asset->size
+      },
       images
     }`,
     { slug },
