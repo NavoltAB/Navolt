@@ -1,5 +1,9 @@
 'use client'
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { missingKits, type CartItem, type CartLine, type MissingKit } from '@/lib/cart'
+
+export { missingKits }
+export type { CartItem, CartLine, MissingKit }
 
 const STORAGE_KEY = 'navolt-varukorg'
 
@@ -12,15 +16,6 @@ const STORAGE_KEY = 'navolt-varukorg'
  * and sending. That's deliberate: the basket is an enquiry, not an order, and
  * the price is quoted back by a human who reads the current catalogue anyway.
  */
-export interface CartItem {
-  slug: string
-  name: string
-  quantity: number
-  price?: number
-  unit?: string
-  image?: string
-}
-
 interface CartContextValue {
   items: CartItem[]
   /** False until localStorage has been read. Guards against rendering a count
@@ -50,7 +45,7 @@ function parse(raw: string): CartItem[] {
   if (!Array.isArray(data)) return []
   return data.flatMap((entry): CartItem[] => {
     if (typeof entry !== 'object' || entry === null) return []
-    const { slug, name, quantity, price, unit, image } = entry as Record<string, unknown>
+    const { slug, name, quantity, price, unit, image, kit } = entry as Record<string, unknown>
     if (typeof slug !== 'string' || !slug || typeof name !== 'string' || !name) return []
     return [
       {
@@ -60,9 +55,25 @@ function parse(raw: string): CartItem[] {
         price: typeof price === 'number' ? price : undefined,
         unit: typeof unit === 'string' ? unit : undefined,
         image: typeof image === 'string' ? image : undefined,
+        kit: parseLine(kit),
       },
     ]
   })
+}
+
+/** Same hostile treatment as the rows themselves: a malformed kit is dropped,
+ *  it never takes the cart down with it. */
+function parseLine(value: unknown): CartLine | undefined {
+  if (typeof value !== 'object' || value === null) return undefined
+  const { slug, name, price, unit, image } = value as Record<string, unknown>
+  if (typeof slug !== 'string' || !slug || typeof name !== 'string' || !name) return undefined
+  return {
+    slug,
+    name,
+    price: typeof price === 'number' ? price : undefined,
+    unit: typeof unit === 'string' ? unit : undefined,
+    image: typeof image === 'string' ? image : undefined,
+  }
 }
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
@@ -95,7 +106,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       // replacing it — "add 2" twice means 4, which is what the button says.
       if (existing) {
         return prev.map((i) =>
-          i.slug === item.slug ? { ...i, quantity: clamp(i.quantity + item.quantity) } : i
+          i.slug === item.slug
+            ? { ...i, quantity: clamp(i.quantity + item.quantity), kit: item.kit ?? i.kit }
+            : i
         )
       }
       return [...prev, { ...item, quantity: clamp(item.quantity) }]

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import {
@@ -82,6 +83,23 @@ export default async function ProductPage({
 
   const details = product.productDetails ?? []
   const documents = product.documents ?? []
+
+  const kit = product.mountingKit ?? null
+  // The reminder is worth showing even when no kit has been linked yet — a gap
+  // in the catalogue becomes a phone call rather than a customer who buys a
+  // ruta and discovers on the pontoon that it cannot be fitted.
+  const needsKit = product.requiresKit === true || kit != null
+  const kitLine = kit
+    ? {
+        slug: kit.slug,
+        name: kit.name,
+        price: kit.price,
+        unit: kit.unit,
+        image: kit.mainImage
+          ? urlFor(kit.mainImage).width(160).height(160).fit('crop').url()
+          : undefined,
+      }
+    : undefined
 
   return (
     <PageTransition>
@@ -240,6 +258,23 @@ export default async function ProductPage({
                 </p>
               )}
 
+              {needsKit && (
+                <p
+                  className="mt-5 inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.12em]"
+                  style={{
+                    background: 'rgba(192,138,62,0.12)',
+                    color: 'var(--color-gold-ink)',
+                  }}
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden>
+                    <path d="M12 8v5" />
+                    <path d="M12 16.5v.5" />
+                    <circle cx="12" cy="12" r="9" />
+                  </svg>
+                  Monteringspaket krävs
+                </p>
+              )}
+
               {product.description && product.description.length > 0 ? (
                 <div className="prose-sanity mt-7">
                   <PortableText value={product.description} />
@@ -261,6 +296,7 @@ export default async function ProductPage({
                   unit={product.unit}
                   image={cartImage}
                   inStock={product.inStock}
+                  kit={kitLine}
                 />
               </div>
 
@@ -296,6 +332,95 @@ export default async function ProductPage({
                   </span>
                 </span>
               </a>
+
+              {needsKit && (
+                <div className="mt-10">
+                  <p className="section-label mb-4">Krävs för montering</p>
+                  {kit ? (
+                    <Link
+                      href={`/produkter/${kit.slug}`}
+                      className="group flex items-center gap-4 rounded-[var(--radius-md)] p-4 transition-colors"
+                      style={{
+                        background: 'rgba(192,138,62,0.07)',
+                        border: '1px solid rgba(192,138,62,0.3)',
+                      }}
+                    >
+                      <span
+                        className="relative h-16 w-16 shrink-0 overflow-hidden"
+                        style={{
+                          background: 'var(--color-bg)',
+                          borderRadius: 'var(--radius-sm)',
+                        }}
+                      >
+                        {kit.mainImage ? (
+                          <Image
+                            src={urlFor(kit.mainImage).width(160).height(160).fit('crop').url()}
+                            alt={kit.name}
+                            fill
+                            sizes="64px"
+                            className="object-cover"
+                          />
+                        ) : (
+                          <span
+                            className="flex h-full w-full items-center justify-center font-heading text-xl font-semibold"
+                            style={{ color: 'var(--color-border)' }}
+                          >
+                            {kit.name.charAt(0)}
+                          </span>
+                        )}
+                      </span>
+
+                      <span className="min-w-0 flex-1">
+                        <span
+                          className="block font-heading font-semibold leading-snug transition-colors group-hover:text-[var(--color-gold-ink)]"
+                          style={{ color: 'var(--color-primary)' }}
+                        >
+                          {kit.name}
+                        </span>
+                        <span
+                          className="mt-1 block text-sm tabular-nums"
+                          style={{ color: 'var(--color-text-muted)' }}
+                        >
+                          {kit.price != null
+                            ? `${kit.price.toLocaleString('sv-SE')} kr${kit.unit ? ` / ${kit.unit}` : ''}`
+                            : 'Pris på förfrågan'}
+                        </span>
+                      </span>
+
+                      <span
+                        aria-hidden
+                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors duration-300 group-hover:bg-[var(--color-gold)] group-hover:text-white"
+                        style={{
+                          background: 'rgba(192,138,62,0.14)',
+                          color: 'var(--color-gold-ink)',
+                        }}
+                      >
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <polyline points="9 18 15 12 9 6" />
+                        </svg>
+                      </span>
+                    </Link>
+                  ) : (
+                    /* Marked as needing a kit, but none linked yet. A dead end
+                       here would cost an order; a phone call recovers it. */
+                    <div
+                      className="rounded-[var(--radius-md)] p-5"
+                      style={{
+                        background: 'rgba(192,138,62,0.07)',
+                        border: '1px solid rgba(192,138,62,0.3)',
+                      }}
+                    >
+                      <p className="text-sm leading-relaxed" style={{ color: 'var(--color-text)' }}>
+                        Den här rutan kräver ett monteringspaket. Vi har inget uppe för just den
+                        här ännu — hör av dig så tar vi fram rätt sats.
+                      </p>
+                      <Link href="/kontakt" className="btn-outline mt-4">
+                        Kontakta oss
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {(details.length > 0 || documents.length > 0) && (
                 <div className="mt-10">

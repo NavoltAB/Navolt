@@ -11,13 +11,13 @@ import {
 } from '@/lib/contactForm'
 
 const schema = z.object({
-  name: z.string().min(1).max(120),
-  email: z.string().email().max(200),
-  phone: z.string().min(1).max(60),
+  name: z.string().trim().min(1).max(120),
+  email: z.string().trim().email().max(200),
+  phone: z.string().trim().min(1).max(60),
   // An enum, not free text: the form offers five options and the follow-up
   // questions are keyed off the answer, so anything else has no meaning here.
   subject: z.enum(SUBJECTS),
-  message: z.string().min(1).max(4000),
+  message: z.string().trim().min(1).max(4000),
   boatHelp: z.string().max(120).optional(),
   boatModel: z.string().max(200).optional(),
   boatLocation: z.string().max(200).optional(),

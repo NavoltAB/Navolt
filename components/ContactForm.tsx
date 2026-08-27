@@ -21,9 +21,9 @@ import {
 } from '@/lib/contactForm'
 
 const schema = z.object({
-  name: z.string().min(2, 'Ange ditt namn'),
-  email: z.string().email('Ange en giltig e-postadress'),
-  phone: z.string().min(6, 'Ange ditt telefonnummer'),
+  name: z.string().trim().min(2, 'Ange ditt namn'),
+  email: z.string().trim().email('Ange en giltig e-postadress'),
+  phone: z.string().trim().min(6, 'Ange ditt telefonnummer'),
   // The `: boolean` is load-bearing. `isSubject` is a type guard, and TypeScript
   // infers a predicate for any arrow that just forwards to one — which sends
   // .refine() down its narrowing overload, so the schema's output type becomes
@@ -31,7 +31,7 @@ const schema = z.object({
   // visitor picks). Annotating the return keeps the check and drops the
   // narrowing; `isSubject` is used directly where a narrowed type is wanted.
   subject: z.string().refine((v): boolean => isSubject(v), 'Välj vad din förfrågan gäller'),
-  message: z.string().min(10, 'Meddelandet är för kort'),
+  message: z.string().trim().min(10, 'Meddelandet är för kort'),
   // Every follow-up question is optional: which ones are even on screen depends
   // on the subject, and none of them is worth blocking a submit over.
   boatHelp: z.string().optional(),
@@ -186,6 +186,7 @@ export default function ContactForm() {
           animate={{ opacity: 1 }}
           onSubmit={handleSubmit(onSubmit)}
           className="space-y-6"
+          noValidate
         >
           <div>
             <label className="label">För- och efternamn *</label>

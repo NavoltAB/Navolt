@@ -4,8 +4,8 @@ import { z } from 'zod'
 import { DELIVERY_OPTIONS } from '@/lib/order'
 
 const schema = z.object({
-  name: z.string().min(1).max(120),
-  email: z.string().email().max(200),
+  name: z.string().trim().min(1).max(120),
+  email: z.string().trim().email().max(200),
   phone: z.string().max(60).optional(),
   delivery: z.enum(DELIVERY_OPTIONS),
   address: z.string().max(200).optional(),
@@ -15,7 +15,7 @@ const schema = z.object({
   items: z
     .array(
       z.object({
-        name: z.string().min(1).max(200),
+        name: z.string().trim().min(1).max(200),
         slug: z.string().max(200),
         quantity: z.number().int().min(1).max(99),
         price: z.number().optional(),

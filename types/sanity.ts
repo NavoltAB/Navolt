@@ -41,6 +41,10 @@ export interface Product {
   slug: string
   category?: Category
   boatModel?: BoatModel
+  /** True when this product sits in a category marked "Kräver monteringspaket". */
+  requiresKit?: boolean
+  /** The one kit this specific ruta needs. Kits themselves never have one. */
+  mountingKit?: Product | null
   price?: number
   unit?: string
   inStock: boolean

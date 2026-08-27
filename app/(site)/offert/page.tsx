@@ -7,7 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import PageTransition from '@/components/PageTransition'
-import { MAX_QTY, useCart } from '@/context/CartContext'
+import { MAX_QTY, missingKits, useCart } from '@/context/CartContext'
 import { siteConfig } from '@/config/site'
 import { DELIVERY_OPTIONS } from '@/lib/order'
 
@@ -15,8 +15,8 @@ const ease = [0.16, 1, 0.3, 1] as const
 
 const schema = z
   .object({
-    name: z.string().min(2, 'Ange ditt namn'),
-    email: z.string().email('Ange en giltig e-postadress'),
+    name: z.string().trim().min(2, 'Ange ditt namn'),
+    email: z.string().trim().email('Ange en giltig e-postadress'),
     phone: z.string().optional(),
     delivery: z.enum(DELIVERY_OPTIONS),
     address: z.string().optional(),
@@ -54,7 +54,12 @@ type FormData = z.infer<typeof schema>
  * localStorage is read, which reads as "we lost your basket".
  */
 export default function OffertPage() {
-  const { items, ready, removeItem, setQuantity, clearCart, count } = useCart()
+  const { items, ready, addItem, removeItem, setQuantity, clearCart, count } = useCart()
+
+  // A reminder, never a gate. Someone who already owns the kit, or whose varv
+  // fits it, still has to be able to send the order — so this never touches the
+  // submit button.
+  const missing = missingKits(items)
   const reduceMotion = useReducedMotion()
   const [status, setStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle')
 
@@ -210,6 +215,62 @@ export default function OffertPage() {
               >
                 {/* ── Rows ─────────────────────────────────── */}
                 <div>
+                  {missing.length > 0 && (
+                    <div
+                      className="mb-6 rounded-[var(--radius-md)] p-5"
+                      style={{
+                        background: 'rgba(192,138,62,0.08)',
+                        border: '1px solid rgba(192,138,62,0.32)',
+                      }}
+                    >
+                      <p className="font-heading font-semibold">
+                        {missing.length === 1
+                          ? 'Ett monteringspaket saknas'
+                          : `${missing.length} monteringspaket saknas`}
+                      </p>
+                      <p className="mt-1 text-sm" style={{ color: 'var(--color-text-muted)' }}>
+                        Rutorna i korgen kräver varsitt monteringspaket för att kunna monteras.
+                        Har du redan ett kan du strunta i den här rutan.
+                      </p>
+
+                      <ul className="mt-4 space-y-2.5">
+                        {missing.map((row) => {
+                          const short = row.needed - row.inCart
+                          return (
+                            <li
+                              key={row.kit.slug}
+                              className="flex flex-wrap items-center justify-between gap-3"
+                            >
+                              <Link
+                                href={`/produkter/${row.kit.slug}`}
+                                className="min-w-0 flex-1 text-sm font-medium underline underline-offset-4 transition-colors hover:text-[var(--color-gold-ink)]"
+                                style={{ color: 'var(--color-primary)' }}
+                              >
+                                {row.kit.name}
+                              </Link>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  addItem({
+                                    slug: row.kit.slug,
+                                    name: row.kit.name,
+                                    quantity: short,
+                                    price: row.kit.price,
+                                    unit: row.kit.unit,
+                                    image: row.kit.image,
+                                  })
+                                }
+                                className="btn-gold shrink-0 !px-4 !py-2 text-sm"
+                              >
+                                Lägg till {short} st
+                              </button>
+                            </li>
+                          )
+                        })}
+                      </ul>
+                    </div>
+                  )}
+
                   <div className="card">
                     <AnimatePresence initial={false} mode="popLayout">
                       {items.map((item) => (

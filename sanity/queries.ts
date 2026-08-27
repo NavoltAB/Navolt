@@ -94,6 +94,8 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
       "slug": slug.current,
       "category": category->{ _id, title, "slug": slug.current },
       "boatModel": boatModel->{ _id, name, "slug": slug.current },
+      "requiresKit": category->role == "requiresKit",
+      "mountingKit": mountingKit->{ ${productFields} },
       price,
       unit,
       inStock,

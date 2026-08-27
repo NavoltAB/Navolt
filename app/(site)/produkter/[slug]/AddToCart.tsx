@@ -1,8 +1,8 @@
 'use client'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
-import { MAX_QTY, useCart } from '@/context/CartContext'
+import { MAX_QTY, missingKits, useCart, type CartLine } from '@/context/CartContext'
 
 const ease = [0.16, 1, 0.3, 1] as const
 
@@ -24,6 +24,7 @@ export default function AddToCart({
   unit,
   image,
   inStock,
+  kit,
 }: {
   slug: string
   name: string
@@ -31,17 +32,38 @@ export default function AddToCart({
   unit?: string
   image?: string
   inStock: boolean
+  /** The monteringspaket this ruta requires, when it has one. */
+  kit?: CartLine
 }) {
   const reduceMotion = useReducedMotion()
-  const { addItem, count } = useCart()
+  const { addItem, count, items } = useCart()
   const [qty, setQty] = useState(1)
   const [added, setAdded] = useState(false)
 
   const unitLabel = unit || 'st'
 
   function handleAdd() {
-    addItem({ slug, name, quantity: qty, price, unit, image })
+    addItem({ slug, name, quantity: qty, price, unit, image, kit })
     setAdded(true)
+  }
+
+  // Recomputed from the basket rather than from `qty`, so it stays right when
+  // the customer adds twice, or already had the kit from another ruta.
+  const outstanding = useMemo(
+    () => (kit ? missingKits(items).find((row) => row.kit.slug === kit.slug) : undefined),
+    [items, kit]
+  )
+
+  function handleAddKit() {
+    if (!outstanding) return
+    addItem({
+      slug: outstanding.kit.slug,
+      name: outstanding.kit.name,
+      quantity: outstanding.needed - outstanding.inCart,
+      price: outstanding.kit.price,
+      unit: outstanding.kit.unit,
+      image: outstanding.kit.image,
+    })
   }
 
   const face = {
@@ -86,6 +108,29 @@ export default function AddToCart({
                 </p>
               </div>
             </div>
+
+            {outstanding && (
+              <div
+                className="mt-5 rounded-[var(--radius-md)] p-4"
+                style={{
+                  background: 'rgba(192,138,62,0.08)',
+                  border: '1px solid rgba(192,138,62,0.32)',
+                }}
+              >
+                <p className="font-heading text-sm font-semibold">Glöm inte monteringspaketet</p>
+                <p className="mt-1 text-sm" style={{ color: 'var(--color-text-muted)' }}>
+                  {outstanding.kit.name} krävs för att montera rutan.
+                </p>
+                <button type="button" onClick={handleAddKit} className="btn-gold mt-3.5 w-full">
+                  Lägg till {outstanding.needed - outstanding.inCart} st
+                  {outstanding.kit.price != null &&
+                    ` · ${(
+                      outstanding.kit.price *
+                      (outstanding.needed - outstanding.inCart)
+                    ).toLocaleString('sv-SE')} kr`}
+                </button>
+              </div>
+            )}
 
             <div className="mt-6 flex flex-col gap-3">
               <Link href="/offert" className="btn-primary w-full">

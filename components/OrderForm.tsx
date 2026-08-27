@@ -6,10 +6,10 @@ import { z } from 'zod'
 import { motion, AnimatePresence } from 'framer-motion'
 
 const schema = z.object({
-  name: z.string().min(2, 'Ange ditt namn'),
-  email: z.string().email('Ange en giltig e-postadress'),
+  name: z.string().trim().min(2, 'Ange ditt namn'),
+  email: z.string().trim().email('Ange en giltig e-postadress'),
   phone: z.string().optional(),
-  quantity: z.string().min(1, 'Ange antal'),
+  quantity: z.string().trim().min(1, 'Ange antal'),
   message: z.string().optional(),
 })
 

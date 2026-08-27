@@ -112,9 +112,15 @@ export default function ProductCard({ product }: { product: Product }) {
             )}
           </motion.div>
 
+          {/* One chip only. Stock state is deliberately not on the card: the grid
+              is for scanning, and "Beställningsvara" belongs where the decision
+              gets made — the product page states it beside the price and the
+              gallery badges it. Two pills pinned to opposite corners of the same
+              photo only ever collided, since a long category name has nothing
+              holding it back. Capped and truncated for the same reason. */}
           {product.category && (
             <span
-              className="absolute top-3 left-3 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] backdrop-blur-md"
+              className="absolute top-3 left-3 max-w-[calc(100%-1.5rem)] truncate rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] backdrop-blur-md"
               style={{
                 background: 'rgba(250,251,250,0.88)',
                 color: 'var(--color-primary)',
@@ -122,18 +128,6 @@ export default function ProductCard({ product }: { product: Product }) {
               }}
             >
               {product.category.title}
-            </span>
-          )}
-
-          {/* A chip rather than a slab across the photo — it reads instantly
-              without wrecking the card. The photo is left in full colour: a
-              beställningsvara is for sale, it just gets ordered in. */}
-          {!product.inStock && (
-            <span
-              className="absolute top-3 right-3 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-white backdrop-blur-md"
-              style={{ background: 'var(--color-warning)' }}
-            >
-              Beställningsvara
             </span>
           )}
         </div>

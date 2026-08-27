@@ -3,12 +3,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 
 const schema = z.object({
-  name: z.string().min(1),
-  email: z.string().email(),
+  name: z.string().trim().min(1),
+  email: z.string().trim().email(),
   phone: z.string().optional(),
-  quantity: z.string().min(1),
+  quantity: z.string().trim().min(1),
   message: z.string().optional(),
-  productName: z.string().min(1),
+  productName: z.string().trim().min(1),
 })
 
 // Subject lines are read at a glance in a shared inbox, so they all take the

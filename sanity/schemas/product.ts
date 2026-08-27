@@ -61,6 +61,53 @@ export const productSchema = defineType({
         'Vilken båt produkten är gjord för. Fylls i för båtrutor och monteringspaket — lämna tom för produkter som inte hör till en viss båt. Styr filtret på /produkter.',
     }),
     defineField({
+      name: 'mountingKit',
+      title: 'Monteringspaket',
+      type: 'reference',
+      to: [{ type: 'product' }],
+      /**
+       * Kits only — a ruta pointed at another ruta would produce a nonsense
+       * reminder on the product page and in varukorgen, and the picker is the
+       * cheapest place to make that impossible.
+       *
+       * But only once a category has actually been marked "Är monteringspaket".
+       * Filtering on a role nobody has set yet hands the editor an empty picker
+       * with no clue why, so until then every other product is offered and the
+       * filter tightens by itself the moment the roll is set.
+       */
+      options: {
+        filter: async ({ document, getClient }) => {
+          const self = (document?._id ?? '').replace(/^drafts\./, '')
+          const kitCategoryExists = await getClient({ apiVersion: '2024-01-01' })
+            .fetch<boolean>('count(*[_type == "category" && role == "kit"]) > 0')
+          return {
+            // A product can never be its own monteringspaket.
+            filter: kitCategoryExists
+              ? '_id != $self && category->role == "kit"'
+              : '_id != $self',
+            params: { self },
+          }
+        },
+      },
+      description:
+        'Det monteringspaket just den här rutan kräver — varje ruta har sitt eget. Visas på produktsidan och påminns om i varukorgen. Listan begränsas till monteringspaket först när kategorin de ligger i har Roll = "Är monteringspaket".',
+      validation: (Rule) =>
+        Rule.custom(async (value, context) => {
+          if (value) return true
+          const categoryRef = (context.document as { category?: { _ref?: string } } | undefined)
+            ?.category?._ref
+          if (!categoryRef) return true
+          // Only nag inside a category that has actually been marked as needing
+          // a kit — every other product is meant to leave this empty.
+          const role = await context
+            .getClient({ apiVersion: '2024-01-01' })
+            .fetch<string | null>('*[_id == $id][0].role', { id: categoryRef })
+          return role === 'requiresKit'
+            ? 'Den här produkten ligger i en kategori som kräver monteringspaket, men inget är valt.'
+            : true
+        }).warning(),
+    }),
+    defineField({
       name: 'images',
       title: 'Bilder',
       type: 'array',
