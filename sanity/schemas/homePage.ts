@@ -76,7 +76,7 @@ export const homePageSchema = defineType({
       title: 'Hero — Knapptext',
       type: 'string',
       group: 'hero',
-      description: 'Knappen leder till /tjanster.',
+      description: 'Knappen leder till /kontakt.',
     }),
     defineField({
       name: 'heroPhoneLabel',

@@ -11,6 +11,7 @@ import AnimatedSection, { StaggerContainer, StaggerItem } from '@/components/Ani
 import ProductCard from '@/components/ProductCard'
 import ServiceTiles from '@/components/ServiceTiles'
 import ElfsightWidget from '@/components/ElfsightWidget'
+import { serviceHref } from '@/lib/services'
 import { siteConfig } from '@/config/site'
 
 export const revalidate = 60
@@ -48,7 +49,7 @@ const fallbackSegments = [
   {
     _id: 'seg-batrutor',
     title: 'Båtrutor',
-    href: '/tjanster#batrutor',
+    href: '/batrutor',
     imageUrl: '/images/batrutor/batrutor-1.jpg',
     shortDescription:
       'Byte och montering av båtrutor, med kompletta monteringspaket för de vanligaste båtmodellerna.',
@@ -66,7 +67,7 @@ const defaults = {
   heroSubtitle:
     'Felsökning, uppgradering och nyinstallation av el och elektronik i din fritidsbåt, husbil eller campervan.',
   heroImageUrl: '/images/hero-img.jpg',
-  heroCtaLabel: 'Se våra tjänster',
+  heroCtaLabel: 'Kontakta oss',
   heroPhoneLabel: 'Ring',
 
   trustStats: [
@@ -148,7 +149,7 @@ export default async function HomePage() {
       ? services.map((s) => ({
           _id: s._id,
           title: s.title,
-          href: s.slug ? `/tjanster#${s.slug}` : '/tjanster',
+          href: serviceHref(s.slug),
           imageUrl: s.imageUrl,
           shortDescription: s.shortDescription,
         }))
@@ -263,7 +264,7 @@ export default async function HomePage() {
 
           <AnimatedSection delay={0.56}>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
-              <Link href="/tjanster" className="btn-gold">
+              <Link href="/kontakt" className="btn-gold">
                 {text(homePage?.heroCtaLabel, defaults.heroCtaLabel)}
               </Link>
               <a

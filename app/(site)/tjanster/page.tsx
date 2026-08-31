@@ -7,32 +7,8 @@ import AnimatedSection from '@/components/AnimatedSection'
 import PageTransition from '@/components/PageTransition'
 import ServiceIndexRail from '@/components/ServiceIndexRail'
 import ServiceFormDialog from '@/components/ServiceFormDialog'
-import { siteConfig } from '@/config/site'
-
-// Services with a lead form of their own. These two carried a booking form on
-// the old site and keep it here, opened from the service panel instead of a
-// separate page; everything else falls through to the generic "Fråga om …"
-// link, which lands on /kontakt with the subject prefilled.
-//
-// Keyed by slug, so a Sanity `service` document picks its form up by matching
-// slug without any change here.
-const serviceForms: Record<
-  string,
-  { appId: string; label: string; padded?: boolean }
-> = {
-  motorservice: {
-    appId: siteConfig.elfsight.motorserviceForm,
-    label: 'Boka motorservice',
-    // This one runs flush to its own edges, so the dialog gives it the air.
-    // The campervan form already pads itself in the Elfsight dashboard — adding
-    // it there too would double up.
-    padded: true,
-  },
-  campervan: {
-    appId: siteConfig.elfsight.campervanForm,
-    label: 'Berätta om din van',
-  },
-}
+import { hasServicePage, serviceForms, serviceHref } from '@/lib/services'
+import { defaultServices } from '@/lib/serviceContent'
 
 export const revalidate = 60
 
@@ -41,71 +17,6 @@ export const metadata: Metadata = {
   description:
     'Marinelektronik, elsystem i campervan, motorservice och båtrutor. Navolt hjälper dig med elen ombord i Göteborg och Öckerö.',
 }
-
-// PLACEHOLDER COPY — mirrors the four segments on Navolt's current site.
-// Pending customer confirmation of both the split and the feature lists.
-// Any `service` documents in Sanity override this entirely.
-const defaultServices = [
-  {
-    _id: 'bat',
-    slug: 'bat',
-    title: 'Båt',
-    shortDescription:
-      'El och elektronik i fritidsbåten — från ett enskilt fel till ett helt nytt elsystem. Vi arbetar med både äldre båtar och nybyggen.',
-    features: [
-      'Felsökning av el- och laddsystem',
-      'Navigation, plotter, radar och VHF',
-      'Landström, laddare och batteribankar',
-      'Belysning och inredningsel',
-      'Bogpropeller och däcksutrustning',
-    ],
-    imageUrl: '/images/boat-img.jpg',
-  },
-  {
-    _id: 'campervan',
-    slug: 'campervan',
-    title: 'Campervan',
-    shortDescription:
-      'Skräddarsytt elsystem i campervan och husbil. Vi dimensionerar efter hur du faktiskt använder bilen — inte efter en standardmall.',
-    features: [
-      'Solceller och laddregulatorer',
-      'Litiumbank och batteriövervakning',
-      'Växelriktare och 230 V ombord',
-      'Värme och kyla',
-      'Komplett installation från grunden',
-    ],
-    imageUrl: '/images/campervan-img.jpg',
-  },
-  {
-    _id: 'motorservice',
-    slug: 'motorservice',
-    title: 'Motorservice',
-    shortDescription:
-      'Service och felsökning på båtmotorn. Vi tar hand om det löpande underhållet och letar rätt på felet när något krånglar.',
-    features: [
-      'Löpande service och underhåll',
-      'Felsökning vid startproblem',
-      'Byte av impeller, filter och olja',
-      'Kontroll av drev och kylsystem',
-      'Inför- och avrustning för säsong',
-    ],
-    imageUrl: '/images/motorservice.jpg',
-  },
-  {
-    _id: 'batrutor',
-    slug: 'batrutor',
-    title: 'Båtrutor',
-    shortDescription:
-      'Byte och montering av båtrutor, med kompletta monteringspaket för de vanligaste båtmodellerna.',
-    features: [
-      'Byte av spruckna och immiga rutor',
-      'Måttanpassad tillverkning',
-      'Kompletta monteringspaket',
-      'Tätning och efterkontroll',
-    ],
-    imageUrl: '/images/batrutor/batrutor-1.jpg',
-  },
-]
 
 // The page's own framing text, editable in Sanity under "Tjänstesida". The
 // services listed between these two blocks come from `service` documents —
@@ -227,20 +138,34 @@ export default async function ServicesPage() {
                     {/* With a form of its own, the panel opens it in place.
                         Without one, the link carries the service through so the
                         contact form's "Ämne" arrives filled in. */}
-                    {form ? (
-                      <ServiceFormDialog
-                        appId={form.appId}
-                        label={form.label}
-                        padded={form.padded}
-                      />
-                    ) : (
-                      <Link
-                        href={`/kontakt?amne=${encodeURIComponent(service.title)}`}
-                        className="btn-outline"
-                      >
-                        {serviceCtaPrefix} {service.title.toLowerCase()}
-                      </Link>
-                    )}
+                    {/* Two buttons on every panel: read on, or get in touch.
+                        The panel is a teaser and hands the visitor over — the
+                        long copy lives on the service's own page, so the two
+                        don't say the same thing in two places Google indexes —
+                        but it never costs a click that used to convert, so the
+                        second button is the service's booking form where there
+                        is one and the contact form where there isn't. */}
+                    <div className="flex flex-wrap gap-3">
+                      {hasServicePage(service.slug) && (
+                        <Link href={serviceHref(service.slug)} className="btn-primary">
+                          Läs mer om {service.title.toLowerCase()}
+                        </Link>
+                      )}
+                      {form ? (
+                        <ServiceFormDialog
+                          appId={form.appId}
+                          label={form.label}
+                          padded={form.padded}
+                        />
+                      ) : (
+                        <Link
+                          href={`/kontakt?amne=${encodeURIComponent(service.title)}`}
+                          className="btn-outline"
+                        >
+                          {serviceCtaPrefix} {service.title.toLowerCase()}
+                        </Link>
+                      )}
+                    </div>
                   </article>
                 </AnimatedSection>
                 )

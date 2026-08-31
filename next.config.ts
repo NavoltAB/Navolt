@@ -15,6 +15,24 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+
+  /**
+   * The old site's flat URLs, for the two that don't carry over unchanged.
+   *
+   * /bat, /motorservice, /campervan and /batrutor were all top-level pages
+   * there; three of them still are, so only /bat needs pointing at its new
+   * name. /galleri has no equivalent — the Instagram feed on /om-oss is the
+   * nearest thing to it, which beats a 404 on a URL that has links to it.
+   *
+   * Confirm the full list against Search Console before launch; anything else
+   * with traffic belongs here too.
+   */
+  async redirects() {
+    return [
+      { source: '/bat', destination: '/marinelektronik', permanent: true },
+      { source: '/galleri', destination: '/om-oss', permanent: true },
+    ]
+  },
 }
 
 export default nextConfig

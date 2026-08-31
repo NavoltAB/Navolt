@@ -56,6 +56,10 @@ export default function Footer({ settings, blurb }: FooterProps) {
             <ul className="space-y-2.5">
               {[
                 { href: '/tjanster', label: 'Tjänster' },
+                // Båtrutor has a page of its own and deliberately no header
+                // entry — the footer is where it gets its permanent internal
+                // link. See lib/services.ts.
+                { href: '/batrutor', label: 'Båtrutor' },
                 { href: '/produkter', label: 'Produkter' },
                 { href: '/om-oss', label: 'Om oss' },
                 { href: '/kontakt', label: 'Kontakt' },

@@ -128,11 +128,26 @@ export function isSubject(value: string): value is Subject {
  * "Motorservice" is a boat job, so it selects Båt and ticks Motor rather than
  * dropping the visitor into Övrigt having lost what they clicked.
  */
+/**
+ * Service names that aren't subjects in their own right.
+ *
+ * /tjanster and each service's own page link here with the service's title, so
+ * the ones that don't match a subject by name are mapped instead of arriving
+ * with nothing selected. Keyed lowercase; the titles come from Sanity, so a
+ * renamed service falls through to an unselected subject rather than breaking.
+ */
+const SUBJECT_ALIASES: Record<string, { subject: Subject; boatHelp?: string }> = {
+  motorservice: { subject: 'Båt', boatHelp: 'Motor' },
+  marinelektronik: { subject: 'Båt' },
+  'elsystem för campervan': { subject: 'Campervan' },
+}
+
 export function prefillFromParam(value: string): { subject: Subject | ''; boatHelp?: string } {
-  const v = value.trim()
+  const v = value.trim().toLowerCase()
   if (!v) return { subject: '' }
-  if (v.toLowerCase() === 'motorservice') return { subject: 'Båt', boatHelp: 'Motor' }
-  const hit = SUBJECTS.find((s) => s.toLowerCase() === v.toLowerCase())
+  const alias = SUBJECT_ALIASES[v]
+  if (alias) return alias
+  const hit = SUBJECTS.find((s) => s.toLowerCase() === v)
   return { subject: hit ?? '' }
 }
 

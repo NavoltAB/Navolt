@@ -11,6 +11,11 @@ export const siteConfig = {
   description:
     'Navolt är marinelektriker i Göteborg och Öckerö. Vi hjälper dig med felsökning, uppgradering och nyinstallation av el och elektronik i fritidsbåt, husbil och campervan.',
 
+  // Canonical origin — metadataBase, the sitemap and every canonical URL
+  // hang off this. Overridable so a preview deploy doesn't advertise the
+  // production domain as its own.
+  url: process.env.NEXT_PUBLIC_SITE_URL ?? 'https://navolt.se',
+
   lang: 'sv',
   locale: 'sv_SE',
 

@@ -16,6 +16,7 @@ import ProductCard from '@/components/ProductCard'
 import { siteConfig } from '@/config/site'
 import AddToCart from './AddToCart'
 import PortableText from './PortableText'
+import DocumentList from '@/components/DocumentList'
 import ProductGallery from './ProductGallery'
 
 export const revalidate = 60
@@ -44,15 +45,6 @@ export async function generateMetadata({
       ? { images: [urlFor(image).width(1200).height(630).fit('crop').url()] }
       : undefined,
   }
-}
-
-// kB rather than KiB: the number on a download link is read by a customer
-// deciding whether to tap it on mobile data, not by anyone doing arithmetic.
-function fileSize(bytes?: number) {
-  if (!bytes) return null
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} kB`
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
 export default async function ProductPage({
@@ -450,53 +442,10 @@ export default async function ProductPage({
                       thing, exactly — and a customer hunting for a
                       monteringsanvisning looks under the specs, not in the
                       description. */}
-                  {documents.length > 0 && (
-                    <StaggerContainer className={details.length > 0 ? 'mt-8' : undefined}>
-                      <ul>
-                        {documents.map((doc, i) => {
-                          const size = fileSize(doc.size)
-                          const label = doc.title || doc.filename || 'Dokument'
-                          return (
-                            <StaggerItem key={`${doc.url ?? label}-${i}`}>
-                              <a
-                                href={doc.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="group flex items-center gap-3.5 py-3.5 transition-colors"
-                                style={{ borderTop: '1px solid var(--color-border)' }}
-                              >
-                                <span
-                                  aria-hidden
-                                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors duration-300 group-hover:bg-[var(--color-gold)] group-hover:text-white"
-                                  style={{
-                                    background: 'rgba(192,138,62,0.12)',
-                                    color: 'var(--color-gold-ink)',
-                                  }}
-                                >
-                                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
-                                    <path d="M12 3v12" />
-                                    <polyline points="7 11 12 16 17 11" />
-                                    <path d="M4 20h16" />
-                                  </svg>
-                                </span>
-                                <span className="min-w-0 flex-1">
-                                  <span className="block text-sm font-medium transition-colors group-hover:text-[var(--color-gold-ink)]">
-                                    {label}
-                                  </span>
-                                  <span
-                                    className="block text-xs"
-                                    style={{ color: 'var(--color-text-muted)' }}
-                                  >
-                                    {[doc.ext?.toUpperCase(), size].filter(Boolean).join(' · ')}
-                                  </span>
-                                </span>
-                              </a>
-                            </StaggerItem>
-                          )
-                        })}
-                      </ul>
-                    </StaggerContainer>
-                  )}
+                  <DocumentList
+                    documents={documents}
+                    className={details.length > 0 ? 'mt-8' : undefined}
+                  />
                 </div>
               )}
             </AnimatedSection>

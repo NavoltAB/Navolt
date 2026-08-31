@@ -56,7 +56,15 @@ const paintTransition = (collapsed: boolean) =>
     ? { duration: 0.45, delay: 0.12, ease: 'easeOut' as const }
     : { duration: 0.28, ease: 'easeOut' as const }
 
-export default function Navigation() {
+/** One entry in the Tjänster dropdown. Built by the layout from Sanity. */
+export type NavService = { title: string; href: string; description?: string }
+
+/**
+ * @param services  The services to hang under "Tjänster". Empty — no Sanity
+ *   project, or nothing published — leaves it a plain link to the index, which
+ *   is what it was before the menu existed.
+ */
+export default function Navigation({ services = [] }: { services?: NavService[] }) {
   const [shrunk, setShrunk] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
@@ -69,6 +77,13 @@ export default function Navigation() {
   const pathname = usePathname()
   const isHome = pathname === '/'
   const { count, ready } = useCart()
+  // The Tjänster dropdown. The header knows no service by name — it lists
+  // whatever the layout hands it.
+  const [servicesOpen, setServicesOpen] = useState(false)
+  // The same list in the mobile menu, where it's an accordion instead —
+  // there's no hover on a phone, and four services unfolded push Kontakt
+  // off the bottom of a small screen.
+  const [mobileServicesOpen, setMobileServicesOpen] = useState(false)
 
   // Equal-growth spacers centre the links between the columns, so the links land
   // (leftCol − rightCol) / 2 off the pill's centre and a margin has to cancel it.
@@ -128,7 +143,18 @@ export default function Navigation() {
 
   useEffect(() => {
     setMobileOpen(false)
+    // A menu left open across a navigation hangs over the page you land on.
+    setServicesOpen(false)
   }, [pathname])
+
+  // Opening the menu on a service page shows that section already open —
+  // you got there from it, so collapsing where you are would be odd. Only
+  // on open, so collapsing it by hand afterwards sticks.
+  useEffect(() => {
+    if (mobileOpen) {
+      setMobileServicesOpen(services.some((service) => pathname === service.href))
+    }
+  }, [mobileOpen, pathname, services])
 
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? 'hidden' : ''
@@ -209,6 +235,20 @@ export default function Navigation() {
           initial={false}
           animate={geometry}
           transition={shape}
+          // The menu hangs off the header, not off the label, so the header is
+          // the region that owns it: moving between the label and the panel
+          // stays inside this element (the panel is a DOM child however far
+          // below it paints), and only leaving the header entirely closes it.
+          // That's what removes the need for a hover bridge across the gap.
+          onMouseLeave={() => setServicesOpen(false)}
+          onBlur={(event) => {
+            if (!event.currentTarget.contains(event.relatedTarget as Node)) {
+              setServicesOpen(false)
+            }
+          }}
+          onKeyDown={(event) => {
+            if (event.key === 'Escape') setServicesOpen(false)
+          }}
         >
           {/* Skins. Both inherit the animating radius and are positioned, so
               they paint under the content below (which is `relative`, i.e. also
@@ -298,12 +338,20 @@ export default function Navigation() {
             transition={shape}
           >
             {navLinks.map((link) => {
-              const active = pathname.startsWith(link.href)
-              return (
+              // A service page is its own top-level URL, so "Tjänster" has to
+              // be told it owns them — startsWith can't see that /batrutor
+              // belongs under it.
+              const active =
+                pathname.startsWith(link.href) ||
+                (link.href === '/tjanster' && services.some((s) => pathname === s.href))
+
+              const anchor = (
                 <Link
-                  key={link.href}
                   href={link.href}
                   aria-current={active ? 'page' : undefined}
+                  {...(link.href === '/tjanster' && services.length > 0
+                    ? { 'aria-expanded': servicesOpen, 'aria-controls': 'services-menu' }
+                    : {})}
                   className={`relative text-sm font-medium tracking-wide whitespace-nowrap transition-colors duration-300 ${
                     active ? activeColor : linkColor
                   }`}
@@ -311,7 +359,6 @@ export default function Navigation() {
                   {link.label}
                   {active && (
                     <motion.span
-                      key={link.href}
                       aria-hidden
                       initial={{ opacity: 0, scale: 0.4 }}
                       animate={{ opacity: 1, scale: 1 }}
@@ -321,6 +368,34 @@ export default function Navigation() {
                     />
                   )}
                 </Link>
+              )
+
+              // Every other label closes the menu on its way past, so hovering
+              // along the row doesn't leave it hanging open under Produkter.
+              if (link.href !== '/tjanster' || services.length === 0) {
+                return (
+                  <div
+                    key={link.href}
+                    className="relative"
+                    onMouseEnter={() => setServicesOpen(false)}
+                  >
+                    {anchor}
+                  </div>
+                )
+              }
+
+              // The trigger stays a real link to the index — the menu is an
+              // addition to it, not a replacement, so the label still goes
+              // somewhere for anyone who clicks rather than hovers.
+              return (
+                <div
+                  key={link.href}
+                  className="relative"
+                  onMouseEnter={() => setServicesOpen(true)}
+                  onFocus={() => setServicesOpen(true)}
+                >
+                  {anchor}
+                </div>
               )
             })}
           </motion.nav>
@@ -432,6 +507,82 @@ export default function Navigation() {
               className="block w-6 h-0.5 origin-center bg-white"
             />
           </button>
+          {/* Services mega-menu.
+              Anchored to the header rather than to the label, so it is exactly
+              as wide as the header is at any moment: full-bleed at the top of
+              the page, pill-width once scrolled. left/right-0 resolve against
+              the header's padding box, and the radius and the gap follow the
+              same `shrunk` flag the header's own geometry does, so the two
+              shapes stay in agreement mid-tween. */}
+          <AnimatePresence>
+            {servicesOpen && services.length > 0 && (
+              <motion.div
+                key="services-menu"
+                id="services-menu"
+                initial={{ opacity: 0, y: -8 }}
+                animate={{
+                  opacity: 1,
+                  y: 0,
+                  borderRadius: shrunk ? 22 : 0,
+                  marginTop: shrunk ? 10 : 0,
+                }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.22, ease: 'easeOut' }}
+                className="absolute left-0 right-0 top-full hidden overflow-hidden md:block"
+                // Light ground under a dark header, so the panel reads as a
+                // sheet of the page pulled down rather than more chrome. Opaque
+                // rather than veiled: text this small needs the contrast, and
+                // the panel hangs over whatever the page happens to be showing.
+                style={{ backgroundColor: 'var(--color-surface)', boxShadow: PILL_SHADOW }}
+              >
+                <div className="grid gap-1 p-4 sm:grid-cols-2 lg:grid-cols-4">
+                  {services.map((service) => {
+                    const current = pathname === service.href
+                    return (
+                      <Link
+                        key={service.href}
+                        href={service.href}
+                        aria-current={current ? 'page' : undefined}
+                        className="rounded-xl px-4 py-3.5 transition-colors duration-200 hover:bg-[var(--color-bg)]"
+                      >
+                        <span
+                          className="block font-heading text-sm font-semibold tracking-wide transition-colors duration-200"
+                          style={{
+                            color: current
+                              ? 'var(--color-gold-ink)'
+                              : 'var(--color-primary)',
+                          }}
+                        >
+                          {service.title}
+                        </span>
+                        {service.description && (
+                          <span
+                            className="mt-1.5 block text-xs leading-relaxed line-clamp-2"
+                            style={{ color: 'var(--color-text-muted)' }}
+                          >
+                            {service.description}
+                          </span>
+                        )}
+                      </Link>
+                    )
+                  })}
+                </div>
+
+                <div
+                  className="border-t px-5 py-3"
+                  style={{ borderColor: 'var(--color-border)' }}
+                >
+                  <Link
+                    href="/tjanster"
+                    className="text-xs font-medium uppercase tracking-[0.14em] transition-colors duration-200 hover:text-[var(--color-primary)]"
+                    style={{ color: 'var(--color-text-muted)' }}
+                  >
+                    Alla tjänster
+                  </Link>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.header>
       </motion.div>
 
@@ -454,28 +605,114 @@ export default function Navigation() {
           >
             <nav className="flex flex-col px-6 py-5">
               {navLinks.map((link) => {
-                const active = pathname.startsWith(link.href)
+                const active =
+                  pathname.startsWith(link.href) ||
+                  (link.href === '/tjanster' && services.some((s) => pathname === s.href))
+                const subLinks = link.href === '/tjanster' ? services : []
+                // Same brass mark on every row — a dot under an 18px line in a
+                // stacked list reads as a stray bullet rather than an
+                // indicator, so it sits at the end of the row instead.
+                const mark = active && (
+                  <span
+                    aria-hidden
+                    className="h-1.5 w-1.5 shrink-0 rounded-full"
+                    style={{ background: 'var(--color-gold)' }}
+                  />
+                )
+
+                if (subLinks.length === 0) {
+                  return (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      aria-current={active ? 'page' : undefined}
+                      className={`flex items-center justify-between border-b border-white/[0.08] py-3 text-lg font-medium tracking-wide ${
+                        active ? 'text-[var(--color-gold)]' : 'text-white/75'
+                      }`}
+                    >
+                      {link.label}
+                      {mark}
+                    </Link>
+                  )
+                }
+
+                // Tjänster is a disclosure: the label still navigates to the
+                // index, and the chevron beside it opens the list. Splitting
+                // the two is what keeps /tjanster reachable — a row that only
+                // toggles would strand it.
                 return (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    aria-current={active ? 'page' : undefined}
-                    className={`flex items-center justify-between py-3 text-lg font-medium tracking-wide border-b border-white/[0.08] ${
-                      active ? 'text-[var(--color-gold)]' : 'text-white/75'
-                    }`}
-                  >
-                    {link.label}
-                    {/* Same brass mark, moved to the end of the row — a dot
-                        under a 18px line in a stacked list reads as a stray
-                        bullet rather than an indicator. */}
-                    {active && (
-                      <span
-                        aria-hidden
-                        className="h-1.5 w-1.5 rounded-full"
-                        style={{ background: 'var(--color-gold)' }}
-                      />
-                    )}
-                  </Link>
+                  <div key={link.href} className="border-b border-white/[0.08]">
+                    <div className="flex items-center">
+                      <Link
+                        href={link.href}
+                        aria-current={active ? 'page' : undefined}
+                        className={`flex-1 py-3 text-lg font-medium tracking-wide ${
+                          active ? 'text-[var(--color-gold)]' : 'text-white/75'
+                        }`}
+                      >
+                        {link.label}
+                      </Link>
+                      {mark}
+                      <button
+                        type="button"
+                        onClick={() => setMobileServicesOpen((open) => !open)}
+                        aria-expanded={mobileServicesOpen}
+                        aria-controls="mobile-services"
+                        aria-label={mobileServicesOpen ? 'Dölj tjänster' : 'Visa tjänster'}
+                        // 44px square: the tap target has to clear the label's
+                        // own, or the two fight over the same thumb.
+                        className="-mr-3 flex h-11 w-11 shrink-0 items-center justify-center text-white/55 transition-colors duration-200 hover:text-white"
+                      >
+                        <motion.svg
+                          aria-hidden
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          initial={false}
+                          animate={{ rotate: mobileServicesOpen ? 180 : 0 }}
+                          transition={{ duration: 0.28, ease }}
+                        >
+                          <path d="M6 9l6 6 6-6" />
+                        </motion.svg>
+                      </button>
+                    </div>
+
+                    <AnimatePresence initial={false}>
+                      {mobileServicesOpen && (
+                        <motion.div
+                          key="mobile-services"
+                          id="mobile-services"
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: 'auto', opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.28, ease }}
+                          className="overflow-hidden"
+                        >
+                          <div className="flex flex-col pb-2">
+                            {subLinks.map((service) => (
+                              <Link
+                                key={service.href}
+                                href={service.href}
+                                aria-current={pathname === service.href ? 'page' : undefined}
+                                className={`py-2 pl-4 text-base tracking-wide ${
+                                  pathname === service.href
+                                    ? 'text-[var(--color-gold)]'
+                                    : 'text-white/55'
+                                }`}
+                              >
+                                {service.title}
+                              </Link>
+                            ))}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
                 )
               })}
 

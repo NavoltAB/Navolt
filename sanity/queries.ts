@@ -156,6 +156,55 @@ export async function getAllServices(): Promise<Service[]> {
   )
 }
 
+/**
+ * One service, for a service that has a page of its own (see lib/services.ts).
+ *
+ * Same fields as the overview query — the dedicated page renders the same
+ * content, only larger — so a båtrutor panel edited in the studio changes both
+ * /tjanster and /batrutor at once.
+ */
+export async function getServiceBySlug(slug: string): Promise<Service | null> {
+  if (!isSanityConfigured) return null
+  return client.fetch(
+    `*[_type == "service" && slug.current == $slug][0] {
+      _id,
+      title,
+      "slug": slug.current,
+      shortDescription,
+      features,
+      "imageUrl": image.asset->url,
+      introLabel,
+      introTitle,
+      description,
+      stepsLabel,
+      stepsTitle,
+      steps[defined(title)]{ title, text },
+      "highlightImageUrl": highlightImage.asset->url,
+      highlightLabel,
+      highlightTitle,
+      highlightText,
+      highlightCtaLabel,
+      highlightCtaHref,
+      gallery[defined(asset)]{ "url": asset->url, alt },
+      "documents": documents[defined(asset)]{
+        title,
+        "url": asset->url,
+        "filename": asset->originalFilename,
+        "ext": asset->extension,
+        "size": asset->size
+      },
+      ctaLabel,
+      ctaTitle,
+      ctaText,
+      ctaButtonLabel,
+      seoTitle,
+      seoDescription
+    }`,
+    { slug },
+    opts60
+  )
+}
+
 // Returns the raw image object rather than asset->url so the component can cap
 // the width via urlFor() — a logo never needs more than a few hundred pixels.
 // Brands without a logo are skipped; a half-filled document shouldn't render.

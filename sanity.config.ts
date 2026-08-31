@@ -120,9 +120,15 @@ export default defineConfig({
                       ),
                   ])
               ),
+            // One document per service, and each one is a whole page: its own
+            // URL, brödtext, steg, galleri and SEO. See sanity/schemas/service.ts.
             S.listItem()
               .title('Tjänster')
-              .child(S.documentTypeList('service')),
+              .child(
+                S.documentTypeList('service')
+                  .title('Tjänster')
+                  .defaultOrdering([{ field: 'order', direction: 'asc' }])
+              ),
             S.listItem()
               .title('Varumärken')
               .child(

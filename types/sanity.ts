@@ -23,7 +23,11 @@ export interface ProductDetail {
   value: string
 }
 
-export interface ProductDocument {
+/**
+ * An uploaded file — a monteringsanvisning, datablad or mall. Hangs off both
+ * products and services, hence the neutral name.
+ */
+export interface SanityFile {
   title?: string
   url?: string
   filename?: string
@@ -52,13 +56,33 @@ export interface Product {
   shortDescription?: string
   description?: PortableTextBlock[]
   productDetails?: ProductDetail[]
-  documents?: ProductDocument[]
+  documents?: SanityFile[]
   mainImage?: SanityImage
   // images[1], when the product has one — the card cross-fades to it on hover.
   hoverImage?: SanityImage
   images?: SanityImage[]
 }
 
+/** One numbered step in the "Så går det till" row on a service page. */
+export interface ServiceStep {
+  title: string
+  text?: string
+}
+
+/** One photo in a service page's gallery. */
+export interface ServicePhoto {
+  url: string
+  alt?: string
+}
+
+/**
+ * A service, and the page it renders at its own top-level URL.
+ *
+ * The first six fields are what the listings need and what getAllServices
+ * projects. Everything below them belongs to the service's own page and is
+ * only fetched by getServiceBySlug — no point shipping a step list to the
+ * landing page's tiles.
+ */
 export interface Service {
   _id: string
   title: string
@@ -66,6 +90,32 @@ export interface Service {
   shortDescription?: string
   features?: string[]
   imageUrl?: string
+
+  introLabel?: string
+  introTitle?: string
+  description?: PortableTextBlock[]
+
+  stepsLabel?: string
+  stepsTitle?: string
+  steps?: ServiceStep[]
+
+  highlightImageUrl?: string
+  highlightLabel?: string
+  highlightTitle?: string
+  highlightText?: string
+  highlightCtaLabel?: string
+  highlightCtaHref?: string
+
+  gallery?: ServicePhoto[]
+  documents?: SanityFile[]
+
+  ctaLabel?: string
+  ctaTitle?: string
+  ctaText?: string
+  ctaButtonLabel?: string
+
+  seoTitle?: string
+  seoDescription?: string
 }
 
 export interface Brand {
