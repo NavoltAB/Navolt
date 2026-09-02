@@ -53,8 +53,7 @@ export default function ServiceFormDialog({
    * Off by default, because how much air a form has around it is set per widget
    * in the Elfsight dashboard, and one that already pads itself would end up
    * double-padded. Turn it on for a form that runs flush to its own edges — see
-   * `serviceForms` in app/(site)/tjanster/page.tsx, which decides this per
-   * service.
+   * `serviceForms` in lib/services.ts, which decides this per service.
    */
   padded?: boolean
 }) {

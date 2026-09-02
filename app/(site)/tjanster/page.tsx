@@ -7,6 +7,7 @@ import AnimatedSection from '@/components/AnimatedSection'
 import PageTransition from '@/components/PageTransition'
 import ServiceIndexRail from '@/components/ServiceIndexRail'
 import ServiceFormDialog from '@/components/ServiceFormDialog'
+import FeatureList from '@/components/FeatureList'
 import { hasServicePage, serviceForms, serviceHref } from '@/lib/services'
 import { defaultServices } from '@/lib/serviceContent'
 
@@ -117,23 +118,11 @@ export default async function ServicesPage() {
                       <p className="section-subtitle mb-10 max-w-2xl">{service.shortDescription}</p>
                     )}
 
-                    {/* Spec-sheet list — ruled rows rather than icon bullets */}
-                    {service.features && service.features.length > 0 && (
-                      <ul className="grid sm:grid-cols-2 gap-x-10 mb-10">
-                        {service.features.map((f, i) => (
-                          <li
-                            key={i}
-                            className="py-3 text-sm border-t"
-                            style={{
-                              color: 'var(--color-text-muted)',
-                              borderColor: 'var(--color-border)',
-                            }}
-                          >
-                            {f}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
+                    {/* Spec-sheet list — ruled rows, each with its own icon */}
+                    <FeatureList
+                      features={service.features}
+                      className="grid sm:grid-cols-2 gap-x-10 mb-10"
+                    />
 
                     {/* With a form of its own, the panel opens it in place.
                         Without one, the link carries the service through so the

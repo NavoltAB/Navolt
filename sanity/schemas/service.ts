@@ -1,4 +1,7 @@
+import { ListChecks } from 'lucide-react'
 import { defineArrayMember, defineField, defineType } from 'sanity'
+
+import { DEFAULT_FEATURE_ICON, featureIcon, featureIconOptions } from '@/lib/featureIcons'
 
 /**
  * A service — and its own page.
@@ -70,9 +73,45 @@ export const serviceSchema = defineType({
       name: 'features',
       title: 'Vad ingår',
       type: 'array',
-      of: [{ type: 'string' }],
+      of: [
+        defineArrayMember({
+          name: 'feature',
+          title: 'Punkt',
+          type: 'object',
+          icon: ListChecks,
+          fields: [
+            defineField({
+              name: 'text',
+              title: 'Text',
+              type: 'string',
+              validation: (Rule) => Rule.required(),
+            }),
+            defineField({
+              name: 'icon',
+              title: 'Ikon',
+              type: 'string',
+              options: { list: featureIconOptions },
+              initialValue: DEFAULT_FEATURE_ICON,
+              description: 'Visas framför texten. Lämna som bock om ingen passar.',
+            }),
+          ],
+          preview: {
+            select: { title: 'text', icon: 'icon' },
+            prepare: ({ title, icon }: { title?: string; icon?: string }) => ({
+              title,
+              media: featureIcon(icon),
+            }),
+          },
+        }),
+      ],
       group: 'grund',
-      description: 'Punktlista. Visas både i tjänsteöversikten och på tjänstens egen sida.',
+      description:
+        'Punktlista med ikon. Visas både i tjänsteöversikten och på tjänstens egen sida.',
+      // Bullets written before the icon field existed are bare strings, which
+      // the studio shows as an unknown item type — Sanity won't allow a string
+      // and an object in the same array, so they can't be kept as a second
+      // member type. `npm run migrate:features` converts them; the site
+      // renders them either way (lib/featureIcons.ts).
     }),
     defineField({
       name: 'order',

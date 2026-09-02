@@ -9,6 +9,8 @@ import PageTransition from '@/components/PageTransition'
 import ServiceFormDialog from '@/components/ServiceFormDialog'
 import PortableText from '@/app/(site)/produkter/[slug]/PortableText'
 import DocumentList from '@/components/DocumentList'
+import FeatureList from '@/components/FeatureList'
+import { normalizeFeatures } from '@/lib/featureIcons'
 import { hasServicePage, serviceForms, serviceHref } from '@/lib/services'
 import {
   defaultServicePages,
@@ -228,22 +230,9 @@ export default async function ServicePage({
               )}
             </AnimatedSection>
 
-            {service.features && service.features.length > 0 && (
+            {normalizeFeatures(service.features).length > 0 && (
               <AnimatedSection delay={0.1}>
-                <ul>
-                  {service.features.map((f, i) => (
-                    <li
-                      key={i}
-                      className="py-3 text-sm border-t"
-                      style={{
-                        color: 'var(--color-text-muted)',
-                        borderColor: 'var(--color-border)',
-                      }}
-                    >
-                      {f}
-                    </li>
-                  ))}
-                </ul>
+                <FeatureList features={service.features} />
               </AnimatedSection>
             )}
           </div>

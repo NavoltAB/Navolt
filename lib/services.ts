@@ -62,16 +62,18 @@ export const serviceForms: Record<
   string,
   { appId: string; label: string; padded?: boolean }
 > = {
+  // Both widgets run flush to their own edges, so the dialog is what gives
+  // them their air — keep the two in step, or one form sits tighter in its
+  // panel than the other. Drop `padded` for a widget that pads itself in the
+  // Elfsight dashboard, or it ends up double-padded.
   motorservice: {
     appId: siteConfig.elfsight.motorserviceForm,
     label: 'Boka motorservice',
-    // This one runs flush to its own edges, so the dialog gives it the air.
-    // The campervan form already pads itself in the Elfsight dashboard — adding
-    // it there too would double up.
     padded: true,
   },
   campervan: {
     appId: siteConfig.elfsight.campervanForm,
     label: 'Berätta om din van',
+    padded: true,
   },
 }

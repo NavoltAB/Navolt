@@ -76,6 +76,21 @@ export interface ServicePhoto {
 }
 
 /**
+ * One "Vad ingår" bullet: a line of text and the icon shown in front of it.
+ *
+ * Documents written before the icon field existed store the bullet as a bare
+ * string, so the array is typed as the union and every consumer runs it
+ * through `normalizeFeatures` (lib/featureIcons.ts) rather than reading it
+ * straight — a page must not go blank because a document hasn't been migrated.
+ * The studio can't edit those old bullets (Sanity allows no string member
+ * beside the object one), so run `npm run migrate:features` to convert them.
+ */
+export interface ServiceFeature {
+  text: string
+  icon?: string
+}
+
+/**
  * A service, and the page it renders at its own top-level URL.
  *
  * The first six fields are what the listings need and what getAllServices
@@ -88,7 +103,7 @@ export interface Service {
   title: string
   slug?: string
   shortDescription?: string
-  features?: string[]
+  features?: (ServiceFeature | string)[]
   imageUrl?: string
 
   introLabel?: string
