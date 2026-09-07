@@ -9,6 +9,7 @@ import PageTransition from '@/components/PageTransition'
 import ServiceFormDialog from '@/components/ServiceFormDialog'
 import PortableText from '@/app/(site)/produkter/[slug]/PortableText'
 import DocumentList from '@/components/DocumentList'
+import ServiceGallery from '@/components/ServiceGallery'
 import FeatureList from '@/components/FeatureList'
 import { normalizeFeatures } from '@/lib/featureIcons'
 import { hasServicePage, serviceForms, serviceHref } from '@/lib/services'
@@ -64,6 +65,11 @@ async function getContent(slug: string) {
       service.seoDescription,
       fallback.seoDescription ?? service.shortDescription ?? ''
     ),
+    featuresLabel: text(service.featuresLabel, fallback.featuresLabel ?? 'Vad ingår'),
+    // The tile image is framed for a tall crop; in the page's 16:9 band the
+    // subject often ends up half out of frame. A wide upload wins where the
+    // editor has made one, and the tile image stands in where they haven't.
+    leadImageUrl: text(service.pageImageUrl, service.imageUrl ?? ''),
     introLabel: text(service.introLabel, fallback.introLabel ?? 'Vad vi gör'),
     introTitle: text(service.introTitle, fallback.introTitle ?? service.title),
     // The document's rich text wins; without it the placeholder paragraphs
@@ -86,6 +92,10 @@ async function getContent(slug: string) {
 
     gallery: list(service.gallery, fallback.gallery ?? []),
 
+    documentsLabel: text(service.documentsLabel, fallback.documentsLabel ?? 'Dokument'),
+    documentsTitle: text(service.documentsTitle, fallback.documentsTitle ?? 'Ladda ner'),
+    documentsText: text(service.documentsText, fallback.documentsText ?? ''),
+
     ctaLabel: text(service.ctaLabel, cta.ctaLabel ?? ''),
     ctaTitle: text(service.ctaTitle, cta.ctaTitle ?? ''),
     ctaText: text(service.ctaText, cta.ctaText ?? ''),
@@ -103,7 +113,7 @@ export async function generateMetadata({
   const content = await getContent(slug)
   if (!content) return {}
 
-  const { service, seoTitle: title, seoDescription: description } = content
+  const { seoTitle: title, seoDescription: description, leadImageUrl } = content
 
   return {
     title,
@@ -115,7 +125,9 @@ export async function generateMetadata({
       title,
       ...(description ? { description } : {}),
       url: `/${slug}`,
-      ...(service.imageUrl ? { images: [service.imageUrl] } : {}),
+      // The same picture the page leads with, which is also the wider crop
+      // of the two — a share card is 1.91:1, not a portrait tile.
+      ...(leadImageUrl ? { images: [leadImageUrl] } : {}),
     },
   }
 }
@@ -134,7 +146,7 @@ export default async function ServicePage({
   const [content, allServices] = await Promise.all([getContent(slug), getAllServices()])
   if (!content) notFound()
 
-  const { service, highlight } = content
+  const { service, highlight, leadImageUrl } = content
   const form = serviceForms[slug]
   const subject = encodeURIComponent(service.title)
 
@@ -177,13 +189,13 @@ export default async function ServicePage({
       </div>
 
       {/* Lead image */}
-      {service.imageUrl && (
+      {leadImageUrl && (
         <section className="pt-12">
           <div className="container mx-auto px-6 max-w-container">
             <AnimatedSection>
               <div className="aspect-[16/9] rounded-lg overflow-hidden relative">
                 <Image
-                  src={service.imageUrl}
+                  src={leadImageUrl}
                   alt={`${service.title} — ${siteConfig.name}`}
                   fill
                   priority
@@ -196,71 +208,9 @@ export default async function ServicePage({
         </section>
       )}
 
-      {/* Body beside the spec list */}
-      <section className="section">
-        <div className="container mx-auto px-6 max-w-container">
-          <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] lg:gap-x-20 gap-y-12">
-            <AnimatedSection>
-              <p className="section-label mb-3">{content.introLabel}</p>
-              <h2 className="font-heading text-3xl md:text-4xl font-semibold mb-6">
-                {content.introTitle}
-              </h2>
-              {content.body ? (
-                <div className="prose-sanity max-w-2xl">
-                  <PortableText value={content.body} />
-                </div>
-              ) : content.introParagraphs.length > 0 ? (
-                <div
-                  className="space-y-5 text-base leading-relaxed max-w-2xl"
-                  style={{ color: 'var(--color-text-muted)' }}
-                >
-                  {content.introParagraphs.map((paragraph, i) => (
-                    <p key={i}>{paragraph}</p>
-                  ))}
-                </div>
-              ) : (
-                // Nothing written yet. Repeating the teaser would put the same
-                // sentence on the page twice, so the header carries it alone.
-                <p
-                  className="text-base leading-relaxed max-w-2xl"
-                  style={{ color: 'var(--color-text-muted)' }}
-                >
-                  Berätta vad du vill få gjort, så återkommer vi med en bedömning.
-                </p>
-              )}
-            </AnimatedSection>
-
-            {normalizeFeatures(service.features).length > 0 && (
-              <AnimatedSection delay={0.1}>
-                <FeatureList features={service.features} />
-              </AnimatedSection>
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* Downloads — monteringsanvisningar, datablad, prislistor. Sits right
-          under the body copy because it answers the same question the copy
-          does, and nothing renders at all when the service has no files. */}
-      {(service.documents?.length ?? 0) > 0 && (
-        <section className="pb-4">
-          <div className="container mx-auto px-6 max-w-container">
-            <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] lg:gap-x-20">
-              <AnimatedSection>
-                <p className="section-label mb-3">Dokument</p>
-                <h2 className="font-heading text-2xl md:text-3xl font-semibold mb-4">
-                  Ladda ner
-                </h2>
-                <DocumentList documents={service.documents ?? []} />
-              </AnimatedSection>
-            </div>
-          </div>
-        </section>
-      )}
-
       {/* How it works */}
       {content.steps.length > 0 && (
-        <section className="section" style={{ background: 'var(--color-surface)' }}>
+        <section className="section">
           <div className="container mx-auto px-6 max-w-container">
             <AnimatedSection>
               <p className="section-label mb-3">{content.stepsLabel}</p>
@@ -293,6 +243,97 @@ export default async function ServicePage({
                   )}
                 </AnimatedSection>
               ))}
+            </div>
+
+            {/* The steps end on "so here's how it works" — the form is the
+                next thing to do, so it's offered here rather than only in the
+                header, where the visitor met it before reading any of this.
+                Only for a service that has a form of its own; the rest already
+                close on the CTA band at the foot of the page. */}
+            {form && (
+              <AnimatedSection delay={0.15} className="mt-14">
+                <ServiceFormDialog appId={form.appId} label={form.label} padded={form.padded} />
+              </AnimatedSection>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* Body, then the spec list under it */}
+      {/* Both sections carry the same background now, so their paddings stack
+          into one 12rem gap. The steps' own bottom padding is enough air
+          between the two — but only when the steps are there to provide it. */}
+      <section className={`section ${content.steps.length > 0 ? 'pt-0' : ''}`}>
+        <div className="container mx-auto px-6 max-w-container">
+          <AnimatedSection>
+            <p className="section-label mb-3">{content.introLabel}</p>
+            <h2 className="font-heading text-3xl md:text-4xl font-semibold mb-6">
+              {content.introTitle}
+            </h2>
+            {content.body ? (
+              <div className="prose-sanity max-w-2xl">
+                <PortableText value={content.body} />
+              </div>
+            ) : content.introParagraphs.length > 0 ? (
+              <div
+                className="space-y-5 text-base leading-relaxed max-w-2xl"
+                style={{ color: 'var(--color-text-muted)' }}
+              >
+                {content.introParagraphs.map((paragraph, i) => (
+                  <p key={i}>{paragraph}</p>
+                ))}
+              </div>
+            ) : (
+              // Nothing written yet. Repeating the teaser would put the same
+              // sentence on the page twice, so the header carries it alone.
+              <p
+                className="text-base leading-relaxed max-w-2xl"
+                style={{ color: 'var(--color-text-muted)' }}
+              >
+                Berätta vad du vill få gjort, så återkommer vi med en bedömning.
+              </p>
+            )}
+          </AnimatedSection>
+
+          {/* Under the copy rather than beside it: the list is as long as the
+              service is broad, and in a side column it ran far past the text
+              it was supposed to sit next to. */}
+          {normalizeFeatures(service.features).length > 0 && (
+            <AnimatedSection delay={0.1}>
+              <div className="mt-14 md:mt-16">
+                <p className="section-label mb-6">{content.featuresLabel}</p>
+                <FeatureList features={service.features} />
+              </div>
+            </AnimatedSection>
+          )}
+        </div>
+      </section>
+
+      {/* Downloads — monteringsanvisningar, datablad, prislistor. Sits right
+          under the body copy because it answers the same question the copy
+          does, and nothing renders at all when the service has no files. */}
+      {(service.documents?.length ?? 0) > 0 && (
+        <section className="pb-4">
+          <div className="container mx-auto px-6 max-w-container">
+            <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] lg:gap-x-20">
+              <AnimatedSection>
+                <p className="section-label mb-3">{content.documentsLabel}</p>
+                <h2 className="font-heading text-2xl md:text-3xl font-semibold mb-4">
+                  {content.documentsTitle}
+                </h2>
+                {/* What the file is worth downloading for. Where it carries
+                    the whole procedure, this is what saves the page from
+                    retelling it in numbered steps above. */}
+                {content.documentsText && (
+                  <p
+                    className="text-base leading-relaxed max-w-2xl mb-6"
+                    style={{ color: 'var(--color-text-muted)' }}
+                  >
+                    {content.documentsText}
+                  </p>
+                )}
+                <DocumentList documents={service.documents ?? []} />
+              </AnimatedSection>
             </div>
           </div>
         </section>
@@ -345,25 +386,18 @@ export default async function ServicePage({
         </section>
       )}
 
-      {/* Gallery */}
+      {/* Gallery — a carousel rather than a three-up grid. The grid capped the
+          page at three photos and shrank each one to a thumbnail; a service
+          with eight pictures of its work should be able to show them. */}
       {content.gallery.length > 0 && (
-        <section className="pb-4">
+        <section className="section pt-0">
           <div className="container mx-auto px-6 max-w-container">
-            <div className="grid sm:grid-cols-3 gap-5">
-              {content.gallery.map((photo, index) => (
-                <AnimatedSection key={photo.url} delay={index * 0.08}>
-                  <div className="aspect-[4/3] rounded-lg overflow-hidden relative">
-                    <Image
-                      src={photo.url}
-                      alt={photo.alt ?? ''}
-                      fill
-                      sizes="(max-width: 640px) 100vw, 400px"
-                      className="object-cover"
-                    />
-                  </div>
-                </AnimatedSection>
-              ))}
-            </div>
+            <AnimatedSection>
+              <ServiceGallery
+                photos={content.gallery}
+                label={`Bilder — ${service.title}`}
+              />
+            </AnimatedSection>
           </div>
         </section>
       )}

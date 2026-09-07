@@ -6,7 +6,7 @@ import {
   getLandingProducts,
   getSiteSettings,
 } from '@/sanity/queries'
-import { list, text } from '@/sanity/fallback'
+import { list, paragraphs, text } from '@/sanity/fallback'
 import AnimatedSection, { StaggerContainer, StaggerItem } from '@/components/AnimatedSection'
 import ProductCard from '@/components/ProductCard'
 import ServiceTiles from '@/components/ServiceTiles'
@@ -84,6 +84,10 @@ const defaults = {
   manifestoBefore: 'Elen ombord ska bara',
   manifestoAccent: 'fungera',
   manifestoAfter: '— oavsett väder och oavsett hur långt hemifrån du är.',
+  // Second gold word, at the very end of the sentence. Empty by default: the
+  // placeholder manifesto doesn't end on a word worth lifting, and an unset
+  // field has to render as nothing rather than as a stray default.
+  manifestoAccentEnd: '',
 
   servicesLabel: 'Vad vi gör',
   servicesTitle: 'Tjänster vi erbjuder',
@@ -91,19 +95,10 @@ const defaults = {
 
   whyLabel: 'Vårt arbetssätt',
   whyTitle: 'Varför Navolt',
-  whyItems: [
-    {
-      title: 'Rätt utfört från början',
-      text: 'El ombord är inte platsen för genvägar. Vi drar, märker och dokumenterar installationen så att den går att felsöka och bygga vidare på — även av någon annan, om tio år.',
-    },
-    {
-      title: 'Vi kommer till båten',
-      text: 'Det mesta löser vi där båten ligger. Slipper du transportera fram och tillbaka blir jobbet både snabbare och billigare för dig.',
-    },
-    {
-      title: 'Komponenter vi står bakom',
-      text: 'Vi arbetar med marknadsledande marina varumärken — Victron, Mastervolt, Garmin, Raymarine och fler. Delar som går att få tag på och serva även i framtiden.',
-    },
+  whyParagraphs: [
+    'El ombord är inte platsen för genvägar. Vi drar, märker och dokumenterar installationen så att den går att felsöka och bygga vidare på — även av någon annan, om tio år.',
+    'Det mesta löser vi där båten ligger. Slipper du transportera fram och tillbaka blir jobbet både snabbare och billigare för dig.',
+    'Vi arbetar med marknadsledande marina varumärken — Victron, Mastervolt, Garmin, Raymarine och fler. Delar som går att få tag på och serva även i framtiden.',
   ],
 
   aboutLabel: 'Om oss',
@@ -111,11 +106,6 @@ const defaults = {
   aboutText:
     'Navolt sitter på Hälsö i Göteborgs norra skärgård och arbetar med el och elektronik ombord — från en trasig landströmsladdare till ett komplett elsystem i en nybyggd campervan. Vi tar oss an både det lilla felet som stoppat semestern och de större installationerna som kräver planering.',
   aboutImageUrl: '/images/startpage-2.jpg',
-  aboutStats: [
-    { value: 'Hälsö', label: 'Bas' },
-    { value: 'Göteborg', label: 'Upptagningsområde' },
-    { value: 'F-skatt', label: 'Godkänt' },
-  ],
   aboutCtaLabel: 'Mer om Navolt',
 
   reviewsLabel: 'Omdömen',
@@ -157,13 +147,11 @@ export default async function HomePage() {
 
   const heroTitleAccent = text(homePage?.heroTitleAccent, defaults.heroTitleAccent)
   const manifestoAccent = text(homePage?.manifestoAccent, defaults.manifestoAccent)
+  const manifestoAccentEnd = text(homePage?.manifestoAccentEnd, defaults.manifestoAccentEnd)
   const ctaTitleAccent = text(homePage?.ctaTitleAccent, defaults.ctaTitleAccent)
 
   const trustStats = list(homePage?.trustStats, defaults.trustStats)
-  const aboutStats = list(homePage?.aboutStats, defaults.aboutStats)
-  // A row with no heading has nothing to number, so it's dropped rather than
-  // rendered as a bare paragraph beside an orphaned "04".
-  const whyItems = list(homePage?.whyItems, defaults.whyItems).filter((item) => item.title)
+  const whyParagraphs = paragraphs(homePage?.whyText, defaults.whyParagraphs)
 
   return (
     <>
@@ -320,6 +308,70 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* ── Segments ──────────────────────────────────────────── */}
+      <section className="section">
+        <div className="container mx-auto px-6" style={{ maxWidth: 'var(--container-max)' }}>
+          <AnimatedSection className="mb-12">
+            <p className="section-label mb-3">
+              {text(homePage?.servicesLabel, defaults.servicesLabel)}
+            </p>
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+              <h2 className="section-title">
+                {text(homePage?.servicesTitle, defaults.servicesTitle)}
+              </h2>
+              <Link href="/tjanster" className="btn-outline shrink-0">
+                {text(homePage?.servicesCtaLabel, defaults.servicesCtaLabel)}
+              </Link>
+            </div>
+          </AnimatedSection>
+
+          {/* Editorial photo tiles rather than cards — the card shape is
+              reserved for products, which carry price and stock. See
+              components/ServiceTiles.tsx. */}
+          <ServiceTiles segments={segments} />
+        </div>
+      </section>
+
+      {/* ── Manifesto ─────────────────────────────────────────── */}
+      {/* Sits between the services and the products: the claim lands after
+          the tiles that back it up, and ahead of the sortiment. */}
+      <section
+        className="py-20"
+        style={{
+          borderTop: '1px solid var(--color-border)',
+          borderBottom: '1px solid var(--color-border)',
+        }}
+      >
+        <div className="container mx-auto px-6" style={{ maxWidth: 'var(--container-max)' }}>
+          <AnimatedSection>
+            <p
+              className="font-heading font-semibold text-center mx-auto"
+              style={{
+                fontSize: 'clamp(1.6rem, 3.5vw, 2.75rem)',
+                lineHeight: 1.22,
+                maxWidth: '820px',
+                color: 'var(--color-primary)',
+                letterSpacing: '-0.02em',
+              }}
+            >
+              {text(homePage?.manifestoBefore, defaults.manifestoBefore)}{' '}
+              <em style={{ color: 'var(--color-gold)', fontStyle: 'italic' }}>
+                {manifestoAccent}
+              </em>{' '}
+              {text(homePage?.manifestoAfter, defaults.manifestoAfter)}
+              {manifestoAccentEnd && (
+                <>
+                  {' '}
+                  <em style={{ color: 'var(--color-gold)', fontStyle: 'italic' }}>
+                    {manifestoAccentEnd}
+                  </em>
+                </>
+              )}
+            </p>
+          </AnimatedSection>
+        </div>
+      </section>
+
       {/* ── Products ──────────────────────────────────────────── */}
       {/* Renders only when there's stock to show. Unlike services there's no
           fallback copy for products — an empty grid under a "Sortiment"
@@ -353,105 +405,28 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* ── Manifesto ─────────────────────────────────────────── */}
-      {/* Sits between the products and the services: the claim lands first,
-          then the tiles below show what backs it up. */}
-      <section
-        className="py-20"
-        style={{
-          borderTop: '1px solid var(--color-border)',
-          borderBottom: '1px solid var(--color-border)',
-        }}
-      >
-        <div className="container mx-auto px-6" style={{ maxWidth: 'var(--container-max)' }}>
-          <AnimatedSection>
-            <p
-              className="font-heading font-semibold text-center mx-auto"
-              style={{
-                fontSize: 'clamp(1.6rem, 3.5vw, 2.75rem)',
-                lineHeight: 1.22,
-                maxWidth: '820px',
-                color: 'var(--color-primary)',
-                letterSpacing: '-0.02em',
-              }}
-            >
-              {text(homePage?.manifestoBefore, defaults.manifestoBefore)}{' '}
-              <em style={{ color: 'var(--color-gold)', fontStyle: 'italic' }}>
-                {manifestoAccent}
-              </em>{' '}
-              {text(homePage?.manifestoAfter, defaults.manifestoAfter)}
-            </p>
-          </AnimatedSection>
-        </div>
-      </section>
-
-      {/* ── Segments ──────────────────────────────────────────── */}
-      <section className="section">
-        <div className="container mx-auto px-6" style={{ maxWidth: 'var(--container-max)' }}>
-          <AnimatedSection className="mb-12">
-            <p className="section-label mb-3">
-              {text(homePage?.servicesLabel, defaults.servicesLabel)}
-            </p>
-            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-              <h2 className="section-title">
-                {text(homePage?.servicesTitle, defaults.servicesTitle)}
-              </h2>
-              <Link href="/tjanster" className="btn-outline shrink-0">
-                {text(homePage?.servicesCtaLabel, defaults.servicesCtaLabel)}
-              </Link>
-            </div>
-          </AnimatedSection>
-
-          {/* Editorial photo tiles rather than cards — the card shape is
-              reserved for products, which carry price and stock. See
-              components/ServiceTiles.tsx. */}
-          <ServiceTiles segments={segments} />
-        </div>
-      </section>
-
       {/* ── Why us ────────────────────────────────────────────── */}
       <section className="section">
         <div className="container mx-auto px-6" style={{ maxWidth: 'var(--container-max)' }}>
-          <div
-            className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 pb-10"
-            style={{ borderBottom: '2px solid var(--color-primary)' }}
-          >
-            <div>
-              <p className="section-label mb-2">{text(homePage?.whyLabel, defaults.whyLabel)}</p>
-              <h2 className="section-title">{text(homePage?.whyTitle, defaults.whyTitle)}</h2>
-            </div>
+          <div className="pb-8" style={{ borderBottom: '2px solid var(--color-primary)' }}>
+            <p className="section-label mb-2">{text(homePage?.whyLabel, defaults.whyLabel)}</p>
+            <h2 className="section-title">{text(homePage?.whyTitle, defaults.whyTitle)}</h2>
           </div>
 
-          {whyItems.map((f, i) => (
-            <AnimatedSection key={`${f.title}-${i}`} delay={i * 0.1}>
-              <div className="py-10 md:py-12" style={{ borderBottom: '1px solid var(--color-border)' }}>
-                <div
-                  className="flex flex-col md:grid md:items-start md:gap-10"
-                  style={{ gridTemplateColumns: '4.5rem 1fr 1.8fr' }}
-                >
-                  <span
-                    className="font-heading font-semibold leading-none mb-4 md:mb-0"
-                    style={{
-                      fontSize: 'clamp(2.2rem, 3.5vw, 3rem)',
-                      color: 'var(--color-border)',
-                      letterSpacing: '-0.04em',
-                    }}
-                  >
-                    {String(i + 1).padStart(2, '0')}
-                  </span>
-                  <h3
-                    className="font-heading font-semibold mb-3 md:mb-0 md:pt-1"
-                    style={{ fontSize: 'var(--text-2xl)' }}
-                  >
-                    {f.title}
-                  </h3>
-                  <p className="leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
-                    {f.text}
-                  </p>
-                </div>
-              </div>
-            </AnimatedSection>
-          ))}
+          {/* One thought, told once: prose straight under the rule. It's a
+              single text field rather than a list of titled blocks — there is
+              nothing here to number, head or separate. Blank lines in the
+              field become paragraphs, the same as the story on /om-oss. */}
+          <AnimatedSection delay={0.1}>
+            <div
+              className="pt-10 md:pt-12 space-y-2 leading-loose"
+              style={{ fontSize: 'var(--text-lg)', color: 'var(--color-text-muted)', maxWidth: '760px' }}
+            >
+              {whyParagraphs.map((paragraph, i) => (
+                <p key={i}>{paragraph}</p>
+              ))}
+            </div>
+          </AnimatedSection>
         </div>
       </section>
 
@@ -481,31 +456,9 @@ export default async function HomePage() {
               <h2 className="section-title mb-6">
                 {text(homePage?.aboutTitle, defaults.aboutTitle)}
               </h2>
-              <p className="section-subtitle mb-10">
+              <p className="section-subtitle mb-10" style={{ maxWidth: '640px' }}>
                 {text(homePage?.aboutText, defaults.aboutText)}
               </p>
-
-              {/* Flex, not grid-cols-3 — the labels differ too much in length
-                  for equal columns, which left ragged gaps after the short
-                  ones. Sizing to content keeps the spacing between items even. */}
-              <div className="flex flex-wrap gap-x-12 gap-y-6 mb-10">
-                {aboutStats.map((s, i) => (
-                  <div key={`${s.label}-${i}`}>
-                    <p
-                      className="font-heading font-semibold mb-0.5"
-                      style={{ fontSize: 'var(--text-xl)', color: 'var(--color-primary)' }}
-                    >
-                      {s.value}
-                    </p>
-                    <p
-                      className="text-xs tracking-[0.1em] uppercase"
-                      style={{ color: 'var(--color-text-muted)' }}
-                    >
-                      {s.label}
-                    </p>
-                  </div>
-                ))}
-              </div>
 
               <Link href="/om-oss" className="btn-outline">
                 {text(homePage?.aboutCtaLabel, defaults.aboutCtaLabel)}

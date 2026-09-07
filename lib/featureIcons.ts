@@ -151,6 +151,20 @@ export function featureIcon(name?: string): LucideIcon {
  * are plain strings — and empty rows are common in a studio array, so this is
  * also where blanks get dropped.
  */
+/**
+ * Splits a bullet written "Etikett - beskrivning" into its two halves.
+ *
+ * The label is the part a reader scans for, so it is set apart from the
+ * sentence that follows it. Only a short leading fragment counts: a dash
+ * further into the text is punctuation in an ordinary sentence, not a label,
+ * and the bullet is then left whole. The separator has to be spaced, so
+ * "Wi-Fi" and "Kyla/Värme" survive intact.
+ */
+export function splitFeature(text: string): { label?: string; body: string } {
+  const match = text.trim().match(/^(.{2,32}?) [-–—] ([\s\S]+)$/)
+  return match ? { label: match[1].trim(), body: match[2].trim() } : { body: text.trim() }
+}
+
 export function normalizeFeatures(
   features?: (ServiceFeature | string)[]
 ): { text: string; icon?: string }[] {

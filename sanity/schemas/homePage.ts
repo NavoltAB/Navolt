@@ -149,6 +149,14 @@ export const homePageSchema = defineType({
       rows: 2,
       group: 'manifest',
     }),
+    defineField({
+      name: 'manifestoAccentEnd',
+      title: 'Manifest — Guldkursivt ord (sist)',
+      type: 'string',
+      group: 'manifest',
+      description:
+        'Valfritt. Sätts sist i meningen, efter "Text efter". Lämna tomt om meningen inte ska sluta i guld.',
+    }),
 
     // ── Tjänster ────────────────────────────────────────────
     defineField({
@@ -185,27 +193,12 @@ export const homePageSchema = defineType({
       group: 'varfor',
     }),
     defineField({
-      name: 'whyItems',
-      title: 'Varför — Punkter',
-      type: 'array',
+      name: 'whyText',
+      title: 'Varför — Text',
+      type: 'text',
+      rows: 8,
       group: 'varfor',
-      description:
-        'Lägg till, ta bort och dra för att ändra ordning. Numreringen (01, 02, 03 …) sätts automatiskt.',
-      of: [
-        defineArrayMember({
-          type: 'object',
-          fields: [
-            defineField({
-              name: 'title',
-              title: 'Rubrik',
-              type: 'string',
-              validation: (Rule) => Rule.required(),
-            }),
-            defineField({ name: 'text', title: 'Text', type: 'text', rows: 4 }),
-          ],
-          preview: { select: { title: 'title', subtitle: 'text' } },
-        }),
-      ],
+      description: 'Texten under rubriken. Separera stycken med en tom rad.',
     }),
 
     // ── Om oss ──────────────────────────────────────────────
@@ -234,23 +227,6 @@ export const homePageSchema = defineType({
       type: 'image',
       options: { hotspot: true },
       group: 'om',
-    }),
-    defineField({
-      name: 'aboutStats',
-      title: 'Om oss — Nyckeltal',
-      type: 'array',
-      group: 'om',
-      description: 'Den lilla raden mellan texten och knappen.',
-      of: [
-        defineArrayMember({
-          type: 'object',
-          fields: [
-            defineField({ name: 'value', title: 'Värde', type: 'string' }),
-            defineField({ name: 'label', title: 'Etikett', type: 'string' }),
-          ],
-          preview: { select: { title: 'value', subtitle: 'label' } },
-        }),
-      ],
     }),
     defineField({
       name: 'aboutCtaLabel',

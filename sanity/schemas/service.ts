@@ -11,7 +11,7 @@ import { DEFAULT_FEATURE_ICON, featureIcon, featureIconOptions } from '@/lib/fea
  * therefore feeds three places:
  *
  *   · the tile on the landing page      — title, kort beskrivning, bild
- *   · the panel on /tjanster            — the same three, plus "Vad ingår"
+ *   · the panel on /tjanster            — the same three, as a teaser
  *   · the service's own page            — all of it
  *
  * Grouped so the first tab is the short version every page needs, and the
@@ -25,8 +25,8 @@ export const serviceSchema = defineType({
   type: 'document',
   groups: [
     { name: 'grund', title: 'Grunduppgifter', default: true },
-    { name: 'text', title: 'Brödtext' },
     { name: 'steg', title: 'Så går det till' },
+    { name: 'text', title: 'Brödtext' },
     { name: 'utvalt', title: 'Utvald sektion' },
     { name: 'galleri', title: 'Bildgalleri' },
     { name: 'dokument', title: 'Dokument' },
@@ -67,7 +67,20 @@ export const serviceSchema = defineType({
       type: 'image',
       options: { hotspot: true },
       group: 'grund',
-      description: 'Används både som tjänstens bild i listorna och överst på dess egen sida.',
+      description:
+        'Tjänstens bild i listorna — startsidan, översikten och menyn. Visas i stående format, ' +
+        'så motivet bör sitta i mitten. Används även överst på tjänstens egen sida om ingen ' +
+        'bredbild är vald nedan.',
+    }),
+    defineField({
+      name: 'pageImage',
+      title: 'Bredbild — överst på tjänstens sida',
+      type: 'image',
+      options: { hotspot: true },
+      group: 'grund',
+      description:
+        'Valfri. Sidans toppbild visas liggande (16:9), och en bild som fungerar stående blir ' +
+        'ofta hårt beskuren där. Lämna tom för att använda bilden ovan.',
     }),
     defineField({
       name: 'features',
@@ -106,12 +119,20 @@ export const serviceSchema = defineType({
       ],
       group: 'grund',
       description:
-        'Punktlista med ikon. Visas både i tjänsteöversikten och på tjänstens egen sida.',
+        'Punktlista med ikon, visas som kort på tjänstens egen sida. Skriv "Etikett - beskrivning" ' +
+        'så sätts etiketten i fetstil överst i kortet.',
       // Bullets written before the icon field existed are bare strings, which
       // the studio shows as an unknown item type — Sanity won't allow a string
       // and an object in the same array, so they can't be kept as a second
       // member type. `npm run migrate:features` converts them; the site
       // renders them either way (lib/featureIcons.ts).
+    }),
+    defineField({
+      name: 'featuresLabel',
+      title: 'Vad ingår — Etikett',
+      type: 'string',
+      group: 'grund',
+      description: 'Liten text ovanför korten. Lämna tom för "Vad ingår".',
     }),
     defineField({
       name: 'order',
@@ -258,6 +279,30 @@ export const serviceSchema = defineType({
     }),
 
     // ── Dokument ────────────────────────────────────────────
+    defineField({
+      name: 'documentsLabel',
+      title: 'Etikett',
+      type: 'string',
+      group: 'dokument',
+      description: 'Liten text ovanför rubriken. Lämna tom för "Dokument".',
+    }),
+    defineField({
+      name: 'documentsTitle',
+      title: 'Rubrik',
+      type: 'string',
+      group: 'dokument',
+      description: 'Lämna tom för "Ladda ner".',
+    }),
+    defineField({
+      name: 'documentsText',
+      title: 'Text',
+      type: 'text',
+      rows: 4,
+      group: 'dokument',
+      description:
+        'Berätta vad filen innehåller och varför den är värd att ladda ner — står det hela ' +
+        'arbetsgången i den behöver sidan inte upprepa den. Lämna tom för att bara visa listan.',
+    }),
     defineField({
       name: 'documents',
       title: 'Dokument',

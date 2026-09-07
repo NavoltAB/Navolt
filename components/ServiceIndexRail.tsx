@@ -108,7 +108,7 @@ export default function ServiceIndexRail({
 
   return (
     <nav aria-label="Tjänster">
-      <p className="section-label mb-6">Innehåll</p>
+      <p className="section-label mb-6">Detta hjälper vi dig med</p>
 
       <div className="relative">
         {/* Track and fill share a box so the line can't fall out of step with

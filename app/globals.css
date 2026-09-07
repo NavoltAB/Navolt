@@ -374,3 +374,16 @@ video {
   margin-bottom: 0.4rem;
   color: var(--color-text-muted);
 }
+
+/* Horizontal scrollers that provide their own controls — the gallery carousel
+   (components/ServiceGallery.tsx). The scrollbar is redundant there and cuts
+   into the frame it would sit under; the track stays keyboard- and
+   touch-scrollable either way. */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}

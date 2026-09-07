@@ -93,7 +93,7 @@ export interface ServiceFeature {
 /**
  * A service, and the page it renders at its own top-level URL.
  *
- * The first six fields are what the listings need and what getAllServices
+ * The first seven fields are what the listings need and what getAllServices
  * projects. Everything below them belongs to the service's own page and is
  * only fetched by getServiceBySlug — no point shipping a step list to the
  * landing page's tiles.
@@ -105,7 +105,10 @@ export interface Service {
   shortDescription?: string
   features?: (ServiceFeature | string)[]
   imageUrl?: string
+  /** Optional wide crop, for the 16:9 bands the tile image is cut badly in. */
+  pageImageUrl?: string
 
+  featuresLabel?: string
   introLabel?: string
   introTitle?: string
   description?: PortableTextBlock[]
@@ -122,6 +125,10 @@ export interface Service {
   highlightCtaHref?: string
 
   gallery?: ServicePhoto[]
+
+  documentsLabel?: string
+  documentsTitle?: string
+  documentsText?: string
   documents?: SanityFile[]
 
   ctaLabel?: string
@@ -163,6 +170,7 @@ export interface HomePage {
   manifestoBefore?: string
   manifestoAccent?: string
   manifestoAfter?: string
+  manifestoAccentEnd?: string
 
   servicesLabel?: string
   servicesTitle?: string
@@ -170,13 +178,12 @@ export interface HomePage {
 
   whyLabel?: string
   whyTitle?: string
-  whyItems?: { title?: string; text?: string }[]
+  whyText?: string
 
   aboutLabel?: string
   aboutTitle?: string
   aboutText?: string
   aboutImageUrl?: string
-  aboutStats?: StatItem[]
   aboutCtaLabel?: string
 
   reviewsLabel?: string

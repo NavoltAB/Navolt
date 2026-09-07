@@ -84,6 +84,7 @@ export interface ServicePageDefaults {
   /** Falls back to the service's title / kort beskrivning when absent. */
   seoTitle?: string
   seoDescription?: string
+  featuresLabel?: string
   introLabel?: string
   introTitle?: string
   /** Rendered only when the document has no "Fullständig beskrivning". */
@@ -100,6 +101,9 @@ export interface ServicePageDefaults {
     ctaHref?: string
   }
   gallery?: ServicePhoto[]
+  documentsLabel?: string
+  documentsTitle?: string
+  documentsText?: string
   ctaLabel?: string
   ctaTitle?: string
   ctaText?: string
@@ -130,26 +134,11 @@ export const defaultServicePages: Record<string, ServicePageDefaults> = {
       'Vi byter och monterar rutor i fritidsbåtar — enstaka rutor såväl som hela set. Där vi har måtten för båtmodellen tillverkas rutan efter dem; annars mäter vi upp, eller använder den gamla rutan som mall.',
       'Vet du inte vilken ruta du behöver? Hör av dig med båtmodell och gärna en bild, så återkommer vi med ett förslag.',
     ],
-    stepsLabel: 'Så går det till',
-    stepsTitle: 'Från mått till monterad ruta',
-    steps: [
-      {
-        title: 'Mått och underlag',
-        text: 'Vi utgår från båtmodellen där vi har måtten, och mäter upp på plats där vi inte har dem. Sitter den gamla rutan kvar går den ofta att använda som mall.',
-      },
-      {
-        title: 'Tillverkning',
-        text: 'Rutan tillverkas efter måtten — form, tjocklek och kanter anpassade efter hur den ska sitta.',
-      },
-      {
-        title: 'Montering',
-        text: 'Vi demonterar den gamla rutan, rengör falsen och monterar den nya med rätt tätning för infästningen.',
-      },
-      {
-        title: 'Efterkontroll',
-        text: 'Vi kontrollerar tätningen innan båten lämnar oss, så att det inte är vid första regnet du får veta om det höll.',
-      },
-    ],
+    // No steps here on purpose. The monteringsanvisning is the step-by-step
+    // account, and a placeholder set would reappear the moment the customer
+    // emptied the field in the studio — an editor can't delete a fallback.
+    documentsText:
+      'Hela arbetsgången står i monteringsanvisningen — verktyg, produkter, mått och torktider, steg för steg. Ladda ner den och ha den till hands vid monteringen.',
     highlight: {
       imageUrl: '/images/batrutor/monteringspaket.jpeg',
       label: 'Monterar du själv?',

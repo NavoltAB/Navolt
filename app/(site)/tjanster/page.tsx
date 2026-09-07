@@ -7,7 +7,6 @@ import AnimatedSection from '@/components/AnimatedSection'
 import PageTransition from '@/components/PageTransition'
 import ServiceIndexRail from '@/components/ServiceIndexRail'
 import ServiceFormDialog from '@/components/ServiceFormDialog'
-import FeatureList from '@/components/FeatureList'
 import { hasServicePage, serviceForms, serviceHref } from '@/lib/services'
 import { defaultServices } from '@/lib/serviceContent'
 
@@ -34,6 +33,30 @@ const defaults = {
     'Det är helt okej — det är ofta därför man ringer en elektriker. Beskriv symptomen så gott du kan, så hör vi av oss och reder ut resten tillsammans.',
   ctaButtonLabel: 'Kontakta oss',
 } as const
+
+/**
+ * The panel's 16:9 image band — a link to the service's page when there is
+ * one, and the same box without a link when there isn't.
+ *
+ * `group` regardless, so the hover on the picture belongs to the frame and
+ * doesn't have to be repeated on both branches.
+ */
+function ImageFrame({
+  href,
+  children,
+}: {
+  href: string | null
+  children: React.ReactNode
+}) {
+  const className = 'group block aspect-[16/9] rounded-lg overflow-hidden relative mb-10'
+  return href ? (
+    <Link href={href} className={className} tabIndex={-1} aria-hidden="true">
+      {children}
+    </Link>
+  ) : (
+    <div className={className}>{children}</div>
+  )
+}
 
 export default async function ServicesPage() {
   const [sanityServices, page] = await Promise.all([getAllServices(), getTjansterPage()])
@@ -73,17 +96,27 @@ export default async function ServicesPage() {
             <div className="space-y-24 lg:space-y-32">
               {services.map((service, index) => {
                 const form = serviceForms[service.slug ?? service._id]
+                // Wide band, so the wide upload wins here as it does at the
+                // top of the service's own page.
+                const panelImageUrl = service.pageImageUrl || service.imageUrl
+                // A panel reads as a card, and a card's picture and title are
+                // clicked by reflex. Null for a service whose slug is reserved:
+                // it has no page of its own, so there is nothing to link to.
+                const href = hasServicePage(service.slug) ? serviceHref(service.slug) : null
                 return (
                 <AnimatedSection key={service._id}>
                   <article id={service.slug ?? service._id} className="scroll-mt-32">
-                    <div className="aspect-[16/9] rounded-lg overflow-hidden relative mb-10">
-                      {service.imageUrl ? (
+                    {/* The picture repeats the heading's link, so it's taken
+                        out of the tab order and hidden from screen readers —
+                        one stop and one announcement per destination. */}
+                    <ImageFrame href={href}>
+                      {panelImageUrl ? (
                         <Image
-                          src={service.imageUrl}
+                          src={panelImageUrl}
                           alt={service.title}
                           fill
                           sizes="(max-width: 1024px) 100vw, 800px"
-                          className="object-cover"
+                          className="object-cover transition-transform duration-500 group-hover:scale-[1.02]"
                         />
                       ) : (
                         <div
@@ -98,7 +131,7 @@ export default async function ServicesPage() {
                           </span>
                         </div>
                       )}
-                    </div>
+                    </ImageFrame>
 
                     {/* Number and rule — the panel's masthead */}
                     <div className="flex items-center gap-4 mb-4">
@@ -112,17 +145,29 @@ export default async function ServicesPage() {
                     </div>
 
                     <h2 className="font-heading text-3xl md:text-4xl font-semibold mb-5">
-                      {service.title}
+                      {href ? (
+                        <Link href={href} className="group/title relative inline-block">
+                          {service.title}
+                          {/* Brass rule, drawn from the left on hover — the
+                              same gesture, easing and duration as the tiles on
+                              the landing page and the product cards. */}
+                          <span
+                            aria-hidden
+                            className="absolute left-0 -bottom-1 block h-[2px] w-full origin-left scale-x-0 transition-transform duration-[600ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover/title:scale-x-100 group-focus-visible/title:scale-x-100"
+                            style={{ background: 'var(--color-gold)' }}
+                          />
+                        </Link>
+                      ) : (
+                        service.title
+                      )}
                     </h2>
+                    {/* Kort beskrivning only. "Vad ingår" used to be listed
+                        here too, which made every panel as long as a page of
+                        its own and left the visitor nothing to click through
+                        for — the full list lives on the service's page. */}
                     {service.shortDescription && (
                       <p className="section-subtitle mb-10 max-w-2xl">{service.shortDescription}</p>
                     )}
-
-                    {/* Spec-sheet list — ruled rows, each with its own icon */}
-                    <FeatureList
-                      features={service.features}
-                      className="grid sm:grid-cols-2 gap-x-10 mb-10"
-                    />
 
                     {/* With a form of its own, the panel opens it in place.
                         Without one, the link carries the service through so the
