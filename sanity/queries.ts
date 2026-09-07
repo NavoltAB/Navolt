@@ -120,20 +120,36 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
 }
 
 /**
- * The row under a product detail page. Same category first, then anything else
- * to top the row up — a one-product category would otherwise render a heading
- * over an empty strip. The product being viewed is always excluded.
+ * The four products under "Mer i sortimentet" on a product page.
+ *
+ * Båtmodell before kategori, deliberately. Someone reading a ruta for a Maxi 68
+ * is shopping for that boat, not for rutor in general — the monteringspaket and
+ * the verktyg that fit the same hull are the useful next click, and they sit in
+ * other categories. Same category is the fallback when the model runs out (or
+ * when the product has no model at all), and the rest of the catalogue fills
+ * the row after that, so the section never renders half empty.
+ *
+ * Both tests are guarded with `defined()`: without it a null parameter matches
+ * every product that *also* has nothing there, since null == null in GROQ, and
+ * a product with no båtmodell would pull in every other product with no
+ * båtmodell as its closest relative.
  */
 export async function getRelatedProducts(
   slug: string,
-  categorySlug: string | null
+  categorySlug: string | null,
+  boatModelSlug: string | null = null
 ): Promise<Product[]> {
   if (!isSanityConfigured) return []
   return client.fetch(
     `*[_type == "product" && slug.current != $slug]
-      | order(select(category->slug.current == $categorySlug => 0, 1) asc, featured desc, name asc)
+      | order(
+          select(defined($boatModelSlug) && boatModel->slug.current == $boatModelSlug => 0, 1) asc,
+          select(defined($categorySlug) && category->slug.current == $categorySlug => 0, 1) asc,
+          featured desc,
+          name asc
+        )
       [0...4] { ${productFields} }`,
-    { slug, categorySlug },
+    { slug, categorySlug, boatModelSlug },
     opts60
   )
 }
@@ -249,6 +265,7 @@ export async function getHomePage(): Promise<HomePage | null> {
       manifestoAccent,
       manifestoAfter,
       manifestoAccentEnd,
+      manifestoAfterEnd,
       servicesLabel,
       servicesTitle,
       servicesCtaLabel,

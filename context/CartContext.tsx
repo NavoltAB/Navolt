@@ -9,7 +9,7 @@ const STORAGE_KEY = 'navolt-varukorg'
 
 /**
  * The basket holds enough to render itself without another Sanity round trip —
- * name, price, unit and a thumbnail URL — so /offert is a pure client page and
+ * name, price, unit and a thumbnail URL — so /varukorg is a pure client page and
  * opens instantly. The slug is the identity; everything else is a snapshot.
  *
  * A snapshot can go stale if a product is renamed or repriced between adding

@@ -39,9 +39,14 @@ export const metadata: Metadata = {
 export default async function ProductsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ kategori?: string; modell?: string; sortera?: string }>
+  searchParams: Promise<{
+    kategori?: string
+    modell?: string
+    sortera?: string
+    sok?: string
+  }>
 }) {
-  const { kategori, modell, sortera } = await searchParams
+  const { kategori, modell, sortera, sok } = await searchParams
   const [products, categories, boatModels, page] = await Promise.all([
     getAllProducts(),
     getAllCategories(),
@@ -63,6 +68,10 @@ export default async function ProductsPage({
 
   const initialSort = isSortKey(sortera) ? sortera : DEFAULT_SORT
 
+  // Capped rather than trusted: ?sok= is whatever someone puts in the address
+  // bar, and it goes straight into the field and the empty state.
+  const initialQuery = (sok ?? '').slice(0, 80)
+
   return (
     <PageTransition>
       <ProductsHero
@@ -79,6 +88,7 @@ export default async function ProductsPage({
         initialCategory={initialCategory}
         initialModels={initialModels}
         initialSort={initialSort}
+        initialQuery={initialQuery}
       />
 
       {/* Closing band — /tjanster and the landing page both end on one, so the

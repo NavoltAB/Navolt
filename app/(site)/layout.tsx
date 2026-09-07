@@ -35,7 +35,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
     }))
 
   // The basket lives above the header and the pages, since both read it: the
-  // header shows the count, /offert renders the contents.
+  // header shows the count, /varukorg renders the contents.
   return (
     // Consent wraps everything, because the chat bubble and the widgets inside
     // the pages all read it before they load a single third-party byte.

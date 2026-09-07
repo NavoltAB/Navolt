@@ -155,7 +155,16 @@ export const homePageSchema = defineType({
       type: 'string',
       group: 'manifest',
       description:
-        'Valfritt. Sätts sist i meningen, efter "Text efter". Lämna tomt om meningen inte ska sluta i guld.',
+        'Valfritt. Sätts efter "Text efter". Lämna tomt om meningen inte ska ha ett andra guldord.',
+    }),
+    defineField({
+      name: 'manifestoAfterEnd',
+      title: 'Manifest — Text efter (sist)',
+      type: 'text',
+      rows: 2,
+      group: 'manifest',
+      description:
+        'Valfritt. Sätts allra sist, efter det andra guldordet — t.ex. "elsystem". Lämna tomt om meningen ska sluta i guld.',
     }),
 
     // ── Tjänster ────────────────────────────────────────────

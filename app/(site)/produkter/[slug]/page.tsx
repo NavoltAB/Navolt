@@ -57,7 +57,11 @@ export default async function ProductPage({
   if (!product) notFound()
 
   const [related, settings] = await Promise.all([
-    getRelatedProducts(slug, product.category?.slug ?? null),
+    getRelatedProducts(
+      slug,
+      product.category?.slug ?? null,
+      product.boatModel?.slug ?? null
+    ),
     getSiteSettings(),
   ])
 
@@ -263,7 +267,7 @@ export default async function ProductPage({
                     <path d="M12 16.5v.5" />
                     <circle cx="12" cy="12" r="9" />
                   </svg>
-                  Monteringspaket krävs
+                  Monteringspaket säljs separat
                 </p>
               )}
 
@@ -327,7 +331,7 @@ export default async function ProductPage({
 
               {needsKit && (
                 <div className="mt-10">
-                  <p className="section-label mb-4">Krävs för montering</p>
+                  <p className="section-label mb-4">Lägg till monteringspaket</p>
                   {kit ? (
                     <Link
                       href={`/produkter/${kit.slug}`}
@@ -416,7 +420,7 @@ export default async function ProductPage({
 
               {(details.length > 0 || documents.length > 0) && (
                 <div className="mt-10">
-                  <p className="section-label mb-4">Specifikation</p>
+                  <p className="section-label mb-4">Specifikationer</p>
                   {details.length > 0 && (
                     <StaggerContainer>
                       <dl>

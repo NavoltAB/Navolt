@@ -20,7 +20,7 @@ export interface CartItem extends CartLine {
    * The monteringspaket this specific ruta requires, snapshotted at add time
    * like the price and the name beside it. It can therefore go stale if the
    * pairing is changed in the studio afterwards — the same deliberate tradeoff
-   * the rest of this snapshot makes, and the reason /offert needs no round trip.
+   * the rest of this snapshot makes, and the reason /varukorg needs no round trip.
    */
   kit?: CartLine
 }

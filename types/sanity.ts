@@ -171,6 +171,7 @@ export interface HomePage {
   manifestoAccent?: string
   manifestoAfter?: string
   manifestoAccentEnd?: string
+  manifestoAfterEnd?: string
 
   servicesLabel?: string
   servicesTitle?: string

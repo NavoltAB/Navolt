@@ -1,5 +1,5 @@
 'use client'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { AnimatePresence, motion, useReducedMotion, type Variants } from 'framer-motion'
 import ProductCard from '@/components/ProductCard'
@@ -14,6 +14,15 @@ const ease = [0.16, 1, 0.3, 1] as const
 const indicatorSpring = { type: 'spring' as const, stiffness: 320, damping: 34, mass: 0.9 }
 
 type Entry = { key: string; label: string; count: number }
+
+/**
+ * Lowercased and stripped of diacritics, so "batrutor" finds "Båtrutor" and
+ * "MAXI" finds "Maxi". Applied to both sides of every comparison — nobody on a
+ * phone keyboard should have to reach for å to find a product.
+ */
+function fold(value: string): string {
+  return value.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+}
 
 /**
  * Owns category, båtmodell and sort state for the whole index, because the
@@ -35,6 +44,7 @@ export default function ProductsShell({
   initialCategory,
   initialModels,
   initialSort,
+  initialQuery,
 }: {
   products: Product[]
   categories: { slug: string; title: string }[]
@@ -42,40 +52,81 @@ export default function ProductsShell({
   initialCategory: string
   initialModels: string[]
   initialSort: SortKey
+  initialQuery: string
 }) {
   const reduceMotion = useReducedMotion()
   const [active, setActive] = useState(initialCategory)
   const [models, setModels] = useState<string[]>(initialModels)
   const [sort, setSort] = useState<SortKey>(initialSort)
   const [modelQuery, setModelQuery] = useState('')
+  const [query, setQuery] = useState(initialQuery)
+  const searchRef = useRef<HTMLInputElement>(null)
+
+  // One folded string per product, rebuilt only when the catalogue itself
+  // changes rather than on every keystroke. Name, description, kategori and
+  // båtmodell all count as matchable: "maxi 68" and "monteringspaket" are
+  // things people type, and neither is in the product name on its own.
+  const haystacks = useMemo(
+    () =>
+      new Map(
+        products.map((product) => [
+          product._id,
+          fold(
+            [
+              product.name,
+              product.shortDescription,
+              product.category?.title,
+              product.boatModel?.name,
+            ]
+              .filter(Boolean)
+              .join(' ')
+          ),
+        ])
+      ),
+    [products]
+  )
+
+  // Every word has to appear somewhere, in any order — "ruta maxi" and
+  // "maxi ruta" are the same search.
+  const terms = useMemo(() => fold(query.trim()).split(/s+/).filter(Boolean), [query])
+
+  // Search sits outermost, above the category and the model: it narrows the
+  // catalogue, and everything below it — the rail's counts included — then
+  // describes what the search found. A rail still claiming 18 products over a
+  // grid showing three would read as a bug.
+  const searched = useMemo(() => {
+    if (terms.length === 0) return products
+    return products.filter((product) => terms.every((term) => (haystacks.get(product._id) ?? '').includes(term)))
+  }, [products, terms, haystacks])
 
   const entries = useMemo<Entry[]>(() => {
     const counts = new Map<string, number>()
-    products.forEach((product) => {
+    searched.forEach((product) => {
       const slug = product.category?.slug
       if (slug) counts.set(slug, (counts.get(slug) ?? 0) + 1)
     })
     // Every category in Sanity is listed, including empty ones — the count is
     // the honest signal, and a category that silently vanished from the rail
     // would look like a bug to whoever just created it in the studio. Counted
-    // against the whole catalogue rather than the model selection, so picking a
-    // båtmodell can never disable the category you are standing in.
+    // against the search but not against the model selection: a search is the
+    // visitor asking what exists, so the rail should answer honestly, while
+    // picking a båtmodell must never disable the category you are standing in.
     return [
-      { key: 'alla', label: 'Alla', count: products.length },
+      { key: 'alla', label: 'Alla', count: searched.length },
       ...categories.map((c) => ({
         key: c.slug,
         label: c.title,
         count: counts.get(c.slug) ?? 0,
       })),
     ]
-  }, [products, categories])
+  }, [searched, categories])
 
   const inCategory = useMemo(
     () =>
       active === 'alla'
-        ? products
-        : products.filter((product) => product.category?.slug === active),
-    [products, active]
+        ? searched
+        : searched.filter((product) => product.category?.slug === active),
+    [searched, active]
   )
 
   // Model counts, unlike the category counts, *do* narrow to the active
@@ -135,7 +186,7 @@ export default function ProductsShell({
 
   const activeLabel = entries.find((entry) => entry.key === active)?.label ?? 'Alla'
   const sortLabel = SORTS.find((s) => s.key === sort)?.label ?? 'Nyast'
-  const filtersOn = active !== 'alla' || models.length > 0
+  const filtersOn = active !== 'alla' || models.length > 0 || query.trim() !== ''
 
   const modelSummary =
     models.length === 0
@@ -149,14 +200,21 @@ export default function ProductsShell({
   // rather than the router: these are view filters, not navigation, and going
   // through the router would re-render the server component and undo the
   // animation this whole component exists for.
+  // Debounced, because of the search box: Safari throttles history writes and
+  // starts dropping them, and a keystroke is not worth a history call anyway.
+  // Nothing renders off the URL, so the lag is invisible.
   useEffect(() => {
-    const params = new URLSearchParams()
-    if (active !== 'alla') params.set('kategori', active)
-    if (models.length > 0) params.set('modell', models.join(','))
-    if (sort !== DEFAULT_SORT) params.set('sortera', sort)
-    const query = params.toString()
-    window.history.replaceState(null, '', query ? `/produkter?${query}` : '/produkter')
-  }, [active, models, sort])
+    const id = setTimeout(() => {
+      const params = new URLSearchParams()
+      if (active !== 'alla') params.set('kategori', active)
+      if (models.length > 0) params.set('modell', models.join(','))
+      if (sort !== DEFAULT_SORT) params.set('sortera', sort)
+      if (query.trim()) params.set('sok', query.trim())
+      const search = params.toString()
+      window.history.replaceState(null, '', search ? `/produkter?${search}` : '/produkter')
+    }, 250)
+    return () => clearTimeout(id)
+  }, [active, models, sort, query])
 
   const toggleModel = useCallback((slug: string) => {
     setModels((current) =>
@@ -167,25 +225,44 @@ export default function ProductsShell({
   const clearFilters = useCallback(() => {
     setActive('alla')
     setModels([])
+    setQuery('')
   }, [])
 
-  const card: Variants = reduceMotion
+  // Split in two on purpose. The outer element is the one that carries
+  // `layout`, and a layout animation drives that element's own transform to
+  // interpolate between its old and new grid slot — so any y/scale of ours on
+  // the same element fights it, which is what threw cards off to the side
+  // mid-refilter. The outer therefore animates opacity only; the rise and the
+  // settle live on an inner wrapper that no layout animation touches.
+  const cardOuter: Variants = reduceMotion
     ? {
         hidden: { opacity: 0 },
         visible: { opacity: 1, transition: { duration: 0.35 } },
         exit: { opacity: 0, transition: { duration: 0.2 } },
       }
     : {
-        hidden: { opacity: 0, y: 28, scale: 0.985 },
+        hidden: { opacity: 0 },
         // Capped so a long catalogue still finishes arriving promptly instead
         // of trickling in for several seconds.
         visible: (i: number) => ({
           opacity: 1,
+          transition: { duration: 0.55, ease, delay: Math.min(i, 7) * 0.07 },
+        }),
+        exit: { opacity: 0, transition: { duration: 0.28, ease: 'easeOut' as const } },
+      }
+
+  // Same labels, so it inherits hidden/visible/exit — and `custom` — from the
+  // card above it, and ProductCard's photo push-in keeps inheriting through.
+  const cardInner: Variants = reduceMotion
+    ? { hidden: {}, visible: {}, exit: {} }
+    : {
+        hidden: { y: 28, scale: 0.985 },
+        visible: (i: number) => ({
           y: 0,
           scale: 1,
           transition: { duration: 0.75, ease, delay: Math.min(i, 7) * 0.07 },
         }),
-        exit: { opacity: 0, scale: 0.96, transition: { duration: 0.3, ease: 'easeOut' as const } },
+        exit: { scale: 0.96, transition: { duration: 0.28, ease: 'easeOut' as const } },
       }
 
   return (
@@ -202,7 +279,7 @@ export default function ProductsShell({
           <div className="-mx-1 flex gap-1.5 overflow-x-auto py-3.5">
             {entries.map((entry) => {
               const on = entry.key === active
-              const empty = entry.count === 0
+              const empty = entry.count === 0 && !on
               return (
                 <button
                   key={entry.key}
@@ -251,7 +328,7 @@ export default function ProductsShell({
 
                   {entries.map((entry, index) => {
                     const on = entry.key === active
-                    const empty = entry.count === 0
+                    const empty = entry.count === 0 && !on
                     return (
                       <li key={entry.key} className="relative">
                         <button
@@ -314,6 +391,72 @@ export default function ProductsShell({
             <div>
               {/* ── Filter bar ─────────────────────────────────── */}
               <div className="mb-8 flex flex-wrap items-center gap-2.5">
+                {/* Full width on a phone, where it wraps onto its own row above
+                    the pills, and a fixed column from sm up. A form rather than
+                    a bare input purely so the phone keyboard's "sök" key
+                    dismisses itself — the filtering itself is live, there is
+                    nothing to submit. */}
+                <form
+                  role="search"
+                  onSubmit={(event) => {
+                    event.preventDefault()
+                    searchRef.current?.blur()
+                  }}
+                  className="relative w-full sm:w-60 lg:w-72"
+                >
+                  <svg
+                    aria-hidden
+                    width="15"
+                    height="15"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2"
+                    style={{ color: 'var(--color-text-muted)' }}
+                  >
+                    <circle cx="11" cy="11" r="7" />
+                    <line x1="16.5" y1="16.5" x2="21" y2="21" />
+                  </svg>
+                  <input
+                    ref={searchRef}
+                    type="search"
+                    value={query}
+                    onChange={(event) => setQuery(event.target.value)}
+                    placeholder="Sök i sortimentet"
+                    aria-label="Sök i sortimentet"
+                    enterKeyHint="search"
+                    autoComplete="off"
+                    className="search-field w-full rounded-full border py-2 pl-10 pr-10 text-sm outline-none transition-colors duration-300 placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-primary)]"
+                    style={{
+                      borderColor: query ? 'var(--color-primary)' : 'var(--color-border)',
+                      background: 'var(--color-surface)',
+                      color: 'var(--color-text)',
+                      // Under 16px iOS zooms the whole page in on focus and
+                      // never zooms back out.
+                      fontSize: '16px',
+                    }}
+                  />
+                  {query && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setQuery('')
+                        searchRef.current?.focus()
+                      }}
+                      aria-label="Rensa sökningen"
+                      className="absolute right-1.5 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full transition-colors hover:bg-[var(--color-bg)]"
+                      style={{ color: 'var(--color-text-muted)' }}
+                    >
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden>
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                      </svg>
+                    </button>
+                  )}
+                </form>
+
                 <FilterMenu label="Sortera" summary={sort === DEFAULT_SORT ? null : sortLabel} active={sort !== DEFAULT_SORT}>
                   {(close) => (
                     <ul className="py-1.5" role="listbox" aria-label="Sortera">
@@ -476,7 +619,11 @@ export default function ProductsShell({
                   something useful when the page is deep-linked with
                   ?kategori=. */}
               <h2 className="sr-only">
-                {active === 'alla' ? 'Alla produkter' : `Produkter i kategorin ${activeLabel}`}
+                {query.trim()
+                  ? `Sökresultat för ${query.trim()}`
+                  : active === 'alla'
+                    ? 'Alla produkter'
+                    : `Produkter i kategorin ${activeLabel}`}
               </h2>
 
               <AnimatePresence mode="wait" initial={false}>
@@ -501,9 +648,11 @@ export default function ProductsShell({
                     <p className="mt-3 max-w-md" style={{ color: 'var(--color-text-muted)' }}>
                       {products.length === 0
                         ? 'Sortimentet fylls på löpande. Vet du redan vad du behöver är det bara att höra av sig.'
-                        : models.length > 0
-                          ? 'Vi har inget uppe för den båtmodellen just nu. Prova en annan modell, eller hör av dig så letar vi.'
-                          : 'Den här kategorin är tom just nu. Prova en annan, eller hör av dig så letar vi.'}
+                        : query.trim()
+                          ? `Ingen produkt matchar "${query.trim()}". Prova ett annat ord, eller hör av dig så letar vi.`
+                          : models.length > 0
+                            ? 'Vi har inget uppe för den båtmodellen just nu. Prova en annan modell, eller hör av dig så letar vi.'
+                            : 'Den här kategorin är tom just nu. Prova en annan, eller hör av dig så letar vi.'}
                     </p>
                     <div className="mt-8 flex flex-wrap gap-3">
                       {filtersOn && (
@@ -520,7 +669,14 @@ export default function ProductsShell({
                   <motion.div
                     key="grid"
                     layout={!reduceMotion}
-                    className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3"
+                    // `relative` is load-bearing: popLayout takes a leaving card
+                    // out of flow by absolutely positioning it at the box it
+                    // just vacated, and those coordinates are resolved against
+                    // the nearest positioned ancestor. With none on the grid the
+                    // browser walked up to the section, so leaving cards were
+                    // pinned tens of pixels off — the ones that appeared to fly
+                    // out to the right on every filter change.
+                    className="relative grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3"
                   >
                     {/* `popLayout` pulls leaving cards out of flow the moment
                         they start to go, so the ones that stay begin closing
@@ -532,13 +688,15 @@ export default function ProductsShell({
                           key={product._id}
                           layout={!reduceMotion}
                           custom={i}
-                          variants={card}
+                          variants={cardOuter}
                           initial="hidden"
                           animate="visible"
                           exit="exit"
                           transition={reduceMotion ? { duration: 0 } : { duration: 0.55, ease }}
                         >
-                          <ProductCard product={product} />
+                          <motion.div variants={cardInner} className="h-full">
+                            <ProductCard product={product} />
+                          </motion.div>
                         </motion.div>
                       ))}
                     </AnimatePresence>

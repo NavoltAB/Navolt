@@ -240,12 +240,20 @@ export default function ServiceGallery({
         ))}
       </div>
 
+      {/* Wraps rather than overflows. The dots are fixed-width and there can
+          be any number of them, so on a narrow screen the row wanted more
+          width than the container had and pushed the arrows out past the
+          right edge — which is what put the sideways scroll on phones. The
+          dots now take a row of their own under the counter and the arrows
+          until sm, and min-w-0 lets that row actually give: a flex child
+          refuses to go below its content width without it, so flex-1 alone
+          was never going to save it. */}
       {!single && (
-        <div className="mt-6 flex items-center gap-6">
+        <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-4">
           {/* Counter — the same tabular, tracked-out numbering the steps and
               the /tjanster panels use. */}
           <p
-            className="font-heading text-xs tabular-nums tracking-[0.18em] shrink-0"
+            className="font-heading text-xs tabular-nums tracking-[0.18em] shrink-0 order-1"
             style={{ color: 'var(--color-gold-ink)' }}
           >
             {String(active + 1).padStart(2, '0')}
@@ -255,7 +263,7 @@ export default function ServiceGallery({
             </span>
           </p>
 
-          <div className="flex flex-1 items-center gap-2">
+          <div className="order-3 flex w-full min-w-0 flex-wrap items-center gap-2 sm:order-2 sm:w-auto sm:flex-1">
             {photos.map((photo, i) => (
               <button
                 key={`dot-${photo.url}-${i}`}
@@ -272,7 +280,7 @@ export default function ServiceGallery({
             ))}
           </div>
 
-          <div className="flex gap-2 shrink-0">
+          <div className="order-2 ml-auto flex shrink-0 gap-2 sm:order-3 sm:ml-0">
             <CarouselButton
               direction="left"
               disabled={active === 0}

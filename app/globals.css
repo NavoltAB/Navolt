@@ -387,3 +387,13 @@ video {
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
+/* The product search (app/(site)/produkter/ProductsShell.tsx) draws its own
+   clear button, positioned and coloured with the rest of the control. WebKit
+   adds a second one inside a type="search" field; two crosses side by side is
+   the sort of detail that reads as unfinished. */
+.search-field::-webkit-search-cancel-button,
+.search-field::-webkit-search-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+}

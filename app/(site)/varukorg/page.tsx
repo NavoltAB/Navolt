@@ -53,7 +53,7 @@ type FormData = z.infer<typeof schema>
  * the first paint: without it the empty state shows for a frame before
  * localStorage is read, which reads as "we lost your basket".
  */
-export default function OffertPage() {
+export default function VarukorgPage() {
   const { items, ready, addItem, removeItem, setQuantity, clearCart, count } = useCart()
 
   // A reminder, never a gate. Someone who already owns the kit, or whose varv

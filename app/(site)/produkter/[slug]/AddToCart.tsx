@@ -133,7 +133,7 @@ export default function AddToCart({
             )}
 
             <div className="mt-6 flex flex-col gap-3">
-              <Link href="/offert" className="btn-primary w-full">
+              <Link href="/varukorg" className="btn-primary w-full">
                 Visa varukorgen
               </Link>
               <button
@@ -217,7 +217,7 @@ export default function AddToCart({
 
             <p className="mt-3.5 text-xs leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
               {inStock
-                ? 'Ingen bindande beställning — vi bekräftar pris, frakt och leveranstid innan något skickas.'
+                ? ''
                 : 'Beställningsvara — vi tar hem den åt dig. Lägg den i korgen, så återkommer vi med leveranstid.'}
             </p>
           </motion.div>

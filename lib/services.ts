@@ -31,6 +31,7 @@ export const RESERVED_SLUGS: readonly string[] = [
   'produkter',
   'om-oss',
   'kontakt',
+  'varukorg',
   'offert',
   'integritetspolicy',
   'cookies',

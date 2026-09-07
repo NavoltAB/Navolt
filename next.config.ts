@@ -30,6 +30,12 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       { source: '/bat', destination: '/marinelektronik', permanent: true },
+      // The basket moved from /offert to /varukorg, which is what it has said
+      // on the page and in the header all along. Temporary rather than 308:
+      // the URL is disallowed to crawlers so there is no ranking to hand over,
+      // and a permanent redirect would sit in visitors' browser caches
+      // indefinitely for a path we may well want back.
+      { source: '/offert', destination: '/varukorg', permanent: false },
       { source: '/galleri', destination: '/om-oss', permanent: true },
     ]
   },

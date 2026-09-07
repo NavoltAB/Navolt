@@ -88,6 +88,9 @@ const defaults = {
   // placeholder manifesto doesn't end on a word worth lifting, and an unset
   // field has to render as nothing rather than as a stray default.
   manifestoAccentEnd: '',
+  // Tail after that second gold word, so the sentence can end in plain navy
+  // ("… ett komplett elsystem"). Empty for the same reason as above.
+  manifestoAfterEnd: '',
 
   servicesLabel: 'Vad vi gör',
   servicesTitle: 'Tjänster vi erbjuder',
@@ -148,6 +151,7 @@ export default async function HomePage() {
   const heroTitleAccent = text(homePage?.heroTitleAccent, defaults.heroTitleAccent)
   const manifestoAccent = text(homePage?.manifestoAccent, defaults.manifestoAccent)
   const manifestoAccentEnd = text(homePage?.manifestoAccentEnd, defaults.manifestoAccentEnd)
+  const manifestoAfterEnd = text(homePage?.manifestoAfterEnd, defaults.manifestoAfterEnd)
   const ctaTitleAccent = text(homePage?.ctaTitleAccent, defaults.ctaTitleAccent)
 
   const trustStats = list(homePage?.trustStats, defaults.trustStats)
@@ -367,6 +371,7 @@ export default async function HomePage() {
                   </em>
                 </>
               )}
+              {manifestoAfterEnd && <> {manifestoAfterEnd}</>}
             </p>
           </AnimatedSection>
         </div>

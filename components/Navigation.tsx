@@ -432,7 +432,7 @@ export default function Navigation({ services = [] }: { services?: NavService[] 
                   style={{ willChange: 'transform' }}
                 >
                   <Link
-                    href="/offert"
+                    href="/varukorg"
                     aria-label={`Varukorg, ${count} ${count === 1 ? 'artikel' : 'artiklar'}`}
                     className="flex h-9 w-9 items-center justify-center rounded-full transition-colors duration-300"
                     style={{ background: 'rgba(255,255,255,0.12)', color: 'var(--color-gold)' }}
@@ -718,7 +718,7 @@ export default function Navigation({ services = [] }: { services?: NavService[] 
 
               {ready && count > 0 && (
                 <Link
-                  href="/offert"
+                  href="/varukorg"
                   className="flex items-center justify-between py-3 text-lg font-medium tracking-wide border-b border-white/[0.08] text-white/75"
                 >
                   Varukorg
