@@ -91,6 +91,26 @@ export interface ServiceFeature {
 }
 
 /**
+ * A category heading standing among the bullets.
+ *
+ * The cards stay one flat array, in the order the editor drags them; a heading
+ * is simply another member of it, and every bullet after it belongs to that
+ * category until the next heading. That keeps the studio to a single list —
+ * no nested arrays to reorder — and leaves every document written before
+ * categories existed rendering exactly as it did: one unheaded group.
+ *
+ * `_type` is what tells the two apart, so the fallback data spells it out
+ * (lib/serviceContent.ts) rather than leaving it to Sanity to supply.
+ */
+export interface ServiceFeatureHeading {
+  _type: 'featureGroup'
+  title: string
+}
+
+/** A "Vad ingår" member: a bullet, a category heading, or a legacy string. */
+export type ServiceFeatureItem = ServiceFeature | ServiceFeatureHeading | string
+
+/**
  * A service, and the page it renders at its own top-level URL.
  *
  * The first seven fields are what the listings need and what getAllServices
@@ -103,7 +123,7 @@ export interface Service {
   title: string
   slug?: string
   shortDescription?: string
-  features?: (ServiceFeature | string)[]
+  features?: ServiceFeatureItem[]
   imageUrl?: string
   /** Optional wide crop, for the 16:9 bands the tile image is cut badly in. */
   pageImageUrl?: string

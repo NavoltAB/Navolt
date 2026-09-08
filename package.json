@@ -11,7 +11,8 @@
     "lint": "next lint",
     "seed:brands": "node scripts/seed-brands.mjs",
     "migrate:features": "node scripts/migrate-service-features.mjs",
-    "migrate:why": "node scripts/migrate-why-text.mjs"
+    "migrate:why": "node scripts/migrate-why-text.mjs",
+    "seed:marinelektronik": "node scripts/seed-marinelektronik-cards.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.0.1",

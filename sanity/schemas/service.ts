@@ -1,4 +1,4 @@
-import { ListChecks } from 'lucide-react'
+import { FolderOpen, ListChecks } from 'lucide-react'
 import { defineArrayMember, defineField, defineType } from 'sanity'
 
 import { DEFAULT_FEATURE_ICON, featureIcon, featureIconOptions } from '@/lib/featureIcons'
@@ -117,11 +117,35 @@ export const serviceSchema = defineType({
             }),
           },
         }),
+        defineArrayMember({
+          name: 'featureGroup',
+          title: 'Kategori',
+          type: 'object',
+          icon: FolderOpen,
+          fields: [
+            defineField({
+              name: 'title',
+              title: 'Rubrik',
+              type: 'string',
+              validation: (Rule) => Rule.required(),
+            }),
+          ],
+          preview: {
+            select: { title: 'title' },
+            prepare: ({ title }: { title?: string }) => ({
+              title,
+              subtitle: 'Kategori',
+              media: FolderOpen,
+            }),
+          },
+        }),
       ],
       group: 'grund',
       description:
         'Punktlista med ikon, visas som kort på tjänstens egen sida. Skriv "Etikett - beskrivning" ' +
-        'så sätts etiketten i fetstil överst i kortet.',
+        'så sätts etiketten i fetstil överst i kortet. Lägg in en "Kategori" för att dela upp ' +
+        'korten i grupper — varje punkt hamnar under närmast föregående kategori, och en kategori ' +
+        'utan punkter under sig visas inte. Utan kategorier visas alla kort i ett svep som förut.',
       // Bullets written before the icon field existed are bare strings, which
       // the studio shows as an unknown item type — Sanity won't allow a string
       // and an object in the same array, so they can't be kept as a second

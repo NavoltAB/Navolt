@@ -1,4 +1,5 @@
 import {
+  Activity,
   Anchor,
   Antenna,
   Battery,
@@ -15,6 +16,7 @@ import {
   Lightbulb,
   MessageCircle,
   Monitor,
+  Network,
   PencilRuler,
   Plug,
   PlugZap,
@@ -26,6 +28,7 @@ import {
   SatelliteDish,
   Search,
   Ship,
+  ShipWheel,
   ShieldCheck,
   Snowflake,
   Sun,
@@ -38,7 +41,7 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 
-import type { ServiceFeature } from '@/types/sanity'
+import type { ServiceFeatureHeading, ServiceFeatureItem } from '@/types/sanity'
 
 /**
  * The icons an editor can put in front of a "Vad ingår" bullet.
@@ -60,6 +63,7 @@ export const featureIcons = {
   check: Check,
   sol: Sun,
   batteri: Battery,
+  batteritest: Activity,
   laddning: BatteryCharging,
   landstrom: PlugZap,
   el: Zap,
@@ -70,11 +74,13 @@ export const featureIcons = {
   matning: Gauge,
   overvakning: Monitor,
   navigation: Compass,
+  ratt: ShipWheel,
   radar: Radar,
   vhf: Radio,
   antenn: Antenna,
   satellit: SatelliteDish,
   wifi: Wifi,
+  natverk: Network,
   varme: Thermometer,
   kyla: Snowflake,
   kylskap: Refrigerator,
@@ -102,6 +108,7 @@ export const featureIconOptions: { title: string; value: FeatureIconName }[] = [
   { title: 'Bock (standard)', value: 'check' },
   { title: 'Sol / solceller', value: 'sol' },
   { title: 'Batteri', value: 'batteri' },
+  { title: 'Batteritest / hälsa', value: 'batteritest' },
   { title: 'Laddning', value: 'laddning' },
   { title: 'Landström', value: 'landstrom' },
   { title: 'El / blixt', value: 'el' },
@@ -112,11 +119,13 @@ export const featureIconOptions: { title: string; value: FeatureIconName }[] = [
   { title: 'Mätning / instrument', value: 'matning' },
   { title: 'Övervakning / skärm', value: 'overvakning' },
   { title: 'Navigation / kompass', value: 'navigation' },
+  { title: 'Autopilot / ratt', value: 'ratt' },
   { title: 'Radar', value: 'radar' },
   { title: 'VHF / radio', value: 'vhf' },
   { title: 'Antenn', value: 'antenn' },
   { title: 'Satellit', value: 'satellit' },
   { title: 'Wi-Fi / internet', value: 'wifi' },
+  { title: 'Nätverk ombord (NMEA)', value: 'natverk' },
   { title: 'Värme', value: 'varme' },
   { title: 'Kyla', value: 'kyla' },
   { title: 'Kylskåp', value: 'kylskap' },
@@ -145,13 +154,6 @@ export function featureIcon(name?: string): LucideIcon {
 }
 
 /**
- * Flattens whatever the array holds into `{ text, icon }`.
- *
- * `features` is a mixed array — bullets written before the icon field existed
- * are plain strings — and empty rows are common in a studio array, so this is
- * also where blanks get dropped.
- */
-/**
  * Splits a bullet written "Etikett - beskrivning" into its two halves.
  *
  * The label is the part a reader scans for, so it is set apart from the
@@ -165,11 +167,71 @@ export function splitFeature(text: string): { label?: string; body: string } {
   return match ? { label: match[1].trim(), body: match[2].trim() } : { body: text.trim() }
 }
 
-export function normalizeFeatures(
-  features?: (ServiceFeature | string)[]
-): { text: string; icon?: string }[] {
+/**
+ * Flattens the bullets into `{ text, icon }`.
+ *
+ * `features` is a mixed array — bullets written before the icon field existed
+ * are plain strings, and category headings share the array with them — and
+ * empty rows are common in a studio array, so this is where headings and
+ * blanks are dropped. Use `groupFeatures` where the categories matter.
+ */
+export function normalizeFeatures(features?: ServiceFeatureItem[]): NormalizedFeature[] {
   if (!features) return []
   return features
-    .map((f) => (typeof f === 'string' ? { text: f } : { text: f?.text ?? '', icon: f?.icon }))
+    .flatMap<NormalizedFeature>((f) => {
+      if (isFeatureHeading(f)) return []
+      return typeof f === 'string' ? [{ text: f }] : [{ text: f?.text ?? '', icon: f?.icon }]
+    })
     .filter((f) => f.text.trim().length > 0)
+}
+
+export interface NormalizedFeature {
+  text: string
+  icon?: string
+}
+
+export interface FeatureGroup {
+  /** Absent for the bullets standing above the first heading. */
+  title?: string
+  items: NormalizedFeature[]
+}
+
+/** A category heading rather than a bullet — see ServiceFeatureHeading. */
+export function isFeatureHeading(item: ServiceFeatureItem): item is ServiceFeatureHeading {
+  return (
+    typeof item === 'object' &&
+    item !== null &&
+    (item as ServiceFeatureHeading)._type === 'featureGroup'
+  )
+}
+
+/**
+ * Folds the flat array into the categories the page renders.
+ *
+ * A heading opens a group and every bullet after it falls into that one;
+ * bullets standing before any heading make an untitled group, which is what an
+ * uncategorised service consists of entirely — so a document nobody has
+ * categorised comes back as a single group and renders exactly as before.
+ *
+ * A heading with no bullets under it is dropped rather than left as a lone
+ * title, the same rule the service page applies to its empty sections: a
+ * half-finished edit in the studio shouldn't look broken on the site.
+ */
+export function groupFeatures(features?: ServiceFeatureItem[]): FeatureGroup[] {
+  if (!features) return []
+
+  const groups: FeatureGroup[] = []
+  for (const item of features) {
+    if (isFeatureHeading(item)) {
+      const title = item.title?.trim()
+      if (title) groups.push({ title, items: [] })
+      continue
+    }
+    const [normalized] = normalizeFeatures([item])
+    if (!normalized) continue
+    if (groups.length === 0) groups.push({ items: [] })
+    groups[groups.length - 1].items.push(normalized)
+  }
+
+  return groups.filter((group) => group.items.length > 0)
 }
