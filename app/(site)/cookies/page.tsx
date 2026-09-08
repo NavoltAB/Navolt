@@ -41,6 +41,13 @@ const EXTERNAL = [
       'Visar chatten, kundomdömena och Instagram-flödet. Elfsight laddar i sin tur innehåll från Facebook och Instagram, som kan sätta egna cookies och registrera att du besökt sidan.',
     retention: 'Enligt respektive leverantörs villkor',
   },
+  {
+    name: 'YouTube',
+    type: 'Tredjepartsskript och cookies',
+    purpose:
+      'Spelar upp filmerna på tjänstesidorna. Inget laddas från YouTube förrän du själv trycker på play — fram till dess är filmen bara en bild från vår egen server. Trycker du på play kan Google sätta cookies och registrera att du sett filmen.',
+    retention: 'Enligt Googles villkor',
+  },
 ]
 
 function Table({

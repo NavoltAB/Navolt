@@ -25,6 +25,19 @@ function fold(value: string): string {
 }
 
 /**
+ * Newest first, as a standalone comparator rather than a branch, because
+ * 'utvalda' needs it as its tie-break: within the utvalda shelf the order is
+ * still whatever the customer added last, and among the rest it is the same.
+ * Module scope so it is not a new function on every render feeding a useMemo.
+ */
+function byNewest(a: Product, b: Product): number {
+  return (
+    (b._createdAt ?? '').localeCompare(a._createdAt ?? '') ||
+    a.name.localeCompare(b.name, 'sv')
+  )
+}
+
+/**
  * Owns category, båtmodell and sort state for the whole index, because the
  * rail, the filter bar and the grid all have to move together.
  *
@@ -163,12 +176,17 @@ export default function ProductsShell({
 
   const sorted = useMemo(() => {
     const list = [...filtered]
-    if (sort === 'nyast') {
+    // Utvalda first — the flag the customer ticks in the studio, the same one
+    // that fills the startsida band. Everything else keeps its place behind it
+    // rather than being hidden, so this is an ordering, not a filter.
+    if (sort === 'utvalda') {
       list.sort(
-        (a, b) =>
-          (b._createdAt ?? '').localeCompare(a._createdAt ?? '') ||
-          a.name.localeCompare(b.name, 'sv')
+        (a, b) => Number(Boolean(b.featured)) - Number(Boolean(a.featured)) || byNewest(a, b)
       )
+      return list
+    }
+    if (sort === 'nyast') {
+      list.sort(byNewest)
       return list
     }
     const direction = sort === 'pris-lagst' ? 1 : -1
@@ -185,7 +203,7 @@ export default function ProductsShell({
   }, [filtered, sort])
 
   const activeLabel = entries.find((entry) => entry.key === active)?.label ?? 'Alla'
-  const sortLabel = SORTS.find((s) => s.key === sort)?.label ?? 'Nyast'
+  const sortLabel = SORTS.find((s) => s.key === sort)?.label ?? 'Utvalda först'
   const filtersOn = active !== 'alla' || models.length > 0 || query.trim() !== ''
 
   const modelSummary =

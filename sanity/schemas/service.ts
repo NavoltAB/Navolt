@@ -28,6 +28,7 @@ export const serviceSchema = defineType({
     { name: 'steg', title: 'Så går det till' },
     { name: 'text', title: 'Brödtext' },
     { name: 'utvalt', title: 'Utvald sektion' },
+    { name: 'film', title: 'Film' },
     { name: 'galleri', title: 'Bildgalleri' },
     { name: 'dokument', title: 'Dokument' },
     { name: 'cta', title: 'Avslutande CTA' },
@@ -252,6 +253,42 @@ export const serviceSchema = defineType({
         Rule.custom((value) =>
           !value || value.startsWith('/') ? true : 'Länken måste börja med /'
         ),
+    }),
+
+    // ── Film ────────────────────────────────────────────────
+    // Nothing loads from YouTube until a visitor presses play — the section is
+    // a poster image and a button until then. See components/YouTubeEmbed.tsx.
+    defineField({
+      name: 'videoUrl',
+      title: 'YouTube-länk',
+      type: 'url',
+      group: 'film',
+      description:
+        'Klistra in adressen till filmen på YouTube, precis som den ser ut i webbläsaren. Tomt fält, ingen filmsektion.',
+    }),
+    defineField({
+      name: 'videoLabel',
+      title: 'Etikett',
+      type: 'string',
+      group: 'film',
+      description: 'Den lilla texten ovanför rubriken, t.ex. "Film".',
+    }),
+    defineField({
+      name: 'videoTitle',
+      title: 'Rubrik',
+      type: 'string',
+      group: 'film',
+      description:
+        'Rubrik över filmen. Används också som filmens namn för skärmläsare, så beskriv vad den visar.',
+    }),
+    defineField({
+      name: 'videoPoster',
+      title: 'Omslagsbild',
+      type: 'image',
+      group: 'film',
+      options: { hotspot: true },
+      description:
+        'Bilden som visas innan man trycker på play. Utan den används YouTubes egen — en egen bild från jobbet är nästan alltid skarpare.',
     }),
 
     // ── Bildgalleri ─────────────────────────────────────────

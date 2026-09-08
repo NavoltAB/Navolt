@@ -35,6 +35,7 @@ export const RESERVED_SLUGS: readonly string[] = [
   'offert',
   'integritetspolicy',
   'cookies',
+  'kopvillkor',
   'studio',
   'api',
 ]

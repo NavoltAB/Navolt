@@ -10,9 +10,11 @@ import ServiceFormDialog from '@/components/ServiceFormDialog'
 import PortableText from '@/app/(site)/produkter/[slug]/PortableText'
 import DocumentList from '@/components/DocumentList'
 import ServiceGallery from '@/components/ServiceGallery'
+import YouTubeEmbed from '@/components/YouTubeEmbed'
 import FeatureList from '@/components/FeatureList'
 import { normalizeFeatures } from '@/lib/featureIcons'
 import { hasServicePage, serviceForms, serviceHref } from '@/lib/services'
+import { parseYouTubeId } from '@/lib/youtube'
 import {
   defaultServicePages,
   defaultServices,
@@ -88,6 +90,15 @@ async function getContent(slug: string) {
       body: text(service.highlightText, fallback.highlight?.text ?? ''),
       ctaLabel: text(service.highlightCtaLabel, fallback.highlight?.ctaLabel ?? ''),
       ctaHref: text(service.highlightCtaHref, fallback.highlight?.ctaHref ?? ''),
+    },
+
+    // The id is parsed here rather than in the markup, so an unusable link
+    // reads as "no video" in one place and the section simply doesn't render.
+    video: {
+      id: parseYouTubeId(service.videoUrl ?? fallback.video?.url),
+      label: text(service.videoLabel, fallback.video?.label ?? ''),
+      title: text(service.videoTitle, fallback.video?.title ?? ''),
+      posterUrl: text(service.videoPosterUrl, fallback.video?.posterUrl ?? ''),
     },
 
     gallery: list(service.gallery, fallback.gallery ?? []),
@@ -308,6 +319,37 @@ export default async function ServicePage({
           )}
         </div>
       </section>
+
+      {/* Film. Directly under the body copy: it answers the same question in
+          a different medium, and a visitor who wants to watch rather than read
+          shouldn't have to reach the foot of the page to find out there was a
+          film. Nothing is fetched from YouTube until play is pressed — see
+          components/YouTubeEmbed.tsx. */}
+      {content.video.id && (
+        <section className="section pt-0">
+          <div className="container mx-auto px-6 max-w-container">
+            {(content.video.label || content.video.title) && (
+              <AnimatedSection className="mb-8">
+                {content.video.label && (
+                  <p className="section-label mb-3">{content.video.label}</p>
+                )}
+                {content.video.title && (
+                  <h2 className="font-heading text-3xl md:text-4xl font-semibold">
+                    {content.video.title}
+                  </h2>
+                )}
+              </AnimatedSection>
+            )}
+            <AnimatedSection delay={0.1}>
+              <YouTubeEmbed
+                id={content.video.id}
+                title={content.video.title || `${service.title} — film`}
+                poster={content.video.posterUrl || undefined}
+              />
+            </AnimatedSection>
+          </div>
+        </section>
+      )}
 
       {/* Downloads — monteringsanvisningar, datablad, prislistor. Sits right
           under the body copy because it answers the same question the copy

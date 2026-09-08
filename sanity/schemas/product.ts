@@ -198,15 +198,20 @@ export const productSchema = defineType({
     }),
     defineField({
       name: 'featured',
-      title: 'Visa på startsidan',
+      title: 'Utvald produkt',
       type: 'boolean',
+      description:
+        'På = produkten ligger först i sortimentet på /produkter (sorteringen "Utvalda först", som är standard) och kan visas i bandet på startsidan. Av = produkten ligger kvar i sortimentet, bara längre ner.',
       initialValue: false,
     }),
   ],
   preview: {
-    select: { title: 'name', subtitle: 'category.title', boatModel: 'boatModel.name', media: 'images.0', price: 'price', inStock: 'inStock' },
-    prepare({ title, subtitle, boatModel, media, price, inStock }) {
+    select: { title: 'name', subtitle: 'category.title', boatModel: 'boatModel.name', media: 'images.0', price: 'price', inStock: 'inStock', featured: 'featured' },
+    prepare({ title, subtitle, boatModel, media, price, inStock, featured }) {
       const parts: string[] = []
+      // Utvald leads the line: it decides where the product lands on
+      // /produkter, so it is the one flag worth seeing without opening the doc.
+      if (featured) parts.push('UTVALD')
       if (subtitle) parts.push(subtitle)
       if (boatModel) parts.push(boatModel)
       if (price) parts.push(`${price} kr`)

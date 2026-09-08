@@ -20,6 +20,7 @@ export const aboutPageSchema = defineType({
     { name: 'bakgrund', title: 'Bakgrund' },
     { name: 'stats', title: 'Sifferrad' },
     { name: 'varderingar', title: 'Så jobbar vi' },
+    { name: 'omdomen', title: 'Omdömen' },
     { name: 'instagram', title: 'Instagram' },
     { name: 'cta', title: 'Avslutande CTA' },
   ],
@@ -132,6 +133,16 @@ export const aboutPageSchema = defineType({
           preview: { select: { title: 'title', subtitle: 'text' } },
         }),
       ],
+    }),
+
+    // ── Omdömen ─────────────────────────────────────────────
+    defineField({
+      name: 'reviewsLabel',
+      title: 'Omdömen — Etikett',
+      type: 'string',
+      group: 'omdomen',
+      description:
+        'Enda texten vi styr här — omdömena själva kommer från Google via Elfsight, och widgeten har en egen rubrik.',
     }),
 
     // ── Instagram ───────────────────────────────────────────

@@ -27,6 +27,7 @@ const staticRoutes = [
   { path: '/produkter', priority: 0.9 },
   { path: '/kontakt', priority: 0.7 },
   { path: '/om-oss', priority: 0.6 },
+  { path: '/kopvillkor', priority: 0.3 },
   { path: '/integritetspolicy', priority: 0.2 },
   { path: '/cookies', priority: 0.2 },
 ] as const

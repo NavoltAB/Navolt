@@ -124,6 +124,12 @@ export interface Service {
   highlightCtaLabel?: string
   highlightCtaHref?: string
 
+  /** As pasted in the studio — parse with parseYouTubeId() before use. */
+  videoUrl?: string
+  videoLabel?: string
+  videoTitle?: string
+  videoPosterUrl?: string
+
   gallery?: ServicePhoto[]
 
   documentsLabel?: string
@@ -213,6 +219,8 @@ export interface AboutPage {
   valuesLabel?: string
   valuesTitle?: string
   values?: { title?: string; text?: string }[]
+
+  reviewsLabel?: string
 
   instagramLabel?: string
   instagramTitle?: string

@@ -130,8 +130,9 @@ export default function VarukorgPage() {
           <p className="section-label mb-3">Din beställning</p>
           <h1 className="section-title mb-4">Varukorg</h1>
           <p className="section-subtitle">
-            Gå igenom delarna, fyll i dina uppgifter och skicka. Du får en bekräftelse med
-            pris, frakt och leveranstid tillbaka — ingenting skickas innan du sagt ja.
+          Kontrollera varukorgen och fyll i dina uppgifter. Vi går igenom beställningen och skickar fakturan separat via mejl. Vid
+leverans skickas varorna efter att fakturan är betald. Vid hämtning kontaktar vi dig för att komma överens om
+överlämning.
           </p>
         </div>
       </div>
@@ -407,22 +408,27 @@ export default function VarukorgPage() {
 
                   {priced.length > 0 && (
                     <div
-                      className="mt-6 flex items-baseline justify-between gap-4 pt-5"
+                      className="mt-6 pt-5"
                       style={{ borderTop: '2px solid var(--color-primary)' }}
                     >
-                      <div>
+                      {/* The label and the sum share a row on their own, and the
+                          fine print sits under both. Sharing one row three ways
+                          put the sum in a flex item narrow enough that 'kr'
+                          wrapped to its own line on a phone — the amount is the
+                          one thing on this page that must never break. */}
+                      <div className="flex items-baseline justify-between gap-4">
                         <p className="font-heading text-lg font-semibold">Pris</p>
-                        <p className="mt-1 text-xs" style={{ color: 'var(--color-text-muted)' }}>
-                          {priced.length < items.length
-                            ? 'Exklusive delar med pris på förfrågan. Frakt tillkommer.'
-                            : 'Exklusive frakt. Slutpriset bekräftas innan vi skickar.'}
+                        <p
+                          className="shrink-0 whitespace-nowrap font-heading font-semibold tabular-nums"
+                          style={{ fontSize: 'var(--text-2xl)', color: 'var(--color-primary)' }}
+                        >
+                          {total.toLocaleString('sv-SE')} kr
                         </p>
                       </div>
-                      <p
-                        className="font-heading font-semibold tabular-nums"
-                        style={{ fontSize: 'var(--text-2xl)', color: 'var(--color-primary)' }}
-                      >
-                        {total.toLocaleString('sv-SE')} kr
+                      <p className="mt-2 text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                        {priced.length < items.length
+                          ? 'Exklusive delar med pris på förfrågan. Frakt tillkommer.'
+                          : 'Frakt tillkommer och anges på fakturan. Vi kontaktar dig för att komma överens om överlämning.'}
                       </p>
                     </div>
                   )}
@@ -595,7 +601,7 @@ export default function VarukorgPage() {
                           id="offert-message"
                           {...register('message')}
                           rows={4}
-                          placeholder="Båtmodell, vad som ska installeras, leveransadress…"
+                          placeholder="Övrig information eller frågor om beställningen..."
                           className="input resize-none"
                         />
                       </div>
@@ -619,12 +625,22 @@ export default function VarukorgPage() {
                         {status === 'sending' ? 'Skickar…' : 'Skicka beställning'}
                       </button>
 
+                      {/* The one place the buyer is told what pressing the
+                          button commits him to, so it says the same thing
+                          /kopvillkor does — bindande vid betald faktura — rather
+                          than a second, looser version of it. */}
                       <p
                         className="text-xs leading-relaxed"
                         style={{ color: 'var(--color-text-muted)' }}
                       >
-                        Beställningen är inte bindande förrän vi bekräftat den. Vi hör av oss med
-                        pris, frakt och leveranstid innan något skickas.
+                        Genom att skicka beställningen godkänner du våra{' '}
+                        <Link
+                          href="/kopvillkor"
+                          className="underline underline-offset-2 transition-colors hover:text-[var(--color-gold-ink)]"
+                        >
+                          köpvillkor
+                        </Link>
+                        . Beställningen blir bindande när fakturan är betald.
                       </p>
                     </form>
                   </div>

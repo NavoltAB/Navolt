@@ -6,6 +6,7 @@
  */
 
 export const SORTS = [
+  { key: 'utvalda', label: 'Utvalda först' },
   { key: 'nyast', label: 'Nyast' },
   { key: 'pris-lagst', label: 'Lägsta pris' },
   { key: 'pris-hogst', label: 'Högsta pris' },
@@ -13,10 +14,12 @@ export const SORTS = [
 
 export type SortKey = (typeof SORTS)[number]['key']
 
-// Newest first is the useful default for a catalogue that is being filled in:
-// whatever the customer just added in the studio is what he wants to see on the
-// page. It is also the one sort that never has to be written into the URL.
-export const DEFAULT_SORT: SortKey = 'nyast'
+// Utvalda first is the default: it is the one order the customer controls from
+// the studio, so the top of the grid is a shelf he has arranged rather than a
+// side effect of whatever was typed in last. Newest stays available as an
+// option — it is just no longer what a first-time visitor lands on. The default
+// is also the one sort that never has to be written into the URL.
+export const DEFAULT_SORT: SortKey = 'utvalda'
 
 export function isSortKey(value: string | undefined): value is SortKey {
   return SORTS.some((s) => s.key === value)

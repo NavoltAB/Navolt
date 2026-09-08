@@ -13,6 +13,14 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'cdn.sanity.io',
       },
+      // YouTube poster frames, for a YouTubeEmbed given no poster of its own.
+      // Going through the optimizer is the point: the still is re-encoded and
+      // served from our own origin, so the page makes no request to Google
+      // before the visitor presses play. See components/YouTubeEmbed.tsx.
+      {
+        protocol: 'https',
+        hostname: 'i.ytimg.com',
+      },
     ],
   },
 

@@ -67,6 +67,8 @@ const defaults = {
     },
   ],
 
+  reviewsLabel: 'Omdömen',
+
   instagramLabel: 'Instagram',
   instagramTitle: 'Senast från jobbet',
 
@@ -205,6 +207,28 @@ export default async function AboutPage() {
           </StaggerContainer>
         </div>
       </section>
+
+      {/* Omdömen — the same Elfsight widget the landing page carries, placed
+          straight after "Så jobbar vi": the värderingar are our own claims
+          about how we work, and this is the only section on the page where
+          someone else says it. Eyebrow only, for the same reason as on the
+          landing page — the widget brings its own heading, and a section-title
+          above it would say the word twice. */}
+      {siteConfig.elfsight.reviews && (
+        <section className="section pt-0">
+          <div className="container mx-auto px-6 max-w-container">
+            <AnimatedSection className="mb-10 text-center">
+              <p className="section-label">{text(page?.reviewsLabel, defaults.reviewsLabel)}</p>
+            </AnimatedSection>
+            <AnimatedSection delay={0.1}>
+              <ElfsightWidget
+                appId={siteConfig.elfsight.reviews}
+                fallbackLabel="Våra kundomdömen visas via en extern tjänst (Elfsight)."
+              />
+            </AnimatedSection>
+          </div>
+        </section>
+      )}
 
       {/* Brands — moved off the landing page. It belongs here: the Bakgrund
           copy above already names Victron, Mastervolt, Garmin and Raymarine,

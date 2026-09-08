@@ -239,7 +239,9 @@ export default function Navigation({ services = [] }: { services?: NavService[] 
           // the region that owns it: moving between the label and the panel
           // stays inside this element (the panel is a DOM child however far
           // below it paints), and only leaving the header entirely closes it.
-          // That's what removes the need for a hover bridge across the gap.
+          // The gap under the shrunk pill is padding on the panel itself, so
+          // even that strip is inside the header and there is no hover bridge
+          // to cross.
           onMouseLeave={() => setServicesOpen(false)}
           onBlur={(event) => {
             if (!event.currentTarget.contains(event.relatedTarget as Node)) {
@@ -520,66 +522,72 @@ export default function Navigation({ services = [] }: { services?: NavService[] 
                 key="services-menu"
                 id="services-menu"
                 initial={{ opacity: 0, y: -8 }}
-                animate={{
-                  opacity: 1,
-                  y: 0,
-                  borderRadius: shrunk ? 22 : 0,
-                  marginTop: shrunk ? 10 : 0,
-                }}
+                animate={{ opacity: 1, y: 0, paddingTop: shrunk ? 10 : 0 }}
                 exit={{ opacity: 0, y: -8 }}
                 transition={{ duration: 0.22, ease: 'easeOut' }}
-                className="absolute left-0 right-0 top-full hidden overflow-hidden md:block"
-                // Light ground under a dark header, so the panel reads as a
-                // sheet of the page pulled down rather than more chrome. Opaque
-                // rather than veiled: text this small needs the contrast, and
-                // the panel hangs over whatever the page happens to be showing.
-                style={{ backgroundColor: 'var(--color-surface)', boxShadow: PILL_SHADOW }}
+                className="absolute left-0 right-0 top-full hidden md:block"
               >
-                <div className="grid gap-1 p-4 sm:grid-cols-2 lg:grid-cols-4">
-                  {services.map((service) => {
-                    const current = pathname === service.href
-                    return (
-                      <Link
-                        key={service.href}
-                        href={service.href}
-                        aria-current={current ? 'page' : undefined}
-                        className="rounded-xl px-4 py-3.5 transition-colors duration-200 hover:bg-[var(--color-bg)]"
-                      >
-                        <span
-                          className="block font-heading text-sm font-semibold tracking-wide transition-colors duration-200"
-                          style={{
-                            color: current
-                              ? 'var(--color-gold-ink)'
-                              : 'var(--color-primary)',
-                          }}
-                        >
-                          {service.title}
-                        </span>
-                        {service.description && (
-                          <span
-                            className="mt-1.5 block text-xs leading-relaxed line-clamp-2"
-                            style={{ color: 'var(--color-text-muted)' }}
-                          >
-                            {service.description}
-                          </span>
-                        )}
-                      </Link>
-                    )
-                  })}
-                </div>
-
-                <div
-                  className="border-t px-5 py-3"
-                  style={{ borderColor: 'var(--color-border)' }}
+                {/* The gap under the shrunk pill is padding on this wrapper,
+                    never a margin on the sheet: padding is still part of the
+                    panel's box, so the pointer crossing the gap stays inside
+                    the header and the menu doesn't close under the cursor. */}
+                <motion.div
+                  initial={false}
+                  animate={{ borderRadius: shrunk ? 22 : 0 }}
+                  transition={{ duration: 0.22, ease: 'easeOut' }}
+                  className="overflow-hidden"
+                  // Light ground under a dark header, so the panel reads as a
+                  // sheet of the page pulled down rather than more chrome. Opaque
+                  // rather than veiled: text this small needs the contrast, and
+                  // the panel hangs over whatever the page happens to be showing.
+                  style={{ backgroundColor: 'var(--color-surface)', boxShadow: PILL_SHADOW }}
                 >
-                  <Link
-                    href="/tjanster"
-                    className="text-xs font-medium uppercase tracking-[0.14em] transition-colors duration-200 hover:text-[var(--color-primary)]"
-                    style={{ color: 'var(--color-text-muted)' }}
+                  <div className="grid gap-1 p-4 sm:grid-cols-2 lg:grid-cols-4">
+                    {services.map((service) => {
+                      const current = pathname === service.href
+                      return (
+                        <Link
+                          key={service.href}
+                          href={service.href}
+                          aria-current={current ? 'page' : undefined}
+                          className="rounded-xl px-4 py-3.5 transition-colors duration-200 hover:bg-[var(--color-bg)]"
+                        >
+                          <span
+                            className="block font-heading text-sm font-semibold tracking-wide transition-colors duration-200"
+                            style={{
+                              color: current
+                                ? 'var(--color-gold-ink)'
+                                : 'var(--color-primary)',
+                            }}
+                          >
+                            {service.title}
+                          </span>
+                          {service.description && (
+                            <span
+                              className="mt-1.5 block text-xs leading-relaxed line-clamp-2"
+                              style={{ color: 'var(--color-text-muted)' }}
+                            >
+                              {service.description}
+                            </span>
+                          )}
+                        </Link>
+                      )
+                    })}
+                  </div>
+
+                  <div
+                    className="border-t px-5 py-3"
+                    style={{ borderColor: 'var(--color-border)' }}
                   >
-                    Alla tjänster
-                  </Link>
-                </div>
+                    <Link
+                      href="/tjanster"
+                      className="text-xs font-medium uppercase tracking-[0.14em] transition-colors duration-200 hover:text-[var(--color-primary)]"
+                      style={{ color: 'var(--color-text-muted)' }}
+                    >
+                      Alla tjänster
+                    </Link>
+                  </div>
+                </motion.div>
               </motion.div>
             )}
           </AnimatePresence>

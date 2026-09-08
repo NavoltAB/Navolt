@@ -23,6 +23,10 @@ export const siteConfig = {
     phone: '073 025 45 55',
     email: 'info@navolt.se',
     address: 'Tjolmenvägen\n475 50 Hälsö',
+    // Where post reaches the company — deliberately not the same as `address`,
+    // which is where you turn up in person. /kopvillkor names both and says so:
+    // a köpvillkor has to state an address the buyer can write to.
+    postalAddress: 'Kapellevägen 15B\n451 44 Uddevalla',
     // TODO: confirm opening hours with the customer — placeholder for now.
     openingHours: 'Måndag–Fredag: 07:00–16:00',
     mapsUrl: 'https://www.google.se/maps/place/Navolt+AB/@57.732011,11.6530219,17z',

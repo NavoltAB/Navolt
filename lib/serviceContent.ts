@@ -100,6 +100,13 @@ export interface ServicePageDefaults {
     ctaLabel?: string
     ctaHref?: string
   }
+  video?: {
+    /** A full YouTube link or a bare id — both go through parseYouTubeId(). */
+    url?: string
+    label?: string
+    title?: string
+    posterUrl?: string
+  }
   gallery?: ServicePhoto[]
   documentsLabel?: string
   documentsTitle?: string
@@ -162,5 +169,16 @@ export const defaultServicePages: Record<string, ServicePageDefaults> = {
     ctaText:
       'Skicka båtmodell och gärna en bild på rutan, så återkommer vi med en bedömning. Är det bråttom går det lika bra att ringa.',
     ctaButtonLabel: 'Kontakta oss',
+  },
+
+  campervan: {
+    // The customer's own film. It sits here rather than in the document so the
+    // section is on the page with no Sanity project configured — put the same
+    // link in the studio's Film-flik and that wins, like every other field.
+    video: {
+      url: 'https://www.youtube.com/watch?v=7j2_cCJeMlQ',
+      label: 'Film',
+      title: 'Elsystem i campervan',
+    },
   },
 }

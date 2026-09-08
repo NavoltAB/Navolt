@@ -26,6 +26,7 @@ const productFields = `
   price,
   unit,
   inStock,
+  featured,
   shortDescription,
   "mainImage": images[0],
   "hoverImage": images[1]
@@ -207,6 +208,10 @@ export async function getServiceBySlug(slug: string): Promise<Service | null> {
       highlightText,
       highlightCtaLabel,
       highlightCtaHref,
+      videoUrl,
+      videoLabel,
+      videoTitle,
+      "videoPosterUrl": videoPoster.asset->url,
       gallery[defined(asset)]{ "url": asset->url, alt },
       "documents": documents[defined(asset)]{
         title,
@@ -306,6 +311,7 @@ export async function getAboutPage(): Promise<AboutPage | null> {
       valuesLabel,
       valuesTitle,
       values[]{ title, text },
+      reviewsLabel,
       instagramLabel,
       instagramTitle,
       ctaTitle,

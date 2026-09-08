@@ -142,6 +142,9 @@ export default function Footer({ settings, blurb }: FooterProps) {
               reachable from every page — withdrawing consent must be as easy as
               giving it, and this row is where a visitor looks for it. */}
           <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
+            <Link href="/kopvillkor" className="footer-nav-link transition-colors duration-200">
+              Köpvillkor
+            </Link>
             <Link href="/integritetspolicy" className="footer-nav-link transition-colors duration-200">
               Integritetspolicy
             </Link>
