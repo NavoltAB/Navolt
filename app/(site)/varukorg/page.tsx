@@ -441,10 +441,7 @@ leverans skickas varorna efter att fakturan är betald. Vid hämtning kontaktar 
                 <div>
                   <div className="card p-6 md:p-7 lg:sticky lg:top-32">
                     <h2 className="font-heading text-xl font-semibold">Dina uppgifter</h2>
-                    <p className="mb-6 mt-1.5 text-sm" style={{ color: 'var(--color-text-muted)' }}>
-                      Berätta gärna vilken båt eller bil det gäller — det gör beställningen
-                      träffsäkrare.
-                    </p>
+                  
 
                     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
                       <div>

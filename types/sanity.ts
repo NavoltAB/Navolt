@@ -118,6 +118,24 @@ export type ServiceFeatureItem = ServiceFeature | ServiceFeatureHeading | string
  * only fetched by getServiceBySlug — no point shipping a step list to the
  * landing page's tiles.
  */
+/**
+ * One "utvald sektion" — the wide image-and-text band on a service page.
+ *
+ * A service can have several: båtrutor runs one for monteringspaketen and one
+ * for rutpaketen. `items` is the punktlista; where an editor has typed the
+ * list into `text` instead, `normalizeHighlight()` picks it apart — see
+ * lib/highlights.ts.
+ */
+export interface ServiceHighlight {
+  imageUrl?: string
+  label?: string
+  title?: string
+  text?: string
+  items?: string[]
+  ctaLabel?: string
+  ctaHref?: string
+}
+
 export interface Service {
   _id: string
   title: string
@@ -137,12 +155,7 @@ export interface Service {
   stepsTitle?: string
   steps?: ServiceStep[]
 
-  highlightImageUrl?: string
-  highlightLabel?: string
-  highlightTitle?: string
-  highlightText?: string
-  highlightCtaLabel?: string
-  highlightCtaHref?: string
+  highlights?: ServiceHighlight[]
 
   /** As pasted in the studio — parse with parseYouTubeId() before use. */
   videoUrl?: string

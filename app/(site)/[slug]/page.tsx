@@ -10,10 +10,12 @@ import ServiceFormDialog from '@/components/ServiceFormDialog'
 import PortableText from '@/app/(site)/produkter/[slug]/PortableText'
 import DocumentList from '@/components/DocumentList'
 import ServiceGallery from '@/components/ServiceGallery'
+import ServiceHighlights from '@/components/ServiceHighlights'
 import YouTubeEmbed from '@/components/YouTubeEmbed'
 import FeatureList from '@/components/FeatureList'
 import { normalizeFeatures } from '@/lib/featureIcons'
-import { hasServicePage, serviceForms, serviceHref } from '@/lib/services'
+import { hasServicePage, serviceForms, serviceHref, servicePageCta } from '@/lib/services'
+import { normalizeHighlights } from '@/lib/highlights'
 import { parseYouTubeId } from '@/lib/youtube'
 import {
   defaultServicePages,
@@ -83,14 +85,10 @@ async function getContent(slug: string) {
     stepsTitle: text(service.stepsTitle, fallback.stepsTitle ?? 'Så går det till'),
     steps: list(service.steps, fallback.steps ?? []),
 
-    highlight: {
-      imageUrl: text(service.highlightImageUrl, fallback.highlight?.imageUrl ?? ''),
-      label: text(service.highlightLabel, fallback.highlight?.label ?? ''),
-      title: text(service.highlightTitle, fallback.highlight?.title ?? ''),
-      body: text(service.highlightText, fallback.highlight?.text ?? ''),
-      ctaLabel: text(service.highlightCtaLabel, fallback.highlight?.ctaLabel ?? ''),
-      ctaHref: text(service.highlightCtaHref, fallback.highlight?.ctaHref ?? ''),
-    },
+    // Several bands are allowed — båtrutor runs one for monteringspaketen and
+    // one for rutpaketen. Normalising here means a punktlista typed into the
+    // text field still comes out as a list; see lib/highlights.ts.
+    highlights: normalizeHighlights(list(service.highlights, fallback.highlights ?? [])),
 
     // The id is parsed here rather than in the markup, so an unusable link
     // reads as "no video" in one place and the section simply doesn't render.
@@ -157,9 +155,14 @@ export default async function ServicePage({
   const [content, allServices] = await Promise.all([getContent(slug), getAllServices()])
   if (!content) notFound()
 
-  const { service, highlight, leadImageUrl } = content
+  const { service, leadImageUrl } = content
   const form = serviceForms[slug]
   const subject = encodeURIComponent(service.title)
+  // The header's second button. "Alla tjänster" sends a visitor who has just
+  // arrived on the page they were looking for back to the index, so a service
+  // that has a better next step — the contact form, the phone — names it in
+  // lib/services.ts and that wins here.
+  const headerCta = servicePageCta[slug] ?? { label: 'Alla tjänster', href: '/tjanster' }
 
   // The row at the foot of the page — every other service that has a page,
   // which is what keeps these linked to each other without the header having
@@ -185,15 +188,22 @@ export default async function ServicePage({
                   appId={form.appId}
                   label={form.label}
                   padded={form.padded}
+                  variant={form.variant}
                 />
               ) : (
                 <Link href={`/kontakt?amne=${subject}`} className="btn-primary">
                   Fråga om {service.title.toLowerCase()}
                 </Link>
               )}
-              <Link href="/tjanster" className="btn-outline">
-                Alla tjänster
-              </Link>
+              {headerCta.href.startsWith('tel:') ? (
+                <a href={headerCta.href} className="btn-outline">
+                  {headerCta.label}
+                </a>
+              ) : (
+                <Link href={headerCta.href} className="btn-outline">
+                  {headerCta.label}
+                </Link>
+              )}
             </div>
           </AnimatedSection>
         </div>
@@ -263,7 +273,12 @@ export default async function ServicePage({
                 close on the CTA band at the foot of the page. */}
             {form && (
               <AnimatedSection delay={0.15} className="mt-14">
-                <ServiceFormDialog appId={form.appId} label={form.label} padded={form.padded} />
+                <ServiceFormDialog
+                  appId={form.appId}
+                  label={form.label}
+                  padded={form.padded}
+                  variant={form.variant}
+                />
               </AnimatedSection>
             )}
           </div>
@@ -381,52 +396,10 @@ export default async function ServicePage({
         </section>
       )}
 
-      {/* Highlight band — monteringspaketen under Båtrutor, and whatever the
-          equivalent turns out to be for the others. A title is what turns it
-          on; without one there's nothing to say here. */}
-      {highlight.title && (
-        <section className="section">
-          <div className="container mx-auto px-6 max-w-container">
-            <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-              {highlight.imageUrl && (
-                <AnimatedSection>
-                  <div className="aspect-[4/3] rounded-lg overflow-hidden relative">
-                    <Image
-                      src={highlight.imageUrl}
-                      alt={highlight.title}
-                      fill
-                      sizes="(max-width: 1024px) 100vw, 600px"
-                      className="object-cover"
-                    />
-                  </div>
-                </AnimatedSection>
-              )}
-
-              <AnimatedSection delay={0.1}>
-                {highlight.label && (
-                  <p className="section-label mb-3">{highlight.label}</p>
-                )}
-                <h2 className="font-heading text-3xl md:text-4xl font-semibold mb-5">
-                  {highlight.title}
-                </h2>
-                {highlight.body && (
-                  <p
-                    className="text-base leading-relaxed mb-8"
-                    style={{ color: 'var(--color-text-muted)' }}
-                  >
-                    {highlight.body}
-                  </p>
-                )}
-                {highlight.ctaLabel && highlight.ctaHref && (
-                  <Link href={highlight.ctaHref} className="btn-gold">
-                    {highlight.ctaLabel}
-                  </Link>
-                )}
-              </AnimatedSection>
-            </div>
-          </div>
-        </section>
-      )}
+      {/* Utvalda sektioner — monteringspaketen and rutpaketen under Båtrutor,
+          and whatever the equivalent turns out to be for the others. A rubrik
+          is what turns a band on; without one there's nothing to say. */}
+      <ServiceHighlights highlights={content.highlights} />
 
       {/* Gallery — a carousel rather than a three-up grid. The grid capped the
           page at three photos and shrank each one to a thumbnail; a service

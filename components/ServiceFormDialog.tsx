@@ -41,6 +41,7 @@ export default function ServiceFormDialog({
   label,
   title,
   padded = false,
+  variant = 'outline',
 }: {
   appId: string
   /** Button text, e.g. "Boka motorservice". */
@@ -56,6 +57,9 @@ export default function ServiceFormDialog({
    * `serviceForms` in lib/services.ts, which decides this per service.
    */
   padded?: boolean
+  /** Solid navy rather than the outline, where opening the form is the main
+   *  thing the panel or page is asking for. Set per service in `serviceForms`. */
+  variant?: 'primary' | 'outline'
 }) {
   const [open, setOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
@@ -130,7 +134,7 @@ export default function ServiceFormDialog({
         onClick={() => setOpen(true)}
         onPointerEnter={warmNow}
         onFocus={warmNow}
-        className="btn-outline"
+        className={variant === 'primary' ? 'btn-primary' : 'btn-outline'}
         aria-haspopup="dialog"
         aria-expanded={open}
       >

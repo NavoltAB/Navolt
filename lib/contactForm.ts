@@ -15,7 +15,12 @@
  * nor mailed.
  */
 
-export const SUBJECTS = ['Båt', 'Campervan', 'Båtrutor', 'Husbil', 'Övrigt'] as const
+export const SUBJECTS = [
+  'Marinelektronik',
+  'Elsystem för campervan eller husbil',
+  'Båtrutor',
+  'Övrigt',
+] as const
 export type Subject = (typeof SUBJECTS)[number]
 
 export const CONDITIONAL_KEYS = [
@@ -54,21 +59,26 @@ const BOAT_WHERE: ContactField[] = [
   { key: 'boatLocation', label: 'Var ligger båten?', placeholder: 'Ange plats', half: true },
 ]
 
-/** `vehicleLocation` is deliberately one key with two labels — a campervan and
- *  a motorhome ask the same question, and the inbox should read naturally for
- *  both without a second field that means the same thing. */
-const vehicle = (whereLabel: string): ContactField[] => [
+/** A campervan and a motorhome are the same job asked about two ways, so they
+ *  share one subject and one pair of questions rather than two sets that mean
+ *  the same thing. */
+const VEHICLE: ContactField[] = [
   {
     key: 'vehicleModel',
     label: 'Bilmärke, modell och årsmodell',
     placeholder: 'Skriv ditt svar…',
     half: true,
   },
-  { key: 'vehicleLocation', label: whereLabel, placeholder: 'Ange plats', half: true },
+  {
+    key: 'vehicleLocation',
+    label: 'Var finns din van eller husbil?',
+    placeholder: 'Ange plats',
+    half: true,
+  },
 ]
 
 export const FIELDS_BY_SUBJECT: Record<Subject, ContactField[]> = {
-  Båt: [
+  Marinelektronik: [
     {
       key: 'boatHelp',
       label: 'Vad behöver du hjälp med i din båt?',
@@ -81,7 +91,7 @@ export const FIELDS_BY_SUBJECT: Record<Subject, ContactField[]> = {
       options: ['I vattnet', 'På land'],
     },
   ],
-  Campervan: vehicle('Var finns din van?'),
+  'Elsystem för campervan eller husbil': VEHICLE,
   Båtrutor: [
     ...BOAT_WHERE,
     {
@@ -98,7 +108,6 @@ export const FIELDS_BY_SUBJECT: Record<Subject, ContactField[]> = {
       showWhen: { key: 'windowRequest', value: 'Ja' },
     },
   ],
-  Husbil: vehicle('Var finns din bil?'),
   Övrigt: [],
 }
 
@@ -124,22 +133,27 @@ export function isSubject(value: string): value is Subject {
 /**
  * Maps the `?amne=` parameter that /tjanster links with onto a subject.
  *
- * The service tiles there don't line up one-to-one with the five options:
+ * The service tiles there don't line up one-to-one with the options:
  * "Motorservice" is a boat job, so it selects Båt and ticks Motor rather than
  * dropping the visitor into Övrigt having lost what they clicked.
  */
 /**
  * Service names that aren't subjects in their own right.
  *
- * /tjanster and each service's own page link here with the service's title, so
+ * /tjanster and each service's own page link here with the service's title or
+ * its slug, so
  * the ones that don't match a subject by name are mapped instead of arriving
  * with nothing selected. Keyed lowercase; the titles come from Sanity, so a
  * renamed service falls through to an unselected subject rather than breaking.
  */
 const SUBJECT_ALIASES: Record<string, { subject: Subject; boatHelp?: string }> = {
-  motorservice: { subject: 'Båt', boatHelp: 'Motor' },
-  marinelektronik: { subject: 'Båt' },
-  'elsystem för campervan': { subject: 'Campervan' },
+  motorservice: { subject: 'Marinelektronik', boatHelp: 'Motor' },
+  bat: { subject: 'Marinelektronik' },
+  båt: { subject: 'Marinelektronik' },
+  batrutor: { subject: 'Båtrutor' },
+  campervan: { subject: 'Elsystem för campervan eller husbil' },
+  husbil: { subject: 'Elsystem för campervan eller husbil' },
+  'elsystem för campervan': { subject: 'Elsystem för campervan eller husbil' },
 }
 
 export function prefillFromParam(value: string): { subject: Subject | ''; boatHelp?: string } {

@@ -1,4 +1,4 @@
-import type { Service, ServicePhoto, ServiceStep } from '@/types/sanity'
+import type { Service, ServiceHighlight, ServicePhoto, ServiceStep } from '@/types/sanity'
 
 /**
  * What a service page shows before anyone has filled it in.
@@ -92,14 +92,9 @@ export interface ServicePageDefaults {
   stepsLabel?: string
   stepsTitle?: string
   steps?: ServiceStep[]
-  highlight?: {
-    imageUrl?: string
-    label?: string
-    title?: string
-    text?: string
-    ctaLabel?: string
-    ctaHref?: string
-  }
+  /** The wide image-and-text bands. Båtrutor runs two: monteringspaketen
+   *  and rutpaketen. */
+  highlights?: ServiceHighlight[]
   video?: {
     /** A full YouTube link or a bare id — both go through parseYouTubeId(). */
     url?: string
@@ -146,17 +141,19 @@ export const defaultServicePages: Record<string, ServicePageDefaults> = {
     // emptied the field in the studio — an editor can't delete a fallback.
     documentsText:
       'Hela arbetsgången står i monteringsanvisningen — verktyg, produkter, mått och torktider, steg för steg. Ladda ner den och ha den till hands vid monteringen.',
-    highlight: {
-      imageUrl: '/images/batrutor/monteringspaket.jpeg',
-      label: 'Monterar du själv?',
-      title: 'Kompletta monteringspaket',
-      text: 'Till de vanligaste båtmodellerna finns rutorna som kompletta paket med det som behövs för monteringen. Du hittar dem i sortimentet, sorterade efter båtmodell.',
-      ctaLabel: 'Till sortimentet',
-      // Unknown category slugs are dropped by /produkter rather than filtering
-      // to an empty grid, so this degrades to the full catalogue if the
-      // category ends up named something else.
-      ctaHref: '/produkter?kategori=batrutor',
-    },
+    highlights: [
+      {
+        imageUrl: '/images/batrutor/monteringspaket.jpeg',
+        label: 'Monterar du själv?',
+        title: 'Kompletta monteringspaket',
+        text: 'Till de vanligaste båtmodellerna finns rutorna som kompletta paket med det som behövs för monteringen. Du hittar dem i sortimentet, sorterade efter båtmodell.',
+        ctaLabel: 'Till sortimentet',
+        // Unknown category slugs are dropped by /produkter rather than filtering
+        // to an empty grid, so this degrades to the full catalogue if the
+        // category ends up named something else.
+        ctaHref: '/produkter?kategori=batrutor',
+      },
+    ],
     // The monteringspaket shot carries the highlight band above, so it isn't
     // repeated here.
     gallery: [

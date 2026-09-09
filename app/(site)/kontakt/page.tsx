@@ -151,14 +151,7 @@ export default async function ContactPage() {
                 </div>
               )}
 
-              <div className="p-5 rounded-lg border" style={{ borderColor: 'var(--color-border)' }}>
-                <p className="font-heading text-base font-semibold mb-2">
-                  {text(page?.freeConsultationTitle, defaults.freeConsultationTitle)}
-                </p>
-                <p className="text-sm leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
-                  {text(page?.freeConsultationText, defaults.freeConsultationText)}
-                </p>
-              </div>
+          
             </AnimatedSection>
 
             {/* Form */}

@@ -7,7 +7,7 @@ import AnimatedSection from '@/components/AnimatedSection'
 import PageTransition from '@/components/PageTransition'
 import ServiceIndexRail from '@/components/ServiceIndexRail'
 import ServiceFormDialog from '@/components/ServiceFormDialog'
-import { hasServicePage, serviceForms, serviceHref } from '@/lib/services'
+import { hasServicePage, serviceForms, serviceHref, servicePanelCta } from '@/lib/services'
 import { defaultServices } from '@/lib/serviceContent'
 
 export const revalidate = 60
@@ -95,7 +95,12 @@ export default async function ServicesPage() {
 
             <div className="space-y-24 lg:space-y-32">
               {services.map((service, index) => {
-                const form = serviceForms[service.slug ?? service._id]
+                const key = service.slug ?? service._id
+                const form = serviceForms[key]
+                // A second button named for this service in particular —
+                // "Se rutpaket" for båtrutor, the contact form for campervan —
+                // in place of whatever the panel would have offered by itself.
+                const cta = servicePanelCta[key]
                 // Wide band, so the wide upload wins here as it does at the
                 // top of the service's own page.
                 const panelImageUrl = service.pageImageUrl || service.imageUrl
@@ -185,11 +190,19 @@ export default async function ServicesPage() {
                           Läs mer om {service.title.toLowerCase()}
                         </Link>
                       )}
-                      {form ? (
+                      {cta ? (
+                        <Link
+                          href={cta.href}
+                          className={cta.variant === 'primary' ? 'btn-primary' : 'btn-outline'}
+                        >
+                          {cta.label}
+                        </Link>
+                      ) : form ? (
                         <ServiceFormDialog
                           appId={form.appId}
                           label={form.label}
                           padded={form.padded}
+                          variant={form.variant}
                         />
                       ) : (
                         <Link

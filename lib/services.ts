@@ -62,7 +62,7 @@ export function serviceHref(slug: string | undefined | null): string {
  */
 export const serviceForms: Record<
   string,
-  { appId: string; label: string; padded?: boolean }
+  { appId: string; label: string; padded?: boolean; variant?: 'primary' | 'outline' }
 > = {
   // Both widgets run flush to their own edges, so the dialog is what gives
   // them their air — keep the two in step, or one form sits tighter in its
@@ -72,10 +72,58 @@ export const serviceForms: Record<
     appId: siteConfig.elfsight.motorserviceForm,
     label: 'Boka motorservice',
     padded: true,
+    variant: 'primary',
   },
   campervan: {
     appId: siteConfig.elfsight.campervanForm,
     label: 'Berätta om din van',
     padded: true,
+    variant: 'primary',
+  },
+}
+
+/* --- The second button ------------------------------------------------- */
+
+/**
+ * A service's second call to action, where the generic one isn't the right
+ * next step.
+ *
+ * By default a /tjanster panel offers "Fråga om <tjänst>" and a service page
+ * offers "Alla tjänster". Some services have something better to send the
+ * visitor to — a catalogue of ready-made rutpaket, the contact form with the
+ * subject already chosen, or the phone — so those are named here and both
+ * consumers read them from one place. Keyed by slug, like `serviceForms`.
+ *
+ * The `?amne=` values are slugs on purpose: `prefillFromParam` in
+ * lib/contactForm.ts maps them onto a subject, so a service renamed in the
+ * studio still arrives at the right one.
+ */
+export type ServiceCta = {
+  label: string
+  href: string
+  /** Solid navy rather than the outline a second button normally wears. For a
+   *  service whose whole page is the enquiry — say what you're building and
+   *  we'll get back to you — that button is the point, not the afterthought. */
+  variant?: 'primary' | 'outline'
+}
+
+/** Replaces the panel's own second button on /tjanster — including the booking
+ *  dialog, where a service has both. */
+export const servicePanelCta: Record<string, ServiceCta> = {
+  batrutor: { label: 'Se rutpaket', href: '/produkter' },
+  campervan: {
+    label: 'Berätta om din van',
+    href: '/kontakt?amne=campervan',
+    variant: 'primary',
+  },
+}
+
+/** Replaces "Alla tjänster" in the header of a service's own page. */
+export const servicePageCta: Record<string, ServiceCta> = {
+  campervan: { label: 'Kontakta oss', href: '/kontakt?amne=campervan' },
+  motorservice: { label: 'Kontakta oss', href: '/kontakt?amne=motorservice' },
+  marinelektronik: {
+    label: 'Ring oss',
+    href: `tel:${siteConfig.contact.phone.replace(/[^0-9+]/g, '')}`,
   },
 }

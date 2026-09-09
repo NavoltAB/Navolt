@@ -231,52 +231,78 @@ export const serviceSchema = defineType({
 
     // ── Utvald sektion ──────────────────────────────────────
     defineField({
-      name: 'highlightImage',
-      title: 'Bild',
-      type: 'image',
-      options: { hotspot: true },
+      name: 'highlights',
+      title: 'Utvalda sektioner',
+      type: 'array',
       group: 'utvalt',
       description:
-        'Bred sektion med bild till vänster och text till höger — t.ex. monteringspaketen under Båtrutor. Beskärs till 4:3. Utan rubrik visas sektionen inte.',
-    }),
-    defineField({
-      name: 'highlightLabel',
-      title: 'Etikett',
-      type: 'string',
-      group: 'utvalt',
-    }),
-    defineField({
-      name: 'highlightTitle',
-      title: 'Rubrik',
-      type: 'string',
-      group: 'utvalt',
-      description: 'Utan den här visas sektionen inte alls.',
-    }),
-    defineField({
-      name: 'highlightText',
-      title: 'Text',
-      type: 'text',
-      rows: 4,
-      group: 'utvalt',
-    }),
-    defineField({
-      name: 'highlightCtaLabel',
-      title: 'Knapptext',
-      type: 'string',
-      group: 'utvalt',
-      description: 'Knappen visas bara om både text och länk är ifyllda.',
-    }),
-    defineField({
-      name: 'highlightCtaHref',
-      title: 'Knappens länk',
-      type: 'string',
-      group: 'utvalt',
-      description:
-        'En adress på sajten, t.ex. /produkter?kategori=batrutor. Måste börja med / — externa länkar hör inte hemma i en knapp mitt på sidan.',
-      validation: (Rule) =>
-        Rule.custom((value) =>
-          !value || value.startsWith('/') ? true : 'Länken måste börja med /'
-        ),
+        'Breda sektioner med bild till vänster och text till höger — t.ex. monteringspaketen och rutpaketen under Båtrutor. Lägg till en per sektion och dra för att ändra ordning. En sektion utan rubrik visas inte.',
+      of: [
+        defineArrayMember({
+          type: 'object',
+          name: 'highlightSection',
+          fields: [
+            defineField({
+              name: 'image',
+              title: 'Bild',
+              type: 'image',
+              options: { hotspot: true },
+              description: 'Beskärs till 4:3.',
+            }),
+            defineField({
+              name: 'label',
+              title: 'Etikett',
+              type: 'string',
+              description: 'Liten versal rad ovanför rubriken, t.ex. "Monteringspaket".',
+            }),
+            defineField({
+              name: 'title',
+              title: 'Rubrik',
+              type: 'string',
+              description: 'Utan den här visas sektionen inte alls.',
+              validation: (Rule) => Rule.required(),
+            }),
+            defineField({
+              name: 'text',
+              title: 'Text',
+              type: 'text',
+              rows: 4,
+              description:
+                'Löpande text. Ska sektionen räkna upp saker — det som ingår i ett paket, till exempel — skriv dem i punktlistan nedan i stället, så blir de en riktig lista.',
+            }),
+            defineField({
+              name: 'items',
+              title: 'Punktlista',
+              type: 'array',
+              of: [defineArrayMember({ type: 'string' })],
+              description:
+                'En sak per rad. Visas i två spalter med bock framför, under texten.',
+            }),
+            defineField({
+              name: 'ctaLabel',
+              title: 'Knapptext',
+              type: 'string',
+              description: 'Knappen visas bara om både text och länk är ifyllda.',
+            }),
+            defineField({
+              name: 'ctaHref',
+              title: 'Knappens länk',
+              type: 'string',
+              description:
+                'En adress på sajten, t.ex. /produkter?kategori=batrutor. Måste börja med / — externa länkar hör inte hemma i en knapp mitt på sidan.',
+              validation: (Rule) =>
+                Rule.custom((value) =>
+                  !value || (value as string).startsWith('/')
+                    ? true
+                    : 'Länken måste börja med /'
+                ),
+            }),
+          ],
+          preview: {
+            select: { title: 'title', subtitle: 'label', media: 'image' },
+          },
+        }),
+      ],
     }),
 
     // ── Film ────────────────────────────────────────────────

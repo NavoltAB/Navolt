@@ -54,7 +54,7 @@ export default function ContactForm() {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Prefilled by the "Fråga om …" buttons on /tjanster, which link here as
-  // /kontakt?amne=Motorservice. Anything that isn't one of the five subjects
+  // /kontakt?amne=Motorservice. Anything that isn't one of the subjects
   // leaves the select unchosen rather than inventing an option.
   const searchParams = useSearchParams()
   const prefill = prefillFromParam((searchParams.get('amne') ?? '').slice(0, 100))
