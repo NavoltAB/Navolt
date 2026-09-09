@@ -240,6 +240,11 @@ export interface AboutPage {
   valuesTitle?: string
   values?: { title?: string; text?: string }[]
 
+  videoUrl?: string
+  videoLabel?: string
+  videoText?: string
+  videoPosterUrl?: string
+
   reviewsLabel?: string
 
   instagramLabel?: string

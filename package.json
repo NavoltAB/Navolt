@@ -12,7 +12,9 @@
     "seed:brands": "node scripts/seed-brands.mjs",
     "migrate:features": "node scripts/migrate-service-features.mjs",
     "migrate:why": "node scripts/migrate-why-text.mjs",
-    "seed:marinelektronik": "node scripts/seed-marinelektronik-cards.mjs"
+    "seed:marinelektronik": "node scripts/seed-marinelektronik-cards.mjs",
+    "seed:motorservice": "node scripts/seed-motorservice-cards.mjs",
+    "seed:campervan": "node scripts/seed-campervan-cards.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.0.1",

@@ -7,6 +7,8 @@ import AnimatedSection, { StaggerContainer, StaggerItem } from '@/components/Ani
 import PageTransition from '@/components/PageTransition'
 import Brands from '@/components/Brands'
 import ElfsightWidget from '@/components/ElfsightWidget'
+import YouTubeEmbed from '@/components/YouTubeEmbed'
+import { parseYouTubeId } from '@/lib/youtube'
 import { siteConfig } from '@/config/site'
 
 export const revalidate = 300
@@ -67,6 +69,15 @@ const defaults = {
     },
   ],
 
+  // The customer's own build film. It sat on /campervan, where it illustrated
+  // one service; here it shows how we work, which is what it is actually of.
+  // In-file rather than in the document so the section stands up with no
+  // Sanity project configured — fill in the studio's Film-flik and that wins.
+  videoUrl: 'https://www.youtube.com/watch?v=7j2_cCJeMlQ',
+  videoLabel: 'Från verkstaden',
+  videoText:
+    'Följ bygget av ett komplett elsystem för en campervan – från tom skiva till färdig installation.',
+
   reviewsLabel: 'Omdömen',
 
   instagramLabel: 'Instagram',
@@ -84,9 +95,12 @@ export default async function AboutPage() {
 
   const stats = list(page?.stats, defaults.stats)
   const storyParagraphs = paragraphs(page?.storyText, defaults.storyParagraphs)
-  // An entry with no heading has nothing to number, so it's dropped rather than
-  // rendered as a bare paragraph beside an orphaned "05".
-  const values = list(page?.values, defaults.values).filter((v) => v.title)
+  // A row with nothing in it is dropped — empty rows are common in a studio
+  // array. A row with only a paragraph is kept: where the section has shrunk
+  // to a single entry there is no list to head, and the copy reads as prose.
+  const values = list(page?.values, defaults.values).filter((v) => v.title || v.text)
+  const videoId = parseYouTubeId(text(page?.videoUrl, defaults.videoUrl))
+  const videoText = text(page?.videoText, defaults.videoText)
 
   return (
     <PageTransition>
@@ -151,7 +165,12 @@ export default async function AboutPage() {
           {/* Ruled band rather than centred cards — reads as an instrument panel */}
           <StaggerContainer className="grid grid-cols-2 md:grid-cols-4">
             {stats.map((stat, index) => (
-              <StaggerItem key={`${stat.label}-${index}`}>
+              /* min-w-0: a grid item defaults to min-width:auto, so a long
+                 unbreakable label ("LITIUMKONVERTERINGAR") forces its column
+                 wider than half the screen and pushes the whole page sideways.
+                 These labels are editor-controlled, so the column has to be
+                 able to shrink regardless of what gets typed into them. */
+              <StaggerItem key={`${stat.label}-${index}`} className="min-w-0">
                 <div
                   className={`text-white px-6 py-2 h-full ${index === 0 ? '' : 'md:border-l'}`}
                   style={{ borderColor: 'rgba(255,255,255,0.15)' }}
@@ -162,8 +181,12 @@ export default async function AboutPage() {
                   >
                     {stat.value}
                   </p>
+                  {/* …and once it can shrink, the word has to be allowed to
+                      wrap inside it. hyphens-auto puts a hyphen in where the
+                      browser knows how (the page is lang="sv"), break-words is
+                      the fallback where it doesn't. */}
                   <p
-                    className="text-xs tracking-[0.16em] uppercase"
+                    className="text-xs tracking-[0.16em] uppercase hyphens-auto break-words"
                     style={{ color: 'rgba(255,255,255,0.6)' }}
                   >
                     {stat.label}
@@ -191,14 +214,23 @@ export default async function AboutPage() {
                   className="py-7 border-t h-full"
                   style={{ borderColor: 'var(--color-border)' }}
                 >
-                  <span
-                    className="font-heading text-xs tabular-nums tracking-[0.18em] block mb-3"
-                    style={{ color: 'var(--color-gold-ink)' }}
-                  >
-                    {String(index + 1).padStart(2, '0')}
-                  </span>
-                  <h3 className="font-heading text-xl font-semibold mb-3">{v.title}</h3>
-                  <p className="text-sm leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
+                  {/* The number counts headings, so an untitled entry gets
+                      neither — a lone "01" above a paragraph is an orphaned
+                      number, not a numbered list. */}
+                  {v.title && (
+                    <>
+                      <span
+                        className="font-heading text-xs tabular-nums tracking-[0.18em] block mb-3"
+                        style={{ color: 'var(--color-gold-ink)' }}
+                      >
+                        {String(index + 1).padStart(2, '0')}
+                      </span>
+                      <h3 className="font-heading text-xl font-semibold mb-3">{v.title}</h3>
+                    </>
+                  )}
+                  {/* Same size as the film's line below it — this entry is the
+                      section's body copy, not a caption under a card. */}
+                  <p className="text-lg leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
                     {v.text}
                   </p>
                 </div>
@@ -208,12 +240,38 @@ export default async function AboutPage() {
         </div>
       </section>
 
-      {/* Omdömen — the same Elfsight widget the landing page carries, placed
-          straight after "Så jobbar vi": the värderingar are our own claims
-          about how we work, and this is the only section on the page where
-          someone else says it. Eyebrow only, for the same reason as on the
-          landing page — the widget brings its own heading, and a section-title
-          above it would say the word twice. */}
+      {/* Film. Straight after "Så jobbar vi": that section says how we work,
+          and this is the same claim with the work actually on screen. Nothing
+          is fetched from YouTube until play is pressed — see
+          components/YouTubeEmbed.tsx. Eyebrow and a line of text rather than a
+          section-title: the sentence is the heading's job here, and setting it
+          in display type would swamp the section it introduces. */}
+      {videoId && (
+        <section className="section pt-0">
+          <div className="container mx-auto px-6 max-w-container">
+            <AnimatedSection className="mb-8">
+              <p className="section-label mb-3">
+                {text(page?.videoLabel, defaults.videoLabel)}
+              </p>
+              {videoText && <p className="section-subtitle">{videoText}</p>}
+            </AnimatedSection>
+            <AnimatedSection delay={0.1}>
+              <YouTubeEmbed
+                id={videoId}
+                title={videoText || `Film — ${siteConfig.name}`}
+                poster={page?.videoPosterUrl || undefined}
+              />
+            </AnimatedSection>
+          </div>
+        </section>
+      )}
+
+      {/* Omdömen — the same Elfsight widget the landing page carries. It
+          closes the run that starts at "Så jobbar vi": those are our own claims
+          about how we work, the film shows the work, and this is the only
+          section on the page where someone else says it. Eyebrow only, for the
+          same reason as on the landing page — the widget brings its own
+          heading, and a section-title above it would say the word twice. */}
       {siteConfig.elfsight.reviews && (
         <section className="section pt-0">
           <div className="container mx-auto px-6 max-w-container">

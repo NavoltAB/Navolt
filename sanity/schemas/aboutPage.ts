@@ -20,6 +20,7 @@ export const aboutPageSchema = defineType({
     { name: 'bakgrund', title: 'Bakgrund' },
     { name: 'stats', title: 'Sifferrad' },
     { name: 'varderingar', title: 'Så jobbar vi' },
+    { name: 'film', title: 'Film' },
     { name: 'omdomen', title: 'Omdömen' },
     { name: 'instagram', title: 'Instagram' },
     { name: 'cta', title: 'Avslutande CTA' },
@@ -126,13 +127,60 @@ export const aboutPageSchema = defineType({
               name: 'title',
               title: 'Rubrik',
               type: 'string',
-              validation: (Rule) => Rule.required(),
+              description:
+                'Valfri. Lämnas den tom visas varken rubrik eller nummer — ' +
+                'använd det när avsnittet bara innehåller ett stycke löptext ' +
+                'och inte en numrerad lista.',
             }),
             defineField({ name: 'text', title: 'Text', type: 'text', rows: 4 }),
           ],
-          preview: { select: { title: 'title', subtitle: 'text' } },
+          // Without a heading the row would show as "Untitled" in the studio,
+          // so the paragraph stands in as its name.
+          preview: {
+            select: { title: 'title', subtitle: 'text' },
+            prepare: ({ title, subtitle }: { title?: string; subtitle?: string }) => ({
+              title: title || subtitle || 'Utan rubrik',
+              subtitle: title ? subtitle : undefined,
+            }),
+          },
         }),
       ],
+    }),
+
+    // ── Film ────────────────────────────────────────────────
+    defineField({
+      name: 'videoUrl',
+      title: 'Film — YouTube-länk',
+      type: 'url',
+      group: 'film',
+      description:
+        'Hela länken till filmen på YouTube. Lämnas den tom visas avsnittet inte alls. ' +
+        'Inget hämtas från YouTube förrän besökaren trycker på play.',
+    }),
+    defineField({
+      name: 'videoLabel',
+      title: 'Film — Etikett',
+      type: 'string',
+      group: 'film',
+      description: 'Liten text ovanför, t.ex. "Från verkstaden".',
+    }),
+    defineField({
+      name: 'videoText',
+      title: 'Film — Text',
+      type: 'text',
+      rows: 3,
+      group: 'film',
+      description: 'En mening om vad filmen visar.',
+    }),
+    defineField({
+      name: 'videoPoster',
+      title: 'Film — Omslagsbild',
+      type: 'image',
+      options: { hotspot: true },
+      group: 'film',
+      description:
+        'Stillbilden som visas innan man trycker play. Lämnas den tom används ' +
+        "YouTubes egen miniatyr, som oftast är suddigare. Beskärs till 16:9.",
     }),
 
     // ── Omdömen ─────────────────────────────────────────────

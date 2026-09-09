@@ -7,9 +7,13 @@ const ease = [0.16, 1, 0.3, 1] as const
  * Header for the product index.
  *
  * Same shape and ground as the headers on /tjanster, /kontakt and /om-oss —
- * `pt-32 pb-16` on `--color-surface` — so the subpages all open the same way.
- * The only thing this one adds is the pair of counts under the subtitle, which
- * state the size of the catalogue instead of implying one.
+ * `pb-16` on `--color-surface` — so the subpages all open the same way. Two
+ * things differ. The pair of counts under the subtitle states the size of the
+ * catalogue instead of implying one. And the top padding drops to `pt-24`
+ * below `md`: this header is followed immediately by the category rail rather
+ * than by open page, so on a phone the full `pt-32` pushed the whole catalogue
+ * down far enough to be worth the inconsistency. From `md` up it matches the
+ * others again.
  *
  * Copy arrives as props: the page is a server component and owns the Sanity
  * read, this is a client component only because of the entrance animation.
@@ -44,7 +48,7 @@ export default function ProductsHero({
       }
 
   return (
-    <div className="pt-32 pb-16" style={{ background: 'var(--color-surface)' }}>
+    <div className="pt-24 md:pt-32 pb-16" style={{ background: 'var(--color-surface)' }}>
       <div className="container mx-auto px-6 max-w-container">
         <motion.div initial="hidden" animate="visible" variants={container}>
           <motion.p variants={rise} className="section-label mb-3">
