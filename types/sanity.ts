@@ -45,10 +45,10 @@ export interface Product {
   slug: string
   category?: Category
   boatModel?: BoatModel
-  /** True when this product sits in a category marked "Kräver monteringspaket". */
-  requiresKit?: boolean
   /** The one kit this specific ruta needs. Kits themselves never have one. */
   mountingKit?: Product | null
+  /** The reverse: every product that points at this one as its monteringspaket. */
+  fitsProducts?: Product[]
   price?: number
   unit?: string
   inStock: boolean
@@ -147,6 +147,8 @@ export interface Service {
   pageImageUrl?: string
 
   featuresLabel?: string
+  /** The eyebrow above the h1 on the service's own page. Defaults to "Tjänst". */
+  pageLabel?: string
   introLabel?: string
   introTitle?: string
   description?: PortableTextBlock[]

@@ -109,6 +109,23 @@ a {
   text-decoration: none;
 }
 
+/* Sections whose heading *is* the eyebrow — a service's "Vad ingår", the
+   blocks down a product page — mark it up as a heading so the outline has a
+   parent for the h3s under it, while it goes on looking like a label. The
+   h1–h6 rule above is unlayered and would otherwise beat .section-label in
+   @layer components, repainting the eyebrow in the heading font and the
+   near-black navy. */
+h1.section-label,
+h2.section-label,
+h3.section-label,
+h4.section-label {
+  font-family: var(--font-body), system-ui, sans-serif;
+  color: var(--color-secondary);
+  /* The eyebrow used to be a <p> and took the body's leading with it. The
+     h1-h6 rule sets 1.2, which would pinch a label that wraps. */
+  line-height: inherit;
+}
+
 img,
 video {
   max-width: 100%;
@@ -355,6 +372,13 @@ video {
   font-family: var(--font-heading), system-ui, sans-serif;
   font-size: var(--text-xl);
   margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.prose-sanity h4 {
+  font-family: var(--font-heading), system-ui, sans-serif;
+  font-size: var(--text-lg);
+  margin-top: 1.25rem;
   margin-bottom: 0.5rem;
 }
 

@@ -23,6 +23,7 @@ import {
   genericPageDefaults,
 } from '@/lib/serviceContent'
 import { siteConfig } from '@/config/site'
+import { shareImage } from '@/lib/seo'
 
 /**
  * A service's own page, at the top level — /batrutor, /motorservice,
@@ -69,7 +70,8 @@ async function getContent(slug: string) {
       service.seoDescription,
       fallback.seoDescription ?? service.shortDescription ?? ''
     ),
-    featuresLabel: text(service.featuresLabel, fallback.featuresLabel ?? 'Vad ingår'),
+    pageLabel: text(service.pageLabel, fallback.pageLabel ?? 'Tjänst'),
+    featuresLabel: text(service.featuresLabel, fallback.featuresLabel ?? 'Vad vi gör'),
     // The tile image is framed for a tall crop; in the page's 16:9 band the
     // subject often ends up half out of frame. A wide upload wins where the
     // editor has made one, and the tile image stands in where they haven't.
@@ -134,9 +136,12 @@ export async function generateMetadata({
       title,
       ...(description ? { description } : {}),
       url: `/${slug}`,
-      // The same picture the page leads with, which is also the wider crop
-      // of the two — a share card is 1.91:1, not a portrait tile.
-      ...(leadImageUrl ? { images: [leadImageUrl] } : {}),
+      // The same picture the page leads with, cropped to the share aspect
+      // rather than shipped at its upload size — some of these originals are
+      // 6000×4000. See shareImage() in lib/seo.ts.
+      ...(leadImageUrl
+        ? { images: [{ url: shareImage(leadImageUrl)!, width: 1200, height: 630 }] }
+        : {}),
     },
   }
 }
@@ -156,6 +161,8 @@ export default async function ServicePage({
   if (!content) notFound()
 
   const { service, leadImageUrl } = content
+  const hasIntro = Boolean(content.body) || content.introParagraphs.length > 0
+  const hasFeatures = normalizeFeatures(service.features).length > 0
   const form = serviceForms[slug]
   const subject = encodeURIComponent(service.title)
   // The header's second button. "Alla tjänster" sends a visitor who has just
@@ -177,7 +184,7 @@ export default async function ServicePage({
       <div className="pt-32 pb-16" style={{ background: 'var(--color-surface)' }}>
         <div className="container mx-auto px-6 max-w-container">
           <AnimatedSection>
-            <p className="section-label mb-3">Tjänst</p>
+            <p className="section-label mb-3">{content.pageLabel}</p>
             <h1 className="section-title mb-5">{service.title}</h1>
             {service.shortDescription && (
               <p className="section-subtitle mb-8">{service.shortDescription}</p>
@@ -291,44 +298,79 @@ export default async function ServicePage({
           between the two — but only when the steps are there to provide it. */}
       <section className={`section ${content.steps.length > 0 ? 'pt-0' : ''}`}>
         <div className="container mx-auto px-6 max-w-container">
-          <AnimatedSection>
-            <p className="section-label mb-3">{content.introLabel}</p>
-            <h2 className="font-heading text-3xl md:text-4xl font-semibold mb-6">
-              {content.introTitle}
-            </h2>
-            {content.body ? (
-              <div className="prose-sanity max-w-2xl">
-                <PortableText value={content.body} />
-              </div>
-            ) : content.introParagraphs.length > 0 ? (
-              <div
-                className="space-y-5 text-base leading-relaxed max-w-2xl"
-                style={{ color: 'var(--color-text-muted)' }}
-              >
-                {content.introParagraphs.map((paragraph, i) => (
-                  <p key={i}>{paragraph}</p>
-                ))}
-              </div>
-            ) : (
-              // Nothing written yet. Repeating the teaser would put the same
-              // sentence on the page twice, so the header carries it alone.
-              <p
-                className="text-base leading-relaxed max-w-2xl"
-                style={{ color: 'var(--color-text-muted)' }}
-              >
-                Berätta vad du vill få gjort, så återkommer vi med en bedömning.
-              </p>
-            )}
-          </AnimatedSection>
+          {/* No copy written yet means no intro at all: the rubrik only
+              repeated the H1 above it and the filler line under it said
+              nothing the header hadn't already said. The punch list — now
+              labelled "Vad vi gör" — carries the section on its own. */}
+          {hasIntro && (
+            <AnimatedSection>
+              <p className="section-label mb-3">{content.introLabel}</p>
+              <h2 className="font-heading text-3xl md:text-4xl font-semibold mb-6">
+                {content.introTitle}
+              </h2>
+              {content.body ? (
+                <div className="prose-sanity max-w-2xl">
+                  <PortableText value={content.body} baseLevel={3} />
+                </div>
+              ) : (
+                <div
+                  className="space-y-5 text-base leading-relaxed max-w-2xl"
+                  style={{ color: 'var(--color-text-muted)' }}
+                >
+                  {content.introParagraphs.map((paragraph, i) => (
+                    <p key={i}>{paragraph}</p>
+                  ))}
+                </div>
+              )}
+            </AnimatedSection>
+          )}
 
           {/* Under the copy rather than beside it: the list is as long as the
               service is broad, and in a side column it ran far past the text
               it was supposed to sit next to. */}
-          {normalizeFeatures(service.features).length > 0 && (
+          {hasFeatures && (
             <AnimatedSection delay={0.1}>
-              <div className="mt-14 md:mt-16">
-                <p className="section-label mb-6">{content.featuresLabel}</p>
+              <div className={hasIntro ? 'mt-14 md:mt-16' : ''}>
+                <h2 className="section-label mb-6">{content.featuresLabel}</h2>
                 <FeatureList features={service.features} />
+              </div>
+            </AnimatedSection>
+          )}
+
+          {/* The list is the longest thing on the page — motorservice runs to
+              four categories of it — and it ends exactly where the visitor has
+              finished reading what the job includes. Rather than send them past
+              "Andra tjänster" to find the band at the foot, the booking form is
+              offered here, in the service's own words. Services without a form
+              of their own get the contact form with the subject prefilled. */}
+          {hasFeatures && (
+            <AnimatedSection delay={0.15}>
+              <div
+                className="mt-14 md:mt-16 pt-10 flex flex-col items-start gap-6 sm:flex-row sm:items-center sm:justify-between"
+                style={{ borderTop: '1px solid var(--color-border)' }}
+              >
+                <p
+                  className="text-base leading-relaxed max-w-xl"
+                  style={{ color: 'var(--color-text-muted)' }}
+                >
+                  {form
+                    ? 'Vill du boka in båten? Berätta vad som ska göras, så återkommer vi med en tid.'
+                    : `Har du frågor om ${service.title.toLowerCase()}? Berätta vad du behöver hjälp med, så hör vi av oss.`}
+                </p>
+                <div className="shrink-0">
+                  {form ? (
+                    <ServiceFormDialog
+                      appId={form.appId}
+                      label={form.label}
+                      padded={form.padded}
+                      variant={form.variant}
+                    />
+                  ) : (
+                    <Link href={`/kontakt?amne=${subject}`} className="btn-primary">
+                      Fråga om {service.title.toLowerCase()}
+                    </Link>
+                  )}
+                </div>
               </div>
             </AnimatedSection>
           )}

@@ -76,7 +76,11 @@ Attachments cap at 5 files / 4 MB total — Vercel rejects a request body over
 turn that into a readable error. Both sides re-check; neither trusts the other.
 
 `/tjanster` still links in as `/kontakt?amne=<tjänst>`; `prefillFromParam`
-maps that onto a subject (Motorservice → Båt, with "Motor" ticked).
+maps that onto a subject, by name where the two match and through
+`SUBJECT_ALIASES` where they don't (`campervan`, `bat`).
+
+Marinelektronik and Motorservice are separate subjects asking the same three
+questions (`BOAT_JOB`) — same hull, different trade.
 
 ### Cookies / GDPR
 `context/CookieConsentContext.tsx` holds the consent state (localStorage key

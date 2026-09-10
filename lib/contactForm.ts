@@ -18,13 +18,13 @@
 export const SUBJECTS = [
   'Marinelektronik',
   'Elsystem för campervan eller husbil',
+  'Motorservice',
   'Båtrutor',
   'Övrigt',
 ] as const
 export type Subject = (typeof SUBJECTS)[number]
 
 export const CONDITIONAL_KEYS = [
-  'boatHelp',
   'boatModel',
   'boatLocation',
   'boatPlacement',
@@ -59,6 +59,18 @@ const BOAT_WHERE: ContactField[] = [
   { key: 'boatLocation', label: 'Var ligger båten?', placeholder: 'Ange plats', half: true },
 ]
 
+/** What a job aboard needs to be quoted: which boat, where it is, and whether
+ *  it can be reached. Marinelektronik and Motorservice are different trades on
+ *  the same hull, so they ask the same three things. */
+const BOAT_JOB: ContactField[] = [
+  ...BOAT_WHERE,
+  {
+    key: 'boatPlacement',
+    label: 'Är din båt för närvarande i vattnet eller på land?',
+    options: ['I vattnet', 'På land'],
+  },
+]
+
 /** A campervan and a motorhome are the same job asked about two ways, so they
  *  share one subject and one pair of questions rather than two sets that mean
  *  the same thing. */
@@ -78,20 +90,9 @@ const VEHICLE: ContactField[] = [
 ]
 
 export const FIELDS_BY_SUBJECT: Record<Subject, ContactField[]> = {
-  Marinelektronik: [
-    {
-      key: 'boatHelp',
-      label: 'Vad behöver du hjälp med i din båt?',
-      options: ['El/elsystem', 'Motor', 'Annat'],
-    },
-    ...BOAT_WHERE,
-    {
-      key: 'boatPlacement',
-      label: 'Är din båt för närvarande i vattnet eller på land?',
-      options: ['I vattnet', 'På land'],
-    },
-  ],
+  Marinelektronik: BOAT_JOB,
   'Elsystem för campervan eller husbil': VEHICLE,
+  Motorservice: BOAT_JOB,
   Båtrutor: [
     ...BOAT_WHERE,
     {
@@ -131,13 +132,6 @@ export function isSubject(value: string): value is Subject {
 }
 
 /**
- * Maps the `?amne=` parameter that /tjanster links with onto a subject.
- *
- * The service tiles there don't line up one-to-one with the options:
- * "Motorservice" is a boat job, so it selects Båt and ticks Motor rather than
- * dropping the visitor into Övrigt having lost what they clicked.
- */
-/**
  * Service names that aren't subjects in their own right.
  *
  * /tjanster and each service's own page link here with the service's title or
@@ -146,8 +140,7 @@ export function isSubject(value: string): value is Subject {
  * with nothing selected. Keyed lowercase; the titles come from Sanity, so a
  * renamed service falls through to an unselected subject rather than breaking.
  */
-const SUBJECT_ALIASES: Record<string, { subject: Subject; boatHelp?: string }> = {
-  motorservice: { subject: 'Marinelektronik', boatHelp: 'Motor' },
+const SUBJECT_ALIASES: Record<string, { subject: Subject }> = {
   bat: { subject: 'Marinelektronik' },
   båt: { subject: 'Marinelektronik' },
   batrutor: { subject: 'Båtrutor' },
@@ -156,7 +149,7 @@ const SUBJECT_ALIASES: Record<string, { subject: Subject; boatHelp?: string }> =
   'elsystem för campervan': { subject: 'Elsystem för campervan eller husbil' },
 }
 
-export function prefillFromParam(value: string): { subject: Subject | ''; boatHelp?: string } {
+export function prefillFromParam(value: string): { subject: Subject | '' } {
   const v = value.trim().toLowerCase()
   if (!v) return { subject: '' }
   const alias = SUBJECT_ALIASES[v]

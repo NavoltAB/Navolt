@@ -10,13 +10,18 @@ import ElfsightWidget from '@/components/ElfsightWidget'
 import YouTubeEmbed from '@/components/YouTubeEmbed'
 import { parseYouTubeId } from '@/lib/youtube'
 import { siteConfig } from '@/config/site'
+import { pageMetadata } from '@/lib/seo'
 
 export const revalidate = 300
 
-export const metadata: Metadata = {
-  title: 'Om oss',
-  description: `${siteConfig.legalName} är marinelektriker på Hälsö i Göteborgs skärgård. Lär känna oss och hur vi arbetar.`,
-}
+export const metadata: Metadata = pageMetadata({
+  path: '/om-oss',
+  // Absolute: the title names the company itself, so the "| Navolt" template
+  // would append it a second time.
+  titleAbsolute: `Om ${siteConfig.name} | Marinelektronik på Västkusten`,
+  description:
+    'Läs om Navolt, ett mobilt och specialiserat företag inom marinelektronik och elsystem med Hälsö utanför Göteborg som utgångspunkt.',
+})
 
 // Every string and image on this page is editable in Sanity under "Om oss".
 // This object is what renders until someone fills a field in — the page must

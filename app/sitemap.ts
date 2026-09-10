@@ -10,7 +10,10 @@ import { siteConfig } from '@/config/site'
  * the new URLs — /batrutor above all, which the old site ranked on — need to
  * be found again quickly rather than crawled into over weeks.
  *
- * /studio, /api and /varukorg are deliberately absent; see app/robots.ts.
+ * /studio, /api and /varukorg are deliberately absent. /varukorg is the one
+ * worth spelling out: robots.txt lets a crawler fetch it, so that it can read
+ * the noindex in its <head> — but a page nobody should land on from a search
+ * result has no business being advertised here either.
  * Products come from Sanity and simply disappear from the list when no project
  * is configured, which is what should happen — an empty catalogue has no
  * product URLs to offer.

@@ -153,11 +153,19 @@ export const serviceSchema = defineType({
       // renders them either way (lib/featureIcons.ts).
     }),
     defineField({
+      name: 'pageLabel',
+      title: 'Etikett överst på sidan',
+      type: 'string',
+      group: 'grund',
+      description:
+        'Den lilla texten ovanför rubriken högst upp på tjänstens egen sida. Lämna tom för "Tjänst".',
+    }),
+    defineField({
       name: 'featuresLabel',
       title: 'Vad ingår — Etikett',
       type: 'string',
       group: 'grund',
-      description: 'Liten text ovanför korten. Lämna tom för "Vad ingår".',
+      description: 'Liten text ovanför korten. Lämna tom för "Vad vi gör".',
     }),
     defineField({
       name: 'order',

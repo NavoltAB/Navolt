@@ -11,6 +11,7 @@ import AnimatedSection from '@/components/AnimatedSection'
 import PageTransition from '@/components/PageTransition'
 import ProductsHero from './ProductsHero'
 import ProductsShell from './ProductsShell'
+import { pageMetadata } from '@/lib/seo'
 import { DEFAULT_SORT, isSortKey } from './sort'
 
 export const revalidate = 60
@@ -30,11 +31,12 @@ const defaults = {
   ctaButtonLabel: 'Kontakta oss',
 } as const
 
-export const metadata: Metadata = {
-  title: 'Produkter',
+export const metadata: Metadata = pageMetadata({
+  path: '/produkter',
+  title: 'Rutpaket & monteringspaket för båt',
   description:
-    'Delar och komponenter för el och elektronik ombord — båt, husbil och campervan. Navolt i Göteborg och Öckerö.',
-}
+    'Köp rutpaket, monteringspaket och tillbehör för utvalda båtmodeller. Hitta båtrutor och delar för utanpåliggande montage hos Navolt.',
+})
 
 export default async function ProductsPage({
   searchParams,

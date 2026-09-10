@@ -2,11 +2,13 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import PageTransition from '@/components/PageTransition'
 import { siteConfig } from '@/config/site'
+import { pageMetadata } from '@/lib/seo'
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: '/kopvillkor',
   title: 'Köpvillkor',
   description: `Villkoren för beställningar hos ${siteConfig.legalName} — betalning, frakt, leverans, ångerrätt och reklamation.`,
-}
+})
 
 // Static legal copy — deliberately not editable in Sanity, for the same reason
 // the integritetspolicy isn't: villkor that can be changed without a record of

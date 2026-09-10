@@ -17,7 +17,10 @@ import { siteConfig } from '@/config/site'
 import AddToCart from './AddToCart'
 import PortableText from './PortableText'
 import DocumentList from '@/components/DocumentList'
+import JsonLd from '@/components/JsonLd'
+import { productJsonLd } from '@/lib/seo'
 import ProductGallery from './ProductGallery'
+import type { Product } from '@/types/sanity'
 
 export const revalidate = 60
 
@@ -41,9 +44,21 @@ export async function generateMetadata({
     description:
       product.shortDescription ||
       `${product.name} — ${siteConfig.legalName}, marinelektronik i Göteborg och Öckerö.`,
-    openGraph: image
-      ? { images: [urlFor(image).width(1200).height(630).fit('crop').url()] }
-      : undefined,
+    alternates: { canonical: `/produkter/${slug}` },
+    openGraph: {
+      url: `/produkter/${slug}`,
+      ...(image
+        ? {
+            images: [
+              {
+                url: urlFor(image).width(1200).height(630).fit('crop').url(),
+                width: 1200,
+                height: 630,
+              },
+            ],
+          }
+        : {}),
+    },
   }
 }
 
@@ -80,11 +95,15 @@ export default async function ProductPage({
   const details = product.productDetails ?? []
   const documents = product.documents ?? []
 
+  // Everything about monteringspaket hangs off a kit actually being linked.
+  // A product with none says nothing about them — a reminder about a part that
+  // isn't in the catalogue is worse than silence.
   const kit = product.mountingKit ?? null
-  // The reminder is worth showing even when no kit has been linked yet — a gap
-  // in the catalogue becomes a phone call rather than a customer who buys a
-  // ruta and discovers on the pontoon that it cannot be fitted.
-  const needsKit = product.requiresKit === true || kit != null
+  // The same relation read backwards: the rutor that name this product as
+  // their monteringspaket. Keyed off the list itself rather than the kategori
+  // roll, so a kit sitting in a category nobody has marked yet still says what
+  // it belongs to.
+  const fits = product.fitsProducts ?? []
   const kitLine = kit
     ? {
         slug: kit.slug,
@@ -99,6 +118,20 @@ export default async function ProductPage({
 
   return (
     <PageTransition>
+      {/* The catalogue is the part of the site with something to say in a rich
+          result — a price, a stock state and a picture. Emitted from the same
+          values the page renders, so the two can't disagree. */}
+      <JsonLd
+        data={productJsonLd({
+          name: product.name,
+          slug: product.slug,
+          description: product.shortDescription,
+          images: full,
+          price: product.price,
+          inStock: product.inStock,
+          category: product.category?.title,
+        })}
+      />
       <div className="pt-32 pb-20" style={{ background: 'var(--color-surface)' }}>
         <div className="container mx-auto max-w-container px-6">
           <nav
@@ -254,7 +287,7 @@ export default async function ProductPage({
                 </p>
               )}
 
-              {needsKit && (
+              {kit && (
                 <p
                   className="mt-5 inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.12em]"
                   style={{
@@ -329,98 +362,27 @@ export default async function ProductPage({
                 </span>
               </a>
 
-              {needsKit && (
+              {kit && (
                 <div className="mt-10">
-                  <p className="section-label mb-4">Lägg till monteringspaket</p>
-                  {kit ? (
-                    <Link
-                      href={`/produkter/${kit.slug}`}
-                      className="group flex items-center gap-4 rounded-[var(--radius-md)] p-4 transition-colors"
-                      style={{
-                        background: 'rgba(192,138,62,0.07)',
-                        border: '1px solid rgba(192,138,62,0.3)',
-                      }}
-                    >
-                      <span
-                        className="relative h-16 w-16 shrink-0 overflow-hidden"
-                        style={{
-                          background: 'var(--color-bg)',
-                          borderRadius: 'var(--radius-sm)',
-                        }}
-                      >
-                        {kit.mainImage ? (
-                          <Image
-                            src={urlFor(kit.mainImage).width(160).height(160).fit('crop').url()}
-                            alt={kit.name}
-                            fill
-                            sizes="64px"
-                            className="object-cover"
-                          />
-                        ) : (
-                          <span
-                            className="flex h-full w-full items-center justify-center font-heading text-xl font-semibold"
-                            style={{ color: 'var(--color-border)' }}
-                          >
-                            {kit.name.charAt(0)}
-                          </span>
-                        )}
-                      </span>
+                  <h2 className="section-label mb-4">Lägg till monteringspaket</h2>
+                  <RelatedProductRow product={kit} />
+                </div>
+              )}
 
-                      <span className="min-w-0 flex-1">
-                        <span
-                          className="block font-heading font-semibold leading-snug transition-colors group-hover:text-[var(--color-gold-ink)]"
-                          style={{ color: 'var(--color-primary)' }}
-                        >
-                          {kit.name}
-                        </span>
-                        <span
-                          className="mt-1 block text-sm tabular-nums"
-                          style={{ color: 'var(--color-text-muted)' }}
-                        >
-                          {kit.price != null
-                            ? `${kit.price.toLocaleString('sv-SE')} kr${kit.unit ? ` / ${kit.unit}` : ''}`
-                            : 'Pris på förfrågan'}
-                        </span>
-                      </span>
-
-                      <span
-                        aria-hidden
-                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors duration-300 group-hover:bg-[var(--color-gold)] group-hover:text-white"
-                        style={{
-                          background: 'rgba(192,138,62,0.14)',
-                          color: 'var(--color-gold-ink)',
-                        }}
-                      >
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <polyline points="9 18 15 12 9 6" />
-                        </svg>
-                      </span>
-                    </Link>
-                  ) : (
-                    /* Marked as needing a kit, but none linked yet. A dead end
-                       here would cost an order; a phone call recovers it. */
-                    <div
-                      className="rounded-[var(--radius-md)] p-5"
-                      style={{
-                        background: 'rgba(192,138,62,0.07)',
-                        border: '1px solid rgba(192,138,62,0.3)',
-                      }}
-                    >
-                      <p className="text-sm leading-relaxed" style={{ color: 'var(--color-text)' }}>
-                        Den här rutan kräver ett monteringspaket. Vi har inget uppe för just den
-                        här ännu — hör av dig så tar vi fram rätt sats.
-                      </p>
-                      <Link href="/kontakt" className="btn-outline mt-4">
-                        Kontakta oss
-                      </Link>
-                    </div>
-                  )}
+              {fits.length > 0 && (
+                <div className="mt-10">
+                  <h2 className="section-label mb-4">Monteringspaket för</h2>
+                  <div className="flex flex-col gap-3">
+                    {fits.map((item) => (
+                      <RelatedProductRow key={item._id} product={item} />
+                    ))}
+                  </div>
                 </div>
               )}
 
               {(details.length > 0 || documents.length > 0) && (
                 <div className="mt-10">
-                  <p className="section-label mb-4">Specifikationer</p>
+                  <h2 className="section-label mb-4">Specifikationer</h2>
                   {details.length > 0 && (
                     <StaggerContainer>
                       <dl>
@@ -481,5 +443,83 @@ export default async function ProductPage({
         </section>
       )}
     </PageTransition>
+  )
+}
+
+/**
+ * One linked product row in the gold band — used at both ends of the
+ * monteringspaket relation: the kit on a rutas page, and the rutor it belongs
+ * to on the kits own page. Same markup either way, so the two sides of the
+ * link can't drift apart visually.
+ */
+function RelatedProductRow({ product }: { product: Product }) {
+  const image = product.mainImage
+    ? urlFor(product.mainImage).width(160).height(160).fit('crop').url()
+    : undefined
+
+  return (
+    <Link
+      href={`/produkter/${product.slug}`}
+      className="group flex items-center gap-4 rounded-[var(--radius-md)] p-4 transition-colors"
+      style={{
+        background: 'rgba(192,138,62,0.07)',
+        border: '1px solid rgba(192,138,62,0.3)',
+      }}
+    >
+      <span
+        className="relative h-16 w-16 shrink-0 overflow-hidden"
+        style={{
+          background: 'var(--color-bg)',
+          borderRadius: 'var(--radius-sm)',
+        }}
+      >
+        {image ? (
+          <Image
+            src={image}
+            alt={product.name}
+            fill
+            sizes="64px"
+            className="object-cover"
+          />
+        ) : (
+          <span
+            className="flex h-full w-full items-center justify-center font-heading text-xl font-semibold"
+            style={{ color: 'var(--color-border)' }}
+          >
+            {product.name.charAt(0)}
+          </span>
+        )}
+      </span>
+
+      <span className="min-w-0 flex-1">
+        <span
+          className="block font-heading font-semibold leading-snug transition-colors group-hover:text-[var(--color-gold-ink)]"
+          style={{ color: 'var(--color-primary)' }}
+        >
+          {product.name}
+        </span>
+        <span
+          className="mt-1 block text-sm tabular-nums"
+          style={{ color: 'var(--color-text-muted)' }}
+        >
+          {product.price != null
+            ? `${product.price.toLocaleString('sv-SE')} kr${product.unit ? ` / ${product.unit}` : ''}`
+            : 'Pris på förfrågan'}
+        </span>
+      </span>
+
+      <span
+        aria-hidden
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors duration-300 group-hover:bg-[var(--color-gold)] group-hover:text-white"
+        style={{
+          background: 'rgba(192,138,62,0.14)',
+          color: 'var(--color-gold-ink)',
+        }}
+      >
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <polyline points="9 18 15 12 9 6" />
+        </svg>
+      </span>
+    </Link>
   )
 }

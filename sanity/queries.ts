@@ -95,8 +95,14 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
       "slug": slug.current,
       "category": category->{ _id, title, "slug": slug.current },
       "boatModel": boatModel->{ _id, name, "slug": slug.current },
-      "requiresKit": category->role == "requiresKit",
       "mountingKit": mountingKit->{ ${productFields} },
+      // The other end of the same relation, so a monteringspaket page can say
+      // which rutor it belongs to. A reverse lookup rather than a second field
+      // for the editor to keep in sync: it is always exactly the set of
+      // products pointing here, and it stays right when a ruta is repointed or
+      // deleted. Usually one ruta, but a kit shared by two hulls lists both.
+      "fitsProducts": *[_type == "product" && mountingKit._ref == ^._id]
+        | order(name asc) { ${productFields} },
       price,
       unit,
       inStock,
@@ -194,6 +200,7 @@ export async function getServiceBySlug(slug: string): Promise<Service | null> {
       shortDescription,
       features,
       featuresLabel,
+      pageLabel,
       "imageUrl": image.asset->url,
       "pageImageUrl": pageImage.asset->url,
       introLabel,

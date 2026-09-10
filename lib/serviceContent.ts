@@ -84,6 +84,8 @@ export interface ServicePageDefaults {
   /** Falls back to the service's title / kort beskrivning when absent. */
   seoTitle?: string
   seoDescription?: string
+  /** The eyebrow above the h1. "Tjänst" where a service says nothing better. */
+  pageLabel?: string
   featuresLabel?: string
   introLabel?: string
   introTitle?: string
@@ -123,12 +125,35 @@ export const genericPageDefaults: ServicePageDefaults = {
 }
 
 export const defaultServicePages: Record<string, ServicePageDefaults> = {
+  // Titles carry no "| Navolt" — app/layout.tsx appends it. Descriptions stay
+  // under ~155 characters, which is where Google truncates.
+  marinelektronik: {
+    seoTitle: 'Elsystem & marinelektronik för båt',
+    seoDescription:
+      'Navolt installerar, uppgraderar och felsöker el och elektronik i fritidsbåtar — litium, laddning, navigation och kompletta elsystem i Göteborg.',
+  },
+  campervan: {
+    seoTitle: 'Elsystem för campervan & husbil',
+    seoDescription:
+      'Skräddarsydda elsystem för campervan och husbil – från systemdesign och komponentval till komplett installation i Göteborg och längs Västkusten.',
+  },
+  motorservice: {
+    seoTitle: 'Motorservice för inombordare i Göteborg',
+    seoDescription:
+      'Service, underhåll och felsökning av diesel- och bensindrivna inombordsmotorer. Navolt kommer till båten i Göteborg och längs Västkusten.',
+  },
   batrutor: {
     // This is the page that ranks on "båtrutor" — the title is doing real
-    // work in the search result, so it says more than the bare word.
-    seoTitle: 'Båtrutor — byte, montering och monteringspaket',
+    // work in the search result, so it says more than the bare word. Both
+    // strings are the customer's own, from the SEO review of 2026-09-10;
+    // the pair they replaced still described byte och montering, which Navolt
+    // no longer performs.
+    seoTitle: 'Båtrutor & rutpaket för utanpåliggande montage',
     seoDescription:
-      'Byte och montering av båtrutor. Måttanpassad tillverkning och kompletta monteringspaket för de vanligaste båtmodellerna. Navolt i Göteborg, Öckerö och Hälsö.',
+      'Färdiga rutpaket och modellanpassade monteringspaket för utanpåliggande båtrutor. Se modeller, monteringsanvisning och delar för att byta rutorna själv.',
+    // The bare word "Tjänst" says nothing a visitor who searched for båtrutor
+    // doesn't already know — this names the product instead.
+    pageLabel: 'Utanpåliggande båtrutor',
     introLabel: 'Vad vi gör',
     introTitle: 'Rutor som håller tätt',
     introParagraphs: [

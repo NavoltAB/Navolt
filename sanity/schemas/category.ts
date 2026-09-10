@@ -16,7 +16,7 @@ export const categorySchema = defineType({
       title: 'Roll',
       type: 'string',
       description:
-        'Styr monteringspaket-påminnelsen på sajten. "Kräver monteringspaket" = produkterna i kategorin ska peka ut ett monteringspaket. "Är monteringspaket" = kategorin innehåller själva paketen. Sätts en gång, inte per produkt.',
+        '"Kräver monteringspaket" = produkterna i kategorin påminns om att peka ut ett monteringspaket, här i studion. "Är monteringspaket" = kategorin innehåller själva paketen, och begränsar listan när ett ska väljas. Ingen av dem visar något på sajten av sig själv — det gör först ett valt paket. Sätts en gång, inte per produkt.',
       options: {
         list: [
           { title: 'Vanlig', value: 'standard' },

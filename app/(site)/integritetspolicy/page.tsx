@@ -2,11 +2,13 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import PageTransition from '@/components/PageTransition'
 import { siteConfig } from '@/config/site'
+import { pageMetadata } from '@/lib/seo'
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: '/integritetspolicy',
   title: 'Integritetspolicy',
   description: `Så behandlar ${siteConfig.legalName} dina personuppgifter enligt GDPR.`,
-}
+})
 
 // Static legal copy — deliberately not editable in Sanity. A policy that can be
 // changed without a record of what it said before is worth less than no policy.

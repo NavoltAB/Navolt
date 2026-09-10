@@ -7,6 +7,8 @@ import { CartProvider } from '@/context/CartContext'
 import { CookieConsentProvider } from '@/context/CookieConsentContext'
 import { getAllServices, getHomePage, getSiteSettings } from '@/sanity/queries'
 import { hasServicePage, serviceHref } from '@/lib/services'
+import { organizationJsonLd } from '@/lib/seo'
+import JsonLd from '@/components/JsonLd'
 
 /**
  * Chrome for the public site — including its stylesheet. The (site) group keeps
@@ -41,6 +43,10 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
     // the pages all read it before they load a single third-party byte.
     <CookieConsentProvider>
       <CartProvider>
+        {/* Who Navolt is, in the one place every public page passes through.
+            Built from config/site.ts, so the org.nr, the address and the
+            phone number are the same facts the footer prints. */}
+        <JsonLd data={organizationJsonLd()} />
         <Navigation services={navServices} />
         <main>{children}</main>
         <Footer settings={settings} blurb={homePage?.heroSubtitle} />

@@ -13,8 +13,17 @@ import ServiceTiles from '@/components/ServiceTiles'
 import ElfsightWidget from '@/components/ElfsightWidget'
 import { serviceHref } from '@/lib/services'
 import { siteConfig } from '@/config/site'
+import { pageMetadata } from '@/lib/seo'
+import type { Metadata } from 'next'
 
 export const revalidate = 60
+
+export const metadata: Metadata = pageMetadata({
+  path: '/',
+  title: 'Marinelektronik i Göteborg',
+  description:
+    'Navolt hjälper dig med marinelektronik och elsystem i fritidsbåtar, campervan och husbilar i Göteborg och längs Västkusten.',
+})
 
 // ── Placeholder copy ─────────────────────────────────────────
 // The four segments mirror Navolt's current site. Treated as

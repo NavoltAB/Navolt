@@ -34,7 +34,6 @@ const schema = z.object({
   message: z.string().trim().min(10, 'Meddelandet är för kort'),
   // Every follow-up question is optional: which ones are even on screen depends
   // on the subject, and none of them is worth blocking a submit over.
-  boatHelp: z.string().optional(),
   boatModel: z.string().optional(),
   boatLocation: z.string().optional(),
   boatPlacement: z.string().optional(),
@@ -69,7 +68,7 @@ export default function ContactForm() {
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { subject: prefill.subject, boatHelp: prefill.boatHelp ?? '' },
+    defaultValues: { subject: prefill.subject },
   })
 
   const subject = watch('subject')

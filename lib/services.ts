@@ -76,7 +76,7 @@ export const serviceForms: Record<
   },
   campervan: {
     appId: siteConfig.elfsight.campervanForm,
-    label: 'Berätta om din van',
+    label: 'Fråga oss om elsystem för campervan',
     padded: true,
     variant: 'primary',
   },
@@ -101,10 +101,6 @@ export const serviceForms: Record<
 export type ServiceCta = {
   label: string
   href: string
-  /** Solid navy rather than the outline a second button normally wears. For a
-   *  service whose whole page is the enquiry — say what you're building and
-   *  we'll get back to you — that button is the point, not the afterthought. */
-  variant?: 'primary' | 'outline'
 }
 
 /** Replaces the panel's own second button on /tjanster — including the booking
@@ -112,14 +108,14 @@ export type ServiceCta = {
 export const servicePanelCta: Record<string, ServiceCta> = {
   batrutor: { label: 'Se rutpaket', href: '/produkter' },
   campervan: {
-    label: 'Berätta om din van',
+    label: 'Fråga oss om elsystem för campervan',
     href: '/kontakt?amne=campervan',
-    variant: 'primary',
   },
 }
 
 /** Replaces "Alla tjänster" in the header of a service's own page. */
 export const servicePageCta: Record<string, ServiceCta> = {
+  batrutor: { label: 'Se alla rutpaket', href: '/produkter' },
   campervan: { label: 'Kontakta oss', href: '/kontakt?amne=campervan' },
   motorservice: { label: 'Kontakta oss', href: '/kontakt?amne=motorservice' },
   marinelektronik: {

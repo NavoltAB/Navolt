@@ -21,6 +21,7 @@ const schema = z
     delivery: z.enum(DELIVERY_OPTIONS),
     address: z.string().optional(),
     postalCode: z.string().optional(),
+    city: z.string().optional(),
     country: z.string().optional(),
     message: z.string().optional(),
   })
@@ -30,7 +31,11 @@ const schema = z
   // the email either, because onSubmit strips them.
   .superRefine((data, ctx) => {
     if (data.delivery !== 'Leverans') return
-    const demand = (field: 'address' | 'postalCode' | 'country', min: number, message: string) => {
+    const demand = (
+      field: 'address' | 'postalCode' | 'city' | 'country',
+      min: number,
+      message: string
+    ) => {
       if ((data[field] ?? '').trim().length < min) {
         ctx.addIssue({ code: 'custom', path: [field], message })
       }
@@ -40,6 +45,7 @@ const schema = z
     // and rejecting a valid Norwegian postcode would be worse than accepting a
     // typo a human reads anyway.
     demand('postalCode', 4, 'Ange postnummer')
+    demand('city', 2, 'Ange ort')
     demand('country', 2, 'Ange land')
   })
 
@@ -91,7 +97,14 @@ export default function VarukorgPage() {
           ...data,
           // Collected orders carry no address, whatever is still sitting in the
           // form state from before the visitor switched.
-          ...(shipping ? {} : { address: undefined, postalCode: undefined, country: undefined }),
+          ...(shipping
+            ? {}
+            : {
+                address: undefined,
+                postalCode: undefined,
+                city: undefined,
+                country: undefined,
+              }),
           items: items.map(({ slug, name, quantity, price, unit }) => ({
             slug,
             name,
@@ -216,6 +229,13 @@ leverans skickas varorna efter att fakturan är betald. Vid hämtning kontaktar 
               >
                 {/* ── Rows ─────────────────────────────────── */}
                 <div>
+                  {/* The basket's two columns are its two sections. "Dina
+                      uppgifter" names the other one; this list had no heading
+                      at all, so nothing tied the rows to the page above them.
+                      Out of view because the h1 two lines up already says
+                      "Varukorg" — repeating it on screen would be noise. */}
+                  <h2 className="sr-only">Varor i varukorgen</h2>
+
                   {missing.length > 0 && (
                     <div
                       className="mb-6 rounded-[var(--radius-md)] p-5"
@@ -558,20 +578,36 @@ leverans skickas varorna efter att fakturan är betald. Vid hämtning kontaktar 
                                 </div>
 
                                 <div>
-                                  <label htmlFor="offert-country" className="label">Land *</label>
+                                  <label htmlFor="offert-city" className="label">Ort *</label>
                                   <input
-                                    id="offert-country"
-                                    {...register('country')}
-                                    placeholder="Sverige"
-                                    autoComplete="country-name"
+                                    id="offert-city"
+                                    {...register('city')}
+                                    placeholder="Hälsö"
+                                    autoComplete="address-level2"
                                     className="input"
                                   />
-                                  {errors.country && (
+                                  {errors.city && (
                                     <p className="mt-1 text-xs" style={{ color: 'var(--color-error)' }}>
-                                      {errors.country.message}
+                                      {errors.city.message}
                                     </p>
                                   )}
                                 </div>
+                              </div>
+
+                              <div>
+                                <label htmlFor="offert-country" className="label">Land *</label>
+                                <input
+                                  id="offert-country"
+                                  {...register('country')}
+                                  placeholder="Sverige"
+                                  autoComplete="country-name"
+                                  className="input"
+                                />
+                                {errors.country && (
+                                  <p className="mt-1 text-xs" style={{ color: 'var(--color-error)' }}>
+                                    {errors.country.message}
+                                  </p>
+                                )}
                               </div>
                             </div>
                           </motion.div>

@@ -3,11 +3,13 @@ import Link from 'next/link'
 import PageTransition from '@/components/PageTransition'
 import CookieSettingsButton from '@/components/CookieSettingsButton'
 import { siteConfig } from '@/config/site'
+import { pageMetadata } from '@/lib/seo'
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: '/cookies',
   title: 'Cookiepolicy',
   description: `Vilka cookies ${siteConfig.legalName} använder, varför, och hur du ändrar ditt val.`,
-}
+})
 
 const LAST_UPDATED = 'augusti 2026'
 

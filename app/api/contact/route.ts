@@ -18,7 +18,6 @@ const schema = z.object({
   // questions are keyed off the answer, so anything else has no meaning here.
   subject: z.enum(SUBJECTS),
   message: z.string().trim().min(1).max(4000),
-  boatHelp: z.string().max(120).optional(),
   boatModel: z.string().max(200).optional(),
   boatLocation: z.string().max(200).optional(),
   boatPlacement: z.string().max(120).optional(),

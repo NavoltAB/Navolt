@@ -9,14 +9,16 @@ import ServiceIndexRail from '@/components/ServiceIndexRail'
 import ServiceFormDialog from '@/components/ServiceFormDialog'
 import { hasServicePage, serviceForms, serviceHref, servicePanelCta } from '@/lib/services'
 import { defaultServices } from '@/lib/serviceContent'
+import { pageMetadata } from '@/lib/seo'
 
 export const revalidate = 60
 
-export const metadata: Metadata = {
-  title: 'Tjänster',
+export const metadata: Metadata = pageMetadata({
+  path: '/tjanster',
+  title: 'Marinelektronik, campervan & motorservice',
   description:
-    'Marinelektronik, elsystem i campervan, motorservice och båtrutor. Navolt hjälper dig med elen ombord i Göteborg och Öckerö.',
-}
+    'Navolt erbjuder marinelektronik, elsystem för campervan och motorservice i Göteborg och längs Västkusten. Här hittar du även rutpaket för båt.',
+})
 
 // The page's own framing text, editable in Sanity under "Tjänstesida". The
 // services listed between these two blocks come from `service` documents —
@@ -108,6 +110,12 @@ export default async function ServicesPage() {
                 // clicked by reflex. Null for a service whose slug is reserved:
                 // it has no page of its own, so there is nothing to link to.
                 const href = hasServicePage(service.slug) ? serviceHref(service.slug) : null
+                // Whatever lands in the second slot wears the outline: it sits
+                // beside the solid "Läs mer", and two solid buttons read as two
+                // primary actions. With no page to read — a reserved slug — it
+                // is the panel's only button and takes the solid style instead.
+                const secondaryVariant = href ? 'outline' : 'primary'
+                const secondaryClass = href ? 'btn-outline' : 'btn-primary'
                 return (
                 <AnimatedSection key={service._id}>
                   <article id={service.slug ?? service._id} className="scroll-mt-32">
@@ -185,16 +193,13 @@ export default async function ServicesPage() {
                         second button is the service's booking form where there
                         is one and the contact form where there isn't. */}
                     <div className="flex flex-wrap gap-3">
-                      {hasServicePage(service.slug) && (
-                        <Link href={serviceHref(service.slug)} className="btn-primary">
+                      {href && (
+                        <Link href={href} className="btn-primary">
                           Läs mer om {service.title.toLowerCase()}
                         </Link>
                       )}
                       {cta ? (
-                        <Link
-                          href={cta.href}
-                          className={cta.variant === 'primary' ? 'btn-primary' : 'btn-outline'}
-                        >
+                        <Link href={cta.href} className={secondaryClass}>
                           {cta.label}
                         </Link>
                       ) : form ? (
@@ -202,12 +207,12 @@ export default async function ServicesPage() {
                           appId={form.appId}
                           label={form.label}
                           padded={form.padded}
-                          variant={form.variant}
+                          variant={secondaryVariant}
                         />
                       ) : (
                         <Link
                           href={`/kontakt?amne=${encodeURIComponent(service.title)}`}
-                          className="btn-outline"
+                          className={secondaryClass}
                         >
                           {serviceCtaPrefix} {service.title.toLowerCase()}
                         </Link>

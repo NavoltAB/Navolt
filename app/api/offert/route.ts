@@ -10,6 +10,7 @@ const schema = z.object({
   delivery: z.enum(DELIVERY_OPTIONS),
   address: z.string().max(200).optional(),
   postalCode: z.string().max(20).optional(),
+  city: z.string().max(120).optional(),
   country: z.string().max(80).optional(),
   message: z.string().max(4000).optional(),
   items: z
@@ -30,7 +31,7 @@ const schema = z.object({
   // attachment limits: both sides check, neither trusts the other.
   .superRefine((data, ctx) => {
     if (data.delivery !== 'Leverans') return
-    for (const field of ['address', 'postalCode', 'country'] as const) {
+    for (const field of ['address', 'postalCode', 'city', 'country'] as const) {
       if (!(data[field] ?? '').trim()) {
         ctx.addIssue({ code: 'custom', path: [field], message: 'Krävs vid leverans' })
       }
@@ -162,7 +163,7 @@ export async function POST(req: NextRequest) {
             </tr>
             ${
               // Only shipped orders carry an address; a collected one would show
-              // three empty rows the reader has to skip past.
+              // four empty rows the reader has to skip past.
               data.delivery === 'Leverans'
                 ? `<tr>
                      <td style="${cell} color: #566A79;">Adress</td>
@@ -171,6 +172,10 @@ export async function POST(req: NextRequest) {
                    <tr>
                      <td style="${cell} color: #566A79;">Postnummer</td>
                      <td style="${cell}">${esc(data.postalCode || '—')}</td>
+                   </tr>
+                   <tr>
+                     <td style="${cell} color: #566A79;">Ort</td>
+                     <td style="${cell}">${esc(data.city || '—')}</td>
                    </tr>
                    <tr>
                      <td style="${cell} color: #566A79;">Land</td>
