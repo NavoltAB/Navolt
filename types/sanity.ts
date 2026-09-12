@@ -193,6 +193,21 @@ export interface StatItem {
   label?: string
 }
 
+export interface Campaign {
+  _id: string
+  title: string
+  titleAccent?: string
+  label?: string
+  text?: string
+  badge?: string
+  imageUrl?: string
+  ctaLabel?: string
+  ctaHref?: string
+  startDate?: string
+  endDate?: string
+  order?: number
+}
+
 export interface HomePage {
   heroBadge?: string
   heroTitle?: string

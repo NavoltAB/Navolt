@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import {
+  getActiveCampaigns,
   getAllServices,
   getHomePage,
   getLandingProducts,
@@ -10,6 +11,7 @@ import { list, paragraphs, text } from '@/sanity/fallback'
 import AnimatedSection, { StaggerContainer, StaggerItem } from '@/components/AnimatedSection'
 import ProductCard from '@/components/ProductCard'
 import ServiceTiles from '@/components/ServiceTiles'
+import CampaignBands from '@/components/CampaignBands'
 import ElfsightWidget from '@/components/ElfsightWidget'
 import { serviceHref } from '@/lib/services'
 import { siteConfig } from '@/config/site'
@@ -133,11 +135,12 @@ const defaults = {
 } as const
 
 export default async function HomePage() {
-  const [services, homePage, products, settings] = await Promise.all([
+  const [services, homePage, products, settings, campaigns] = await Promise.all([
     getAllServices(),
     getHomePage(),
     getLandingProducts(),
     getSiteSettings(),
+    getActiveCampaigns(),
   ])
 
   // The number appears twice on this page. It lives in Webbplatsinställningar
@@ -443,6 +446,13 @@ export default async function HomePage() {
           </AnimatedSection>
         </div>
       </section>
+
+      {/* ── Kampanjer ─────────────────────────────────────────── */}
+      {/* Normally absent. Placed between the arbetssätt and Om oss on purpose:
+          the offer lands after the page has said what Navolt does and how, and
+          before it starts talking about itself — so it reads as an invitation
+          rather than as the first thing shouted. See CampaignBands.tsx. */}
+      <CampaignBands campaigns={campaigns} />
 
       {/* ── About ─────────────────────────────────────────────── */}
       <section className="section" style={{ borderTop: '1px solid var(--color-border)' }}>

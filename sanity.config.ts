@@ -38,6 +38,20 @@ export default defineConfig({
               .title('Webbplatsinställningar')
               .child(S.document().schemaType('siteSettings').documentId('siteSettings')),
             S.divider(),
+            // Kampanjer sits first below the divider because it is the list
+            // someone opens most often and for the shortest visit: tick a
+            // campaign on before a kampanjvecka, off after it. Everything else
+            // down here is the catalogue.
+            S.listItem()
+              .title('Kampanjer')
+              .child(
+                S.documentTypeList('campaign')
+                  .title('Kampanjer')
+                  .defaultOrdering([
+                    { field: 'order', direction: 'asc' },
+                    { field: '_createdAt', direction: 'desc' },
+                  ])
+              ),
             S.listItem()
               .title('Kategorier')
               .child(S.documentTypeList('category')),

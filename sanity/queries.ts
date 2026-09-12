@@ -4,6 +4,7 @@ import type {
   Category,
   Service,
   Brand,
+  Campaign,
   BoatModel,
   HomePage,
   AboutPage,
@@ -256,6 +257,50 @@ export async function getAllBrands(): Promise<Brand[]> {
     }`,
     {},
     opts300
+  )
+}
+
+/**
+ * Campaign bands for the landing page — normally none.
+ *
+ * The date window is applied here rather than in GROQ. `now()` inside the
+ * query would make the result depend on a value the cache can't see, so a band
+ * whose last day had passed could stay up for as long as the cached response
+ * lived; comparing plain `YYYY-MM-DD` strings in JS is both obvious and
+ * evaluated on every render. Both ends are inclusive — a campaign "till" the
+ * 30th runs all day on the 30th.
+ *
+ * Drafts are excluded explicitly. A half-written campaign with "Synlig"
+ * already ticked is the one unpublished document on this site that would cost
+ * something if it leaked onto the landing page.
+ *
+ * Sorted low `order` first so a deal week with two bands can be arranged;
+ * newest first otherwise, which is what a single campaign wants anyway.
+ */
+export async function getActiveCampaigns(): Promise<Campaign[]> {
+  if (!isSanityConfigured) return []
+  const campaigns: Campaign[] = await client.fetch(
+    `*[_type == "campaign" && active == true && !(_id in path("drafts.**"))] | order(order asc, _createdAt desc) {
+      _id,
+      title,
+      titleAccent,
+      label,
+      text,
+      badge,
+      "imageUrl": image.asset->url,
+      ctaLabel,
+      ctaHref,
+      startDate,
+      endDate,
+      order
+    }`,
+    {},
+    opts60
+  )
+
+  const today = new Date().toISOString().slice(0, 10)
+  return campaigns.filter(
+    (c) => (!c.startDate || c.startDate <= today) && (!c.endDate || c.endDate >= today)
   )
 }
 

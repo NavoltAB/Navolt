@@ -2,6 +2,7 @@ import { categorySchema } from './category'
 import { productSchema } from './product'
 import { serviceSchema } from './service'
 import { brandSchema } from './brand'
+import { campaignSchema } from './campaign'
 import { boatModelSchema } from './boatModel'
 import { homePageSchema } from './homePage'
 import { aboutPageSchema } from './aboutPage'
@@ -15,6 +16,7 @@ export const schemas = [
   productSchema,
   serviceSchema,
   brandSchema,
+  campaignSchema,
   boatModelSchema,
   homePageSchema,
   aboutPageSchema,

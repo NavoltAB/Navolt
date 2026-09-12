@@ -444,8 +444,9 @@ export default async function ServicePage({
       <ServiceHighlights highlights={content.highlights} />
 
       {/* Gallery — a carousel rather than a three-up grid. The grid capped the
-          page at three photos and shrank each one to a thumbnail; a service
-          with eight pictures of its work should be able to show them. */}
+          page at three photos; a service with eight pictures of its work
+          should be able to show them. On desktop the carousel still shows
+          three at a time and pages through the rest. */}
       {content.gallery.length > 0 && (
         <section className="section pt-0">
           <div className="container mx-auto px-6 max-w-container">

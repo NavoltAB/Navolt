@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import { useReducedMotion } from 'framer-motion'
+import PhotoLightbox from '@/components/PhotoLightbox'
 import type { ServicePhoto } from '@/types/sanity'
 
 /**
@@ -39,6 +40,11 @@ import type { ServicePhoto } from '@/types/sanity'
  * dragging, clicking an arrow, tapping a dot and flicking on a phone all end
  * up in the same state — there is no second source of truth to fall out of
  * step with where the track actually is.
+ *
+ * Clicking a photo opens it in `PhotoLightbox`. A mouse drag ends in a click
+ * too, on whatever photo the pointer came to rest over, so a press that turned
+ * into a drag swallows the click that follows it. Closing the lightbox brings
+ * the carousel round to the last photo looked at, if it's no longer in view.
  */
 
 /** Photos side by side at lg and up. Mirrored by the `lg:w-*` classes below. */
@@ -77,6 +83,7 @@ function readTrack(track: HTMLElement) {
 
   return { first: Math.min(nearest, Math.max(0, slides.length - perView)), perView }
 }
+
 export default function ServiceGallery({
   photos,
   label,
@@ -88,7 +95,10 @@ export default function ServiceGallery({
   const trackRef = useRef<HTMLDivElement>(null)
   const [{ first, perView }, setView] = useState({ first: 0, perView: 1 })
   const [dragging, setDragging] = useState(false)
+  const [lightbox, setLightbox] = useState<number | null>(null)
   const drag = useRef({ startX: 0, startScroll: 0, moved: false })
+  // Set when a press turned into a drag; cleared by the next press.
+  const justDragged = useRef(false)
   const resnap = useRef<ReturnType<typeof setTimeout> | null>(null)
   const reduceMotion = useReducedMotion()
 
@@ -161,6 +171,7 @@ export default function ServiceGallery({
         return
       }
       drag.current.moved = false
+      justDragged.current = true
       setDragging(false)
       if (track.hasPointerCapture(event.pointerId)) track.releasePointerCapture(event.pointerId)
 
@@ -175,6 +186,11 @@ export default function ServiceGallery({
     },
     [scrollTo]
   )
+
+  const closeLightbox = useCallback(() => {
+    if (lightbox !== null && (lightbox < first || lightbox >= first + perView)) scrollTo(lightbox)
+    setLightbox(null)
+  }, [lightbox, first, perView, scrollTo])
 
   if (photos.length === 0) return null
 
@@ -205,6 +221,7 @@ export default function ServiceGallery({
         aria-label={label}
         tabIndex={0}
         onPointerDown={(event) => {
+          justDragged.current = false
           // Touch and pen pan the scroller themselves; taking the pointer here
           // would only make that worse.
           if (event.pointerType !== 'mouse' || single) return
@@ -229,6 +246,13 @@ export default function ServiceGallery({
         }}
         onPointerUp={endDrag}
         onPointerCancel={endDrag}
+        onClickCapture={(event) => {
+          // The click at the end of a drag isn't a request to open the photo.
+          if (!justDragged.current) return
+          justDragged.current = false
+          event.preventDefault()
+          event.stopPropagation()
+        }}
         onKeyDown={(event) => {
           if (event.key === 'ArrowRight') {
             event.preventDefault()
@@ -247,8 +271,16 @@ export default function ServiceGallery({
             key={`${photo.url}-${i}`}
             className={`snap-center lg:snap-start shrink-0 grow-0 ${slide.width}`}
           >
-            <div
-              className="relative aspect-[3/2] rounded-lg overflow-hidden transition-[opacity,transform] duration-[700ms] ease-[cubic-bezier(0.16,1,0.3,1)]"
+            {/* The focus ring is drawn on ::after, over the photo — the track
+                clips anything outside the frame, and a ring on the button
+                itself would sit underneath the image. */}
+            <button
+              type="button"
+              onClick={() => setLightbox(i)}
+              aria-label={`Visa bild ${i + 1} i större format`}
+              className={`group relative block w-full aspect-[3/2] rounded-lg overflow-hidden transition-[opacity,transform] duration-[700ms] ease-[cubic-bezier(0.16,1,0.3,1)] focus-visible:outline-none after:pointer-events-none after:absolute after:inset-0 after:rounded-lg after:ring-2 after:ring-inset after:ring-transparent focus-visible:after:ring-[var(--color-gold)] ${
+                dragging ? 'cursor-grabbing' : 'cursor-zoom-in'
+              }`}
               style={{
                 background: 'var(--color-primary)',
                 // The frames either side stay legible but recede — enough that
@@ -269,7 +301,30 @@ export default function ServiceGallery({
                 // image that is actually the LCP.
                 loading="lazy"
               />
-            </div>
+              {/* Says "this opens" to a mouse. Touch has no hover to show it
+                  on, and tapping a photo to see it bigger needs no telling. */}
+              <span
+                aria-hidden
+                className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full text-white opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100"
+                style={{ background: 'rgba(7, 20, 33, 0.55)' }}
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <polyline points="15 3 21 3 21 9" />
+                  <polyline points="9 21 3 21 3 15" />
+                  <line x1="21" y1="3" x2="14" y2="10" />
+                  <line x1="3" y1="21" x2="10" y2="14" />
+                </svg>
+              </span>
+            </button>
           </figure>
         ))}
       </div>
@@ -339,6 +394,17 @@ export default function ServiceGallery({
           </div>
         </div>
       )}
+
+      {/* A sibling of the track, not a child: React events bubble out of a
+          portal through the component tree, and the track's own arrow-key
+          and click handlers would otherwise hear everything said in here. */}
+      <PhotoLightbox
+        photos={photos}
+        index={lightbox}
+        onIndexChange={setLightbox}
+        onClose={closeLightbox}
+        label={label}
+      />
     </div>
   )
 }
