@@ -122,10 +122,14 @@ export default defineConfig({
                         S.documentList()
                           .title('Utvalda produkter')
                           .filter('_type == "product" && featured == true')
-                          // Newest first, which is the order these land in on
-                          // /produkter under 'Utvalda först' — the list should
-                          // read the way the shelf it controls does.
-                          .defaultOrdering([{ field: '_createdAt', direction: 'desc' }])
+                          // Sorteringsordning, then newest — the order these
+                          // land in both on startsidan and on /produkter under
+                          // 'Utvalda först'. The list should read the way the
+                          // shelf it controls does.
+                          .defaultOrdering([
+                            { field: 'order', direction: 'asc' },
+                            { field: '_createdAt', direction: 'desc' },
+                          ])
                       ),
                     S.listItem()
                       .title('Beställningsvaror')

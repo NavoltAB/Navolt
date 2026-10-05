@@ -69,7 +69,7 @@ export const campaignSchema = defineType({
       options: { dateFormat: 'YYYY-MM-DD' },
       description:
         'Valfritt. Sista dagen kampanjen syns — dagen räknas med. Datumet visas också som ' +
-        '"Gäller t.o.m. …" i bandet, så besökaren ser hur länge erbjudandet står sig.',
+        '"Gäller till och med …" i bandet, så besökaren ser hur länge erbjudandet står sig.',
     }),
     defineField({
       name: 'order',

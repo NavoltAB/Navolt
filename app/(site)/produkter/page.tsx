@@ -11,7 +11,7 @@ import AnimatedSection from '@/components/AnimatedSection'
 import PageTransition from '@/components/PageTransition'
 import ProductsHero from './ProductsHero'
 import ProductsShell from './ProductsShell'
-import { pageMetadata } from '@/lib/seo'
+import { withPageSeo } from '@/lib/seo'
 import { DEFAULT_SORT, isSortKey } from './sort'
 
 export const revalidate = 60
@@ -31,12 +31,17 @@ const defaults = {
   ctaButtonLabel: 'Kontakta oss',
 } as const
 
-export const metadata: Metadata = pageMetadata({
-  path: '/produkter',
-  title: 'Rutpaket & monteringspaket för båt',
-  description:
-    'Köp rutpaket, monteringspaket och tillbehör för utvalda båtmodeller. Hitta båtrutor och delar för utanpåliggande montage hos Navolt.',
-})
+export async function generateMetadata(): Promise<Metadata> {
+  return withPageSeo(
+    {
+      path: '/produkter',
+      title: 'Rutpaket & monteringspaket för båt',
+      description:
+        'Köp rutpaket, monteringspaket och tillbehör för utvalda båtmodeller. Hitta båtrutor och delar för utanpåliggande montage hos Navolt.',
+    },
+    await getProductsPage()
+  )
+}
 
 export default async function ProductsPage({
   searchParams,

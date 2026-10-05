@@ -57,7 +57,10 @@ export default function ServiceTiles({ segments }: { segments: ServiceTile[] }) 
         <motion.article key={seg._id} variants={tile}>
           <Link
             href={seg.href}
-            className="group relative block aspect-[4/3] sm:aspect-[3/4] overflow-hidden transition-shadow duration-500 ease-out hover:shadow-[0_28px_56px_-28px_rgba(7,20,33,0.6)]"
+            // Taller than wide on a phone too (4:5, not 4:3): one tile spans the
+            // full column there, so a landscape box left the copy block covering
+            // most of the photo and the crop reading as a sliver.
+            className="group relative block aspect-[4/5] sm:aspect-[3/4] overflow-hidden transition-shadow duration-500 ease-out hover:shadow-[0_28px_56px_-28px_rgba(7,20,33,0.6)]"
             style={{ borderRadius: 'var(--radius-md)' }}
           >
             {/* Two nested layers so the entrance push-in and the hover zoom

@@ -9,16 +9,21 @@ import ServiceIndexRail from '@/components/ServiceIndexRail'
 import ServiceFormDialog from '@/components/ServiceFormDialog'
 import { hasServicePage, serviceForms, serviceHref, servicePanelCta } from '@/lib/services'
 import { defaultServices } from '@/lib/serviceContent'
-import { pageMetadata } from '@/lib/seo'
+import { withPageSeo } from '@/lib/seo'
 
 export const revalidate = 60
 
-export const metadata: Metadata = pageMetadata({
-  path: '/tjanster',
-  title: 'Marinelektronik, campervan & motorservice',
-  description:
-    'Navolt erbjuder marinelektronik, elsystem för campervan och motorservice i Göteborg och längs Västkusten. Här hittar du även rutpaket för båt.',
-})
+export async function generateMetadata(): Promise<Metadata> {
+  return withPageSeo(
+    {
+      path: '/tjanster',
+      title: 'Marinelektronik, campervan & motorservice',
+      description:
+        'Navolt erbjuder marinelektronik, elsystem för campervan och motorservice i Göteborg och längs Västkusten. Här hittar du även rutpaket för båt.',
+    },
+    await getTjansterPage()
+  )
+}
 
 // The page's own framing text, editable in Sanity under "Tjänstesida". The
 // services listed between these two blocks come from `service` documents —

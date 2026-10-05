@@ -15,17 +15,22 @@ import CampaignBands from '@/components/CampaignBands'
 import ElfsightWidget from '@/components/ElfsightWidget'
 import { serviceHref } from '@/lib/services'
 import { siteConfig } from '@/config/site'
-import { pageMetadata } from '@/lib/seo'
+import { withPageSeo } from '@/lib/seo'
 import type { Metadata } from 'next'
 
 export const revalidate = 60
 
-export const metadata: Metadata = pageMetadata({
-  path: '/',
-  title: 'Marinelektronik i Göteborg',
-  description:
-    'Navolt hjälper dig med marinelektronik och elsystem i fritidsbåtar, campervan och husbilar i Göteborg och längs Västkusten.',
-})
+export async function generateMetadata(): Promise<Metadata> {
+  return withPageSeo(
+    {
+      path: '/',
+      title: 'Marinelektronik i Göteborg',
+      description:
+        'Navolt hjälper dig med marinelektronik och elsystem i fritidsbåtar, campervan och husbilar i Göteborg och längs Västkusten.',
+    },
+    await getHomePage()
+  )
+}
 
 // ── Placeholder copy ─────────────────────────────────────────
 // The four segments mirror Navolt's current site. Treated as
@@ -167,7 +172,24 @@ export default async function HomePage() {
   const ctaTitleAccent = text(homePage?.ctaTitleAccent, defaults.ctaTitleAccent)
 
   const trustStats = list(homePage?.trustStats, defaults.trustStats)
-  const whyParagraphs = paragraphs(homePage?.whyText, defaults.whyParagraphs)
+  // "Varför Navolt" is a section the page can do without, so a blank one is
+  // left out rather than filled in. The defaults behind the other fields exist
+  // so the site stands up with no Sanity project at all — but once a document
+  // exists, silence in it is a decision, not a gap to paper over, and reaching
+  // for the placeholder prose there published copy nobody had written. Hence
+  // the two cases: no document, the defaults; a document, exactly what it says.
+  const why = homePage
+    ? {
+        label: homePage.whyLabel?.trim() ?? '',
+        title: homePage.whyTitle?.trim() ?? '',
+        paragraphs: paragraphs(homePage.whyText, []),
+      }
+    : {
+        label: defaults.whyLabel,
+        title: defaults.whyTitle,
+        paragraphs: [...defaults.whyParagraphs],
+      }
+  const hasWhy = Boolean(why.label || why.title || why.paragraphs.length > 0)
 
   return (
     <>
@@ -348,9 +370,17 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* ── Kampanjer ─────────────────────────────────────────── */}
+      {/* Normally absent. Sits directly under the service tiles: a campaign is
+          time-limited, so while one is running it gets the first screen after
+          the offer itself rather than waiting until the page has finished
+          introducing the company. See CampaignBands.tsx. */}
+      <CampaignBands campaigns={campaigns} />
+
       {/* ── Manifesto ─────────────────────────────────────────── */}
       {/* Sits between the services and the products: the claim lands after
-          the tiles that back it up, and ahead of the sortiment. */}
+          the tiles that back it up, and ahead of the sortiment. A live campaign
+          slots in above it without disturbing that order. */}
       <section
         className="py-20"
         style={{
@@ -423,36 +453,38 @@ export default async function HomePage() {
       )}
 
       {/* ── Why us ────────────────────────────────────────────── */}
-      <section className="section">
-        <div className="container mx-auto px-6" style={{ maxWidth: 'var(--container-max)' }}>
-          <div className="pb-8" style={{ borderBottom: '2px solid var(--color-primary)' }}>
-            <p className="section-label mb-2">{text(homePage?.whyLabel, defaults.whyLabel)}</p>
-            <h2 className="section-title">{text(homePage?.whyTitle, defaults.whyTitle)}</h2>
+      {/* Absent entirely when the document has nothing for it — see `why`
+          above. Each of the three parts is also optional on its own, so a
+          section with only prose doesn't carry an empty rule above it. */}
+      {hasWhy && (
+        <section className="section">
+          <div className="container mx-auto px-6" style={{ maxWidth: 'var(--container-max)' }}>
+            {(why.label || why.title) && (
+              <div className="pb-8" style={{ borderBottom: '2px solid var(--color-primary)' }}>
+                {why.label && <p className="section-label mb-2">{why.label}</p>}
+                {why.title && <h2 className="section-title">{why.title}</h2>}
+              </div>
+            )}
+
+            {/* One thought, told once: prose straight under the rule. It's a
+                single text field rather than a list of titled blocks — there is
+                nothing here to number, head or separate. Blank lines in the
+                field become paragraphs, the same as the story on /om-oss. */}
+            {why.paragraphs.length > 0 && (
+              <AnimatedSection delay={0.1}>
+                <div
+                  className={`${why.label || why.title ? 'pt-10 md:pt-12' : ''} space-y-2 leading-loose`}
+                  style={{ fontSize: 'var(--text-lg)', color: 'var(--color-text-muted)', maxWidth: '760px' }}
+                >
+                  {why.paragraphs.map((paragraph, i) => (
+                    <p key={i}>{paragraph}</p>
+                  ))}
+                </div>
+              </AnimatedSection>
+            )}
           </div>
-
-          {/* One thought, told once: prose straight under the rule. It's a
-              single text field rather than a list of titled blocks — there is
-              nothing here to number, head or separate. Blank lines in the
-              field become paragraphs, the same as the story on /om-oss. */}
-          <AnimatedSection delay={0.1}>
-            <div
-              className="pt-10 md:pt-12 space-y-2 leading-loose"
-              style={{ fontSize: 'var(--text-lg)', color: 'var(--color-text-muted)', maxWidth: '760px' }}
-            >
-              {whyParagraphs.map((paragraph, i) => (
-                <p key={i}>{paragraph}</p>
-              ))}
-            </div>
-          </AnimatedSection>
-        </div>
-      </section>
-
-      {/* ── Kampanjer ─────────────────────────────────────────── */}
-      {/* Normally absent. Placed between the arbetssätt and Om oss on purpose:
-          the offer lands after the page has said what Navolt does and how, and
-          before it starts talking about itself — so it reads as an invitation
-          rather than as the first thing shouted. See CampaignBands.tsx. */}
-      <CampaignBands campaigns={campaigns} />
+        </section>
+      )}
 
       {/* ── About ─────────────────────────────────────────────── */}
       <section className="section" style={{ borderTop: '1px solid var(--color-border)' }}>

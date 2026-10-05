@@ -72,6 +72,10 @@ async function getContent(slug: string) {
     ),
     pageLabel: text(service.pageLabel, fallback.pageLabel ?? 'Tjänst'),
     featuresLabel: text(service.featuresLabel, fallback.featuresLabel ?? 'Vad vi gör'),
+    // Optional, and the one thing that decides the list's heading levels —
+    // see FeatureList.
+    featuresTitle: text(service.featuresTitle, fallback.featuresTitle ?? ''),
+    featuresLayout: service.featuresLayout ?? fallback.featuresLayout ?? 'cards',
     // The tile image is framed for a tall crop; in the page's 16:9 band the
     // subject often ends up half out of frame. A wide upload wins where the
     // editor has made one, and the tile image stands in where they haven't.
@@ -282,7 +286,7 @@ export default async function ServicePage({
               <AnimatedSection delay={0.15} className="mt-14">
                 <ServiceFormDialog
                   appId={form.appId}
-                  label={form.label}
+                  label={form.stepsLabel ?? form.label}
                   padded={form.padded}
                   variant={form.variant}
                 />
@@ -331,8 +335,23 @@ export default async function ServicePage({
           {hasFeatures && (
             <AnimatedSection delay={0.1}>
               <div className={hasIntro ? 'mt-14 md:mt-16' : ''}>
-                <h2 className="section-label mb-6">{content.featuresLabel}</h2>
-                <FeatureList features={service.features} />
+                {/* Eyebrow, never a heading — it labels the section, it doesn't
+                    title it. The rubrik under it is optional, and which of the
+                    two the section ends on is what sets the list's heading
+                    levels: with a rubrik it is the h2 and the categories are
+                    h3s under it, without one the categories are the h2s
+                    themselves. See FeatureList. */}
+                <p className={`section-label ${content.featuresTitle ? 'mb-3' : 'mb-6'}`}>
+                  {content.featuresLabel}
+                </p>
+                {content.featuresTitle && (
+                  <h2 className="section-title mb-8">{content.featuresTitle}</h2>
+                )}
+                <FeatureList
+                  features={service.features}
+                  layout={content.featuresLayout}
+                  headingLevel={content.featuresTitle ? 3 : 2}
+                />
               </div>
             </AnimatedSection>
           )}
@@ -465,8 +484,8 @@ export default async function ServicePage({
         <section className="section" style={{ background: 'var(--color-surface)' }}>
           <div className="container mx-auto px-6 max-w-container">
             <AnimatedSection>
-              <p className="section-label mb-3">Mer från oss</p>
-              <h2 className="section-title mb-10">Andra tjänster</h2>
+              <p className="section-label mb-3">Tjänster &amp; produkter</p>
+              <h2 className="section-title mb-10">Mer från Navolt</h2>
             </AnimatedSection>
 
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">

@@ -22,12 +22,13 @@ const productFields = `
   _createdAt,
   name,
   "slug": slug.current,
-  "category": category->{ _id, title, "slug": slug.current },
+  "category": category->{ _id, title, "slug": slug.current, order },
   "boatModel": boatModel->{ _id, name, "slug": slug.current },
   price,
   unit,
   inStock,
   featured,
+  order,
   shortDescription,
   "mainImage": images[0],
   "hoverImage": images[1]
@@ -36,7 +37,12 @@ const productFields = `
 export async function getAllCategories(): Promise<Category[]> {
   if (!isSanityConfigured) return []
   return client.fetch(
-    `*[_type == "category"] | order(title asc) { _id, title, "slug": slug.current }`,
+    // Sorteringsordning first, then title. The same sequence the grid uses, so
+    // the filter chips read in the order the products below them do — and an
+    // untouched category still lands alphabetically rather than arbitrarily.
+    `*[_type == "category"] | order(coalesce(order, 9999) asc, title asc) {
+      _id, title, "slug": slug.current, order
+    }`,
     {},
     opts300
   )
@@ -57,25 +63,45 @@ export async function getAllBoatModels(): Promise<BoatModel[]> {
   )
 }
 
-export async function getFeaturedProducts(): Promise<Product[]> {
-  if (!isSanityConfigured) return []
-  return client.fetch(
-    `*[_type == "product" && featured == true] | order(_createdAt desc)[0...4] { ${productFields} }`,
-    {},
-    opts60
-  )
-}
+/**
+ * The landing page's product row.
+ *
+ * Every product the customer has ticked as utvald, in the order they chose —
+ * `order` ascending, and everything without a number after everything with
+ * one, newest of those first. `coalesce` is what puts the un-numbered last:
+ * GROQ sorts null before any number, so leaving it out would have an untouched
+ * product jump ahead of a deliberate "1".
+ *
+ * Short of four, the rest of the catalogue fills the row out so the band still
+ * reads as a row rather than a lone card — in kategoriordning, so the filler is
+ * drawn from what the customer sells rather than from whatever happened to be
+ * created last. Past four, the fill is dropped and the ticked ones are all that
+ * show.
+ *
+ * It used to be one `order(featured desc, …)[0...4]`, which sorted but never
+ * filtered: a fifth ticked product silently never appeared, and with none
+ * ticked the row looked exactly the same as with four, so the box read as if
+ * it did nothing. Both halves are fetched separately now precisely so the
+ * count decides what happens.
+ */
+const LANDING_PRODUCTS = 4
+// Two full rows at the grid's widest. A cap this high is a guard against
+// someone ticking the whole catalogue, not a limit anyone should meet.
+const LANDING_PRODUCTS_MAX = 8
 
-// Landing page row. Featured first, then newest, capped at four — one query
-// rather than "featured, else fall back to all", so the section still fills
-// sensibly before anyone has thought to tick the featured box.
 export async function getLandingProducts(): Promise<Product[]> {
   if (!isSanityConfigured) return []
-  return client.fetch(
-    `*[_type == "product"] | order(featured desc, _createdAt desc)[0...4] { ${productFields} }`,
-    {},
+  const { featured, fill } = await client.fetch<{ featured: Product[]; fill: Product[] }>(
+    `{
+      "featured": *[_type == "product" && featured == true]
+        | order(coalesce(order, 9999) asc, _createdAt desc)[0...$max] { ${productFields} },
+      "fill": *[_type == "product" && featured != true]
+        | order(coalesce(category->order, 9999) asc, _createdAt desc)[0...$min] { ${productFields} }
+    }`,
+    { max: LANDING_PRODUCTS_MAX, min: LANDING_PRODUCTS },
     opts60
   )
+  return [...featured, ...fill].slice(0, Math.max(LANDING_PRODUCTS, featured.length))
 }
 
 export async function getAllProducts(): Promise<Product[]> {
@@ -94,7 +120,7 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
       _id,
       name,
       "slug": slug.current,
-      "category": category->{ _id, title, "slug": slug.current },
+      "category": category->{ _id, title, "slug": slug.current, order },
       "boatModel": boatModel->{ _id, name, "slug": slug.current },
       "mountingKit": mountingKit->{ ${productFields} },
       // The other end of the same relation, so a monteringspaket page can say
@@ -201,6 +227,8 @@ export async function getServiceBySlug(slug: string): Promise<Service | null> {
       shortDescription,
       features,
       featuresLabel,
+      featuresTitle,
+      featuresLayout,
       pageLabel,
       "imageUrl": image.asset->url,
       "pageImageUrl": pageImage.asset->url,
@@ -310,6 +338,8 @@ export async function getHomePage(): Promise<HomePage | null> {
     // Projected field by field rather than fetched whole, so a schema change
     // can't quietly start shipping unused document weight to every visitor.
     `*[_type == "homePage"][0] {
+      seoTitle,
+      seoDescription,
       heroBadge,
       heroTitle,
       heroTitleAccent,
@@ -355,6 +385,8 @@ export async function getAboutPage(): Promise<AboutPage | null> {
   if (!isSanityConfigured) return null
   return client.fetch(
     `*[_type == "aboutPage"][0] {
+      seoTitle,
+      seoDescription,
       pageLabel,
       pageTitle,
       pageSubtitle,
@@ -387,6 +419,8 @@ export async function getKontaktPage(): Promise<KontaktPage | null> {
   if (!isSanityConfigured) return null
   return client.fetch(
     `*[_type == "kontaktPage"][0] {
+      seoTitle,
+      seoDescription,
       pageLabel,
       pageTitle,
       pageSubtitle,
@@ -405,6 +439,8 @@ export async function getTjansterPage(): Promise<TjansterPage | null> {
   if (!isSanityConfigured) return null
   return client.fetch(
     `*[_type == "tjansterPage"][0] {
+      seoTitle,
+      seoDescription,
       pageLabel,
       pageTitle,
       pageSubtitle,
@@ -423,6 +459,8 @@ export async function getProductsPage(): Promise<ProductsPage | null> {
   if (!isSanityConfigured) return null
   return client.fetch(
     `*[_type == "productsPage"][0] {
+      seoTitle,
+      seoDescription,
       pageLabel,
       pageTitle,
       pageSubtitle,

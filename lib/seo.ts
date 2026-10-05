@@ -66,6 +66,31 @@ type PageSeo = {
   noindex?: boolean
 }
 
+/**
+ * Lays an editor's own title and description over a page's built-in pair.
+ *
+ * The singleton pages — startsidan, /om-oss, /kontakt, /tjanster, /produkter —
+ * each carry a written-out default in their route file, which is what ships
+ * until someone types something in the studio. A value typed there is taken as
+ * the **whole** title: these pages name the company in their own titles ("Om
+ * Navolt | …"), so the `%s | Navolt` template would say it twice.
+ *
+ * Service pages don't go through here — they template, and changing that would
+ * rewrite titles that are already indexed.
+ */
+export function withPageSeo(
+  seo: PageSeo,
+  overrides?: { seoTitle?: string; seoDescription?: string } | null
+): Metadata {
+  const title = overrides?.seoTitle?.trim()
+  const description = overrides?.seoDescription?.trim()
+  return pageMetadata({
+    ...seo,
+    ...(title ? { title: undefined, titleAbsolute: title } : {}),
+    ...(description ? { description } : {}),
+  })
+}
+
 export function pageMetadata(seo: PageSeo): Metadata {
   return {
     ...(seo.titleAbsolute

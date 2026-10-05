@@ -1,3 +1,4 @@
+import { seoFields } from './seoFields'
 import { defineField, defineType } from 'sanity'
 
 /**
@@ -18,6 +19,7 @@ export const tjansterPageSchema = defineType({
   groups: [
     { name: 'huvud', title: 'Sidhuvud', default: true },
     { name: 'cta', title: 'Avslutande CTA' },
+    { name: 'seo', title: 'Sök och delning' },
   ],
   fields: [
     // ── Sidhuvud ────────────────────────────────────────────
@@ -77,6 +79,7 @@ export const tjansterPageSchema = defineType({
       group: 'cta',
       description: 'Knappen leder till /kontakt.',
     }),
+    ...seoFields('/tjanster'),
   ],
   preview: {
     prepare: () => ({ title: 'Tjänstesida' }),

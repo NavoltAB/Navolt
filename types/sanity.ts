@@ -9,6 +9,9 @@ export interface Category {
   _id: string
   title: string
   slug: string
+  /** Lower first, in the filter row and in the grid under it. Absent sorts
+   *  after every number, alphabetically among those. */
+  order?: number
 }
 
 export interface BoatModel {
@@ -53,6 +56,10 @@ export interface Product {
   unit?: string
   inStock: boolean
   featured?: boolean
+  /** Manual position *within its category*. Lower first; absent sorts after
+   *  every number, newest of those first. The category's own Sorteringsordning
+   *  decides which block the product sits in to begin with. */
+  order?: number
   shortDescription?: string
   description?: PortableTextBlock[]
   productDetails?: ProductDetail[]
@@ -147,6 +154,12 @@ export interface Service {
   pageImageUrl?: string
 
   featuresLabel?: string
+  /** Optional heading over the cards. Present, it is the section's h2 and the
+   *  category rubriker drop to h3; absent, the categories are the h2s. */
+  featuresTitle?: string
+  /** A card per bullet, or a card per category with the bullets listed inside.
+   *  Defaults to 'cards'. See FeatureList. */
+  featuresLayout?: 'cards' | 'grouped'
   /** The eyebrow above the h1 on the service's own page. Defaults to "Tjänst". */
   pageLabel?: string
   introLabel?: string
@@ -209,6 +222,9 @@ export interface Campaign {
 }
 
 export interface HomePage {
+  /** Overrides the route file's own title and description. See seoFields.ts. */
+  seoTitle?: string
+  seoDescription?: string
   heroBadge?: string
   heroTitle?: string
   heroTitleAccent?: string
@@ -255,6 +271,9 @@ export interface HomePage {
 }
 
 export interface AboutPage {
+  /** Overrides the route file's own title and description. See seoFields.ts. */
+  seoTitle?: string
+  seoDescription?: string
   pageLabel?: string
   pageTitle?: string
   pageSubtitle?: string
@@ -287,6 +306,9 @@ export interface AboutPage {
 }
 
 export interface KontaktPage {
+  /** Overrides the route file's own title and description. See seoFields.ts. */
+  seoTitle?: string
+  seoDescription?: string
   pageLabel?: string
   pageTitle?: string
   pageSubtitle?: string
@@ -298,6 +320,9 @@ export interface KontaktPage {
 }
 
 export interface TjansterPage {
+  /** Overrides the route file's own title and description. See seoFields.ts. */
+  seoTitle?: string
+  seoDescription?: string
   pageLabel?: string
   pageTitle?: string
   pageSubtitle?: string
@@ -309,6 +334,9 @@ export interface TjansterPage {
 }
 
 export interface ProductsPage {
+  /** Overrides the route file's own title and description. See seoFields.ts. */
+  seoTitle?: string
+  seoDescription?: string
   pageLabel?: string
   pageTitle?: string
   pageSubtitle?: string

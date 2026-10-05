@@ -28,6 +28,17 @@ export const categorySchema = defineType({
       initialValue: 'standard',
     }),
     defineField({
+      name: 'order',
+      title: 'Sorteringsordning',
+      type: 'number',
+      description:
+        'Lägre siffra först. Styr både i vilken ordning kategorierna står i filterraden ' +
+        'på /produkter och var deras produkter hamnar i sortimentet — sätt Båtrutor till 1 ' +
+        'och Verktyg till 9 så ligger verktygen sist, utan att någon enskild produkt ' +
+        'behöver en egen siffra. Lämnas den tom hamnar kategorin efter dem som har en, ' +
+        'i bokstavsordning.',
+    }),
+    defineField({
       name: 'slug',
       title: 'URL-slug',
       type: 'slug',

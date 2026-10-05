@@ -425,7 +425,7 @@ export default async function ProductPage({
             <AnimatedSection className="mb-10">
               <p className="section-label mb-3">Mer i sortimentet</p>
               <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-                <h2 className="section-title">Andra delar</h2>
+                <h2 className="section-title">Fler produkter</h2>
                 <Link href="/produkter" className="btn-outline shrink-0">
                   Alla produkter
                 </Link>

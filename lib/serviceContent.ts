@@ -1,3 +1,4 @@
+import type { FeaturesLayout } from '@/components/FeatureList'
 import type { Service, ServiceHighlight, ServicePhoto, ServiceStep } from '@/types/sanity'
 
 /**
@@ -87,6 +88,9 @@ export interface ServicePageDefaults {
   /** The eyebrow above the h1. "Tjänst" where a service says nothing better. */
   pageLabel?: string
   featuresLabel?: string
+  /** Optional rubrik over the cards — see `ServiceDoc.featuresTitle`. */
+  featuresTitle?: string
+  featuresLayout?: FeaturesLayout
   introLabel?: string
   introTitle?: string
   /** Rendered only when the document has no "Fullständig beskrivning". */
@@ -136,11 +140,22 @@ export const defaultServicePages: Record<string, ServicePageDefaults> = {
     seoTitle: 'Elsystem för campervan & husbil',
     seoDescription:
       'Skräddarsydda elsystem för campervan och husbil – från systemdesign och komponentval till komplett installation i Göteborg och längs Västkusten.',
+    // Campervan's three categories are narrower than marinelektronik's four and
+    // read as a list of jobs rather than as sections of the page, so they get a
+    // rubrik over them and sit a level down. Marinelektronik deliberately has
+    // none — its categories carry the section on their own.
+    featuresTitle: 'Vi hjälper dig med',
   },
   motorservice: {
     seoTitle: 'Motorservice för inombordare i Göteborg',
     seoDescription:
       'Service, underhåll och felsökning av diesel- och bensindrivna inombordsmotorer. Navolt kommer till båten i Göteborg och längs Västkusten.',
+    featuresTitle: 'Vad vi hjälper dig med',
+    // Motorservice's twenty-six bullets are the contents of four jobs, not
+    // twenty-six jobs: eight of them are what we change in a service and ten
+    // what we do in a vinterkonservering. A card each said an impeller and a
+    // vinterkonservering were the same size of thing — see FeatureList.
+    featuresLayout: 'grouped',
   },
   batrutor: {
     // This is the page that ranks on "båtrutor" — the title is doing real

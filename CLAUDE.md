@@ -107,7 +107,7 @@ them: one panel per service, each linking out with "Läs mer".
 brödtext, steg, utvald sektion, galleri, CTA and SEO — rendered by the single
 route `app/(site)/[slug]/page.tsx`. There is no per-service route and no
 per-service singleton; adding a service in the studio adds a page, a landing
-tile, a `/tjanster` panel and a header menu entry, with no code change.
+tile, a `/tjanster` panel and a sitemap entry, with no code change.
 
 A section with nothing in it is left out rather than rendered empty (the
 highlight band keys off its rubrik, steps and gallery off their arrays), so a
@@ -135,16 +135,13 @@ catches every unknown path — hence its `notFound()`.
 generic placeholder in one place, and `generateMetadata` reads the same
 function, so the merge rules can't drift between the markup and the `<head>`.
 
-The header's **Tjänster** item opens a mega-menu listing whatever services are
-published. `app/(site)/layout.tsx` fetches them and passes `services` to
-`Navigation`, so the header stays a client component that knows nothing about
-Sanity — with none published it degrades to the plain link it always was. The
-panel is a child of `motion.header`, positioned `left-0 right-0 top-full`, so
-it is exactly as wide as the header at any moment: full-bleed at the top of the
-page, pill-width once scrolled. Its radius and gap follow the same `shrunk`
-flag the header's geometry does. The header owns the hover region — moving
-between the label and the panel stays inside one element, which is why no
-hover bridge is needed.
+The header's **Tjänster** item is a plain link to `/tjanster`, deliberately —
+there is no dropdown and there shouldn't be one. The index page is where we
+want visitors to land: it shows the whole offer, not just the one service they
+came looking for. `app/(site)/layout.tsx` still fetches the published services
+and passes `services` to `Navigation`, but only so the item can mark itself
+active on them — a service page is its own top-level URL, so `startsWith`
+can't see that `/batrutor` belongs under Tjänster.
 
 `next.config.ts` redirects the two old URLs that don't carry over: `/bat` →
 `/marinelektronik` and `/galleri` → `/om-oss`. **The full list still needs

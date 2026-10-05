@@ -1,3 +1,4 @@
+import { seoFields } from './seoFields'
 import { defineArrayMember, defineField, defineType } from 'sanity'
 
 /**
@@ -24,6 +25,7 @@ export const aboutPageSchema = defineType({
     { name: 'omdomen', title: 'Omdömen' },
     { name: 'instagram', title: 'Instagram' },
     { name: 'cta', title: 'Avslutande CTA' },
+    { name: 'seo', title: 'Sök och delning' },
   ],
   fields: [
     // ── Sidhuvud ────────────────────────────────────────────
@@ -236,6 +238,7 @@ export const aboutPageSchema = defineType({
       group: 'cta',
       description: 'Knappen leder till /tjanster.',
     }),
+    ...seoFields('/om-oss'),
   ],
   preview: {
     prepare: () => ({ title: 'Om oss' }),

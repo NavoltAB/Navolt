@@ -1,3 +1,4 @@
+import { seoFields } from './seoFields'
 import { defineField, defineType } from 'sanity'
 
 /**
@@ -18,6 +19,7 @@ export const kontaktPageSchema = defineType({
     { name: 'huvud', title: 'Sidhuvud', default: true },
     { name: 'uppgifter', title: 'Uppgifter' },
     { name: 'formular', title: 'Formulär' },
+    { name: 'seo', title: 'Sök och delning' },
   ],
   fields: [
     // ── Sidhuvud ────────────────────────────────────────────
@@ -81,6 +83,7 @@ export const kontaktPageSchema = defineType({
       group: 'formular',
       description: 'T.ex. "Skicka ett meddelande". Fälten i formuläret är fasta.',
     }),
+    ...seoFields('/kontakt'),
   ],
   preview: {
     prepare: () => ({ title: 'Kontakt' }),

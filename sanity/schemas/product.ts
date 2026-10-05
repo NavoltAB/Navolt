@@ -28,7 +28,11 @@ export const productSchema = defineType({
     {
       title: 'Utvalda först',
       name: 'featuredFirst',
-      by: [{ field: 'featured', direction: 'desc' }, { field: 'name', direction: 'asc' }],
+      by: [
+        { field: 'featured', direction: 'desc' },
+        { field: 'order', direction: 'asc' },
+        { field: 'name', direction: 'asc' },
+      ],
     },
   ],
   fields: [
@@ -201,8 +205,19 @@ export const productSchema = defineType({
       title: 'Utvald produkt',
       type: 'boolean',
       description:
-        'På = produkten ligger först i sortimentet på /produkter (sorteringen "Utvalda först", som är standard) och kan visas i bandet på startsidan. Av = produkten ligger kvar i sortimentet, bara längre ner.',
+        'På = produkten visas i bandet på startsidan och ligger först i sortimentet på /produkter (sorteringen "Utvalda först", som är standard). Av = produkten ligger kvar i sortimentet, bara längre ner.',
       initialValue: false,
+    }),
+    defineField({
+      name: 'order',
+      title: 'Sorteringsordning',
+      type: 'number',
+      description:
+        'Lägre siffra först — inom sin egen kategori, och bland de utvalda i bandet på ' +
+        'startsidan. Vilken kategori som kommer före en annan bestäms på kategorin, inte ' +
+        'här, så det här fältet behövs bara när en enskild produkt ska ligga främst bland ' +
+        'sina egna. Lämnas den tom hamnar produkten efter dem som har en siffra, med den ' +
+        'senast skapade först.',
     }),
   ],
   preview: {

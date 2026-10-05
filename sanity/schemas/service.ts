@@ -168,6 +168,34 @@ export const serviceSchema = defineType({
       description: 'Liten text ovanför korten. Lämna tom för "Vad vi gör".',
     }),
     defineField({
+      name: 'featuresLayout',
+      title: 'Vad ingår — Visningssätt',
+      type: 'string',
+      group: 'grund',
+      options: {
+        list: [
+          { title: 'Ett kort per punkt', value: 'cards' },
+          { title: 'Ett kort per kategori, med punktlista', value: 'grouped' },
+        ],
+        layout: 'radio',
+      },
+      description:
+        'Är punkterna var sin egen tjänst passar ett kort per punkt. Är de i stället ' +
+        'innehållet i några få jobb — allt som ingår i en service, allt som ingår i en ' +
+        'vinterkonservering — blir det lugnare med ett kort per kategori. Kräver att ' +
+        'punkterna är indelade i kategorier.',
+    }),
+    defineField({
+      name: 'featuresTitle',
+      title: 'Vad ingår — Rubrik',
+      type: 'string',
+      group: 'grund',
+      description:
+        'Valfri rubrik över korten, t.ex. "Vi hjälper dig med". Lämnas den tom blir ' +
+        'kategorirubrikerna sidans egna underrubriker — fyll i den bara när korten ' +
+        'behöver en gemensam rubrik över sig.',
+    }),
+    defineField({
       name: 'order',
       title: 'Sorteringsordning',
       type: 'number',

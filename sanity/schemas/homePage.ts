@@ -1,3 +1,4 @@
+import { seoFields } from './seoFields'
 import { defineArrayMember, defineField, defineType } from 'sanity'
 
 /**
@@ -33,6 +34,7 @@ export const homePageSchema = defineType({
     { name: 'om', title: 'Om oss' },
     { name: 'omdomen', title: 'Omdömen' },
     { name: 'cta', title: 'Avslutande CTA' },
+    { name: 'seo', title: 'Sök och delning' },
   ],
   fields: [
     // ── Hero ────────────────────────────────────────────────
@@ -194,6 +196,9 @@ export const homePageSchema = defineType({
       title: 'Varför — Etikett',
       type: 'string',
       group: 'varfor',
+      description:
+        'Liten text ovanför rubriken. Hela avsnittet är frivilligt: lämnas alla tre ' +
+        'fälten här tomma visas det inte alls på startsidan.',
     }),
     defineField({
       name: 'whyTitle',
@@ -303,6 +308,7 @@ export const homePageSchema = defineType({
       group: 'cta',
       description: 'Numret självt hämtas från Webbplatsinställningar.',
     }),
+    ...seoFields('startsidan'),
   ],
   preview: {
     prepare: () => ({ title: 'Startsida' }),

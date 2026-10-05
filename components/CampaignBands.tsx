@@ -5,7 +5,8 @@ import type { Campaign } from '@/types/sanity'
 
 /**
  * The landing page's campaign section — kampanjveckor, rea, tidsbegränsade
- * erbjudanden. Sits between "Varför Navolt" and "Om oss".
+ * erbjudanden. Sits directly under the service tiles: a campaign runs out, so
+ * while one is live it gets the first screen after the offer itself.
  *
  * It borrows the About band's shape on purpose: same two-column grid, same
  * image proportions, same eyebrow → rubrik → text → knapp order. Three things
@@ -13,7 +14,7 @@ import type { Campaign } from '@/types/sanity'
  * ones — nothing here is a new layout to maintain:
  *
  * - The columns are **mirrored**. Text left, photo right, so the campaign and
- *   the About band below read as a pair rather than a repeat.
+ *   the About band further down read as a pair rather than a repeat.
  * - It sits in a **brass-tinted panel** with a hairline brass border. The rest
  *   of the page uses the accent by the word; this is the one block allowed to
  *   use it as a surface, which is what marks it as an offer.
@@ -25,18 +26,18 @@ import type { Campaign } from '@/types/sanity'
  */
 
 /**
- * "Gäller t.o.m. 30 september" — the year is added only when the campaign ends
- * in a different one, so the common case stays short and the December band
- * running into January still says which January it means.
+ * "Gäller till och med 31 oktober 2026". The year is always written out, even
+ * for a deadline inside the current one: a bare day and month reads as undated
+ * once the page has been up a while, and the whole point of the line is that
+ * the reader can tell how long the offer stands.
  */
 function formatEndDate(endDate: string): string | null {
   const date = new Date(`${endDate}T00:00:00`)
   if (Number.isNaN(date.getTime())) return null
-  const sameYear = date.getFullYear() === new Date().getFullYear()
   return new Intl.DateTimeFormat('sv-SE', {
     day: 'numeric',
     month: 'long',
-    ...(sameYear ? {} : { year: 'numeric' }),
+    year: 'numeric',
   }).format(date)
 }
 
@@ -129,7 +130,7 @@ function CampaignBand({ campaign }: { campaign: Campaign }) {
                   <polyline points="12 7 12 12 15.5 14" />
                 </svg>
                 {/* <time> so the deadline is machine-readable, not just ink. */}
-                Gäller t.o.m. <time dateTime={endDate}>{until}</time>
+                Gäller till och med <time dateTime={endDate}>{until}</time>
               </span>
             )}
           </div>

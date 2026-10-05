@@ -62,7 +62,20 @@ export function serviceHref(slug: string | undefined | null): string {
  */
 export const serviceForms: Record<
   string,
-  { appId: string; label: string; padded?: boolean; variant?: 'primary' | 'outline' }
+  {
+    appId: string
+    label: string
+    /**
+     * The same dialog where it appears again under "Så går det till".
+     * By then the steps have named the first one — campervan's opens on
+     * "Berätta om din van" — so the button can say that rather than repeat
+     * the header's wording a screen and a half further down. Falls back to
+     * `label` where a service has nothing better to call it.
+     */
+    stepsLabel?: string
+    padded?: boolean
+    variant?: 'primary' | 'outline'
+  }
 > = {
   // Both widgets run flush to their own edges, so the dialog is what gives
   // them their air — keep the two in step, or one form sits tighter in its
@@ -76,7 +89,10 @@ export const serviceForms: Record<
   },
   campervan: {
     appId: siteConfig.elfsight.campervanForm,
-    label: 'Fråga oss om elsystem för campervan',
+    // "Fråga oss" reads as a line to a person; the button opens a form. Dropping
+    // "oss" is what makes the label and what happens next agree.
+    label: 'Fråga om elsystem för campervan',
+    stepsLabel: 'Berätta om din van',
     padded: true,
     variant: 'primary',
   },
@@ -116,8 +132,15 @@ export const servicePanelCta: Record<string, ServiceCta> = {
 /** Replaces "Alla tjänster" in the header of a service's own page. */
 export const servicePageCta: Record<string, ServiceCta> = {
   batrutor: { label: 'Se alla rutpaket', href: '/produkter' },
-  campervan: { label: 'Kontakta oss', href: '/kontakt?amne=campervan' },
-  motorservice: { label: 'Kontakta oss', href: '/kontakt?amne=motorservice' },
+  // The first button already opens the form, so the second is only worth
+  // having if it offers something else — here, the phone.
+  campervan: {
+    label: 'Ring oss',
+    href: `tel:${siteConfig.contact.phone.replace(/[^0-9+]/g, '')}`,
+  },
+  // The first button books the job. This one is for the visitor who isn't
+  // ready to book yet, so it says what it's for rather than "Kontakta oss".
+  motorservice: { label: 'Fråga om motorservice', href: '/kontakt?amne=motorservice' },
   marinelektronik: {
     label: 'Ring oss',
     href: `tel:${siteConfig.contact.phone.replace(/[^0-9+]/g, '')}`,

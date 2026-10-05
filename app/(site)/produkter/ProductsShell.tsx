@@ -26,8 +26,9 @@ function fold(value: string): string {
 
 /**
  * Newest first, as a standalone comparator rather than a branch, because
- * 'utvalda' needs it as its tie-break: within the utvalda shelf the order is
- * still whatever the customer added last, and among the rest it is the same.
+ * 'utvalda' needs it as its last tie-break: two utvalda with no sorteringssiffra
+ * between them fall back to whatever the customer added last, and among the
+ * rest it is the same.
  * Module scope so it is not a new function on every render feeding a useMemo.
  */
 function byNewest(a: Product, b: Product): number {
@@ -174,14 +175,38 @@ export default function ProductsShell({
     [inCategory, models]
   )
 
+  // Where each category stands, taken from the order the rail is already in
+  // rather than read off the documents again: `getAllCategories` has sorted
+  // them (Sorteringsordning, then title), and the grid following the same list
+  // is what keeps the chips and the products below them in agreement. It also
+  // means the ordering is right before anyone has typed a single number —
+  // alphabetical until they do.
+  const categoryRank = useMemo(() => {
+    const rank = new Map<string, number>()
+    categories.forEach((category, index) => rank.set(category.slug, index))
+    return rank
+  }, [categories])
+
   const sorted = useMemo(() => {
     const list = [...filtered]
+    const rankOf = (product: Product) =>
+      categoryRank.get(product.category?.slug ?? '') ?? Infinity
     // Utvalda first — the flag the customer ticks in the studio, the same one
     // that fills the startsida band. Everything else keeps its place behind it
     // rather than being hidden, so this is an ordering, not a filter.
     if (sort === 'utvalda') {
       list.sort(
-        (a, b) => Number(Boolean(b.featured)) - Number(Boolean(a.featured)) || byNewest(a, b)
+        (a, b) =>
+          Number(Boolean(b.featured)) - Number(Boolean(a.featured)) ||
+          // Then by kategori, not by product. The alternative was a number on
+          // every one of eighteen products to keep a single fogspruta off the
+          // first row — three numbers on the categories say the same thing and
+          // keep saying it as the catalogue grows. Uncategorised sorts last.
+          rankOf(a) - rankOf(b) ||
+          // Inside a category, the product's own siffra — for pinning one ruta
+          // to the front of the rutor without touching the rest.
+          (a.order ?? Infinity) - (b.order ?? Infinity) ||
+          byNewest(a, b)
       )
       return list
     }
@@ -200,7 +225,7 @@ export default function ProductsShell({
       return (a.price - b.price) * direction
     })
     return list
-  }, [filtered, sort])
+  }, [filtered, sort, categoryRank])
 
   const activeLabel = entries.find((entry) => entry.key === active)?.label ?? 'Alla'
   const sortLabel = SORTS.find((s) => s.key === sort)?.label ?? 'Utvalda först'

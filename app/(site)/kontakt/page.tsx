@@ -6,15 +6,20 @@ import AnimatedSection from '@/components/AnimatedSection'
 import ContactForm from '@/components/ContactForm'
 import PageTransition from '@/components/PageTransition'
 import { siteConfig } from '@/config/site'
-import { pageMetadata } from '@/lib/seo'
+import { withPageSeo } from '@/lib/seo'
 
 export const revalidate = 300
 
-export const metadata: Metadata = pageMetadata({
-  path: '/kontakt',
-  titleAbsolute: `Kontakta ${siteConfig.name} | Marinelektronik & elsystem`,
-  description: `Kontakta Navolt för marinelektronik, elsystem för campervan, motorservice eller båtrutor. Fyll i formuläret eller ring ${siteConfig.contact.phone}.`,
-})
+export async function generateMetadata(): Promise<Metadata> {
+  return withPageSeo(
+    {
+      path: '/kontakt',
+      titleAbsolute: `Kontakta ${siteConfig.name} | Marinelektronik & elsystem`,
+      description: `Kontakta Navolt för marinelektronik, elsystem för campervan, motorservice eller båtrutor. Fyll i formuläret eller ring ${siteConfig.contact.phone}.`,
+    },
+    await getKontaktPage()
+  )
+}
 
 // Editable in Sanity under "Kontakt". These render until someone fills the
 // fields in — the page has to stand up with no Sanity project configured.

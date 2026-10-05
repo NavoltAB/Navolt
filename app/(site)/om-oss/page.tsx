@@ -10,18 +10,26 @@ import ElfsightWidget from '@/components/ElfsightWidget'
 import YouTubeEmbed from '@/components/YouTubeEmbed'
 import { parseYouTubeId } from '@/lib/youtube'
 import { siteConfig } from '@/config/site'
-import { pageMetadata } from '@/lib/seo'
+import { withPageSeo } from '@/lib/seo'
 
 export const revalidate = 300
 
-export const metadata: Metadata = pageMetadata({
-  path: '/om-oss',
-  // Absolute: the title names the company itself, so the "| Navolt" template
-  // would append it a second time.
-  titleAbsolute: `Om ${siteConfig.name} | Marinelektronik på Västkusten`,
-  description:
-    'Läs om Navolt, ett mobilt och specialiserat företag inom marinelektronik och elsystem med Hälsö utanför Göteborg som utgångspunkt.',
-})
+// The pair below is what ships until someone fills in "Sök och delning" on the
+// Om oss-dokumentet; anything typed there wins. Same arrangement on the other
+// four singleton pages — see withPageSeo().
+export async function generateMetadata(): Promise<Metadata> {
+  return withPageSeo(
+    {
+      path: '/om-oss',
+      // Absolute: the title names the company itself, so the "| Navolt" template
+      // would append it a second time.
+      titleAbsolute: `Om ${siteConfig.name} | Marinelektronik på Västkusten`,
+      description:
+        'Läs om Navolt, ett mobilt och specialiserat företag inom marinelektronik och elsystem med Hälsö utanför Göteborg som utgångspunkt.',
+    },
+    await getAboutPage()
+  )
+}
 
 // Every string and image on this page is editable in Sanity under "Om oss".
 // This object is what renders until someone fills a field in — the page must
@@ -155,10 +163,6 @@ export default async function AboutPage() {
                   <p key={index}>{paragraph}</p>
                 ))}
               </div>
-
-              <Link href="/kontakt" className="btn-primary mt-2 self-start">
-                {text(page?.storyCtaLabel, defaults.storyCtaLabel)}
-              </Link>
             </AnimatedSection>
           </div>
         </div>
@@ -242,6 +246,18 @@ export default async function AboutPage() {
               </StaggerItem>
             ))}
           </StaggerContainer>
+
+          {/* The page's one button, and it closes this section rather than the
+              bakgrund above: "så jobbar vi" ends on how a job is run, which is
+              the point at which getting in touch is the obvious next move. It
+              also rules the section off before the film starts. */}
+          <AnimatedSection delay={0.1}>
+            <div className="pt-10 mt-4" style={{ borderTop: '1px solid var(--color-border)' }}>
+              <Link href="/kontakt" className="btn-primary">
+                {text(page?.storyCtaLabel, defaults.storyCtaLabel)}
+              </Link>
+            </div>
+          </AnimatedSection>
         </div>
       </section>
 
