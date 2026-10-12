@@ -382,7 +382,7 @@ export default async function HomePage() {
           the tiles that back it up, and ahead of the sortiment. A live campaign
           slots in above it without disturbing that order. */}
       <section
-        className="py-20"
+        className="py-14 md:py-20"
         style={{
           borderTop: '1px solid var(--color-border)',
           borderBottom: '1px solid var(--color-border)',
@@ -550,7 +550,7 @@ export default async function HomePage() {
 
       {/* ── CTA ───────────────────────────────────────────────── */}
       <section
-        className="py-24 md:py-28 relative overflow-hidden"
+        className="py-16 md:py-28 relative overflow-hidden"
         style={{ background: 'var(--color-primary)' }}
       >
         <div

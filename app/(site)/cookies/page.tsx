@@ -102,7 +102,7 @@ function Table({
 export default function CookiesPage() {
   return (
     <PageTransition>
-      <div className="pt-32 pb-16" style={{ background: 'var(--color-surface)' }}>
+      <div className="pt-24 md:pt-32 pb-16" style={{ background: 'var(--color-surface)' }}>
         <div className="container mx-auto px-6 max-w-container">
           <p className="section-label mb-3">Juridisk information</p>
           <h1 className="section-title mb-3">Cookiepolicy</h1>

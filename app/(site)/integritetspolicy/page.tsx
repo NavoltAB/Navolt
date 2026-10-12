@@ -21,7 +21,7 @@ const link = 'underline underline-offset-2 hover:text-primary transition-colors'
 export default function IntegritetspolicyPage() {
   return (
     <PageTransition>
-      <div className="pt-32 pb-16" style={{ background: 'var(--color-surface)' }}>
+      <div className="pt-24 md:pt-32 pb-16" style={{ background: 'var(--color-surface)' }}>
         <div className="container mx-auto px-6 max-w-container">
           <p className="section-label mb-3">Juridisk information</p>
           <h1 className="section-title mb-3">Integritetspolicy</h1>
@@ -66,9 +66,12 @@ export default function IntegritetspolicyPage() {
                 <li>De produkter du lagt i varukorgen, när du skickar en beställning</li>
               </ul>
               <p className="text-sm leading-relaxed mt-3">
-                Vi samlar inte in uppgifter om dig utan att du aktivt skickar in ett formulär, och
-                vi använder inga analys- eller spårningsverktyg för besöksstatistik. Väljer du att
-                tillåta externa tjänster kan dessa dock samla in uppgifter för egen räkning — se{' '}
+                Utöver det för vi anonym besöksstatistik med Vercel Web Analytics: vilka sidor som
+                visas, vilken sida besökaren kom ifrån, land samt typ av enhet och webbläsare.
+                Verktyget sätter inga cookies, sparar ingenting på din enhet och följer dig inte
+                mellan webbplatser eller från dag till dag, så statistiken kan inte knytas till dig
+                som person. Väljer du att tillåta externa tjänster kan dessa dock samla in
+                uppgifter för egen räkning — se{' '}
                 <Link href="/cookies" className={link}>
                   cookiepolicyn
                 </Link>
@@ -93,6 +96,10 @@ export default function IntegritetspolicyPage() {
                 <li>
                   För att spara underlag till bokföringen — rättslig förpliktelse (art. 6.1 c
                   GDPR, bokföringslagen).
+                </li>
+                <li>
+                  För att se hur webbplatsen används och kunna förbättra den — berättigat intresse
+                  av anonym besöksstatistik (art. 6.1 f GDPR).
                 </li>
                 <li>
                   För att ladda innehåll från externa tjänster — ditt samtycke (art. 6.1 a GDPR),
@@ -129,7 +136,7 @@ export default function IntegritetspolicyPage() {
                 <li>
                   <strong style={{ color: 'var(--color-text)' }}>Vercel</strong> — driftar
                   webbplatsen och behandlar tekniska loggar, bl.a. IP-adress, för att sidan ska
-                  fungera och vara säker.
+                  fungera och vara säker. Levererar även den anonyma besöksstatistiken.
                 </li>
                 <li>
                   <strong style={{ color: 'var(--color-text)' }}>Elfsight</strong> — levererar

@@ -126,7 +126,7 @@ export default function VarukorgPage() {
 
   return (
     <PageTransition>
-      <div className="pt-32 pb-16" style={{ background: 'var(--color-surface)' }}>
+      <div className="pt-24 md:pt-32 pb-16" style={{ background: 'var(--color-surface)' }}>
         <div className="container mx-auto max-w-container px-6">
           <nav
             aria-label="Brödsmulor"

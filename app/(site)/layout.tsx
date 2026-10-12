@@ -1,4 +1,5 @@
 import '../globals.css'
+import { Analytics } from '@vercel/analytics/next'
 import Navigation from '@/components/Navigation'
 import Footer from '@/components/Footer'
 import ChatBubble from '@/components/ChatBubble'
@@ -52,6 +53,10 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
         <Footer settings={settings} blurb={homePage?.heroSubtitle} />
         <ChatBubble />
         <CookieBanner />
+        {/* Here rather than in the root layout so /studio stays out of the
+            numbers. Vercel Analytics sets no cookie and stores nothing on the
+            device, which is why it sits outside the consent gate. */}
+        <Analytics />
       </CartProvider>
     </CookieConsentProvider>
   )
